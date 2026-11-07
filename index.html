@@ -89,8 +89,8 @@ body.studio main>.card:not(#imgcard):not(#stbar),body.studio main>details,body.s
 .lc .lt{display:flex;gap:5px;flex-wrap:wrap}.lc .lt span{font-size:12px;padding:2px 8px;border-radius:99px;border:1px solid var(--bd);color:var(--mut)}
 .lc .la{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:8px}.lc .la button{padding:6px 10px;font-size:13px}
 .lempty{grid-column:1/-1;text-align:center;padding:60px 16px;color:var(--mut);border:1px dashed var(--bd);border-radius:12px}
-dialog#libd{border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--fg);padding:20px;width:min(440px,92vw)}dialog#libd::backdrop{background:rgba(0,0,0,.45)}
-dialog#libd select,dialog#libd input{padding:7px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit}
+dialog#libd,dialog#embd{border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--fg);padding:20px;width:min(440px,92vw)}dialog#libd::backdrop,dialog#embd::backdrop{background:rgba(0,0,0,.45)}
+dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{padding:7px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit}
 .hmc{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin:20px 0 28px}
 .hmk{display:flex;flex-direction:column;gap:10px;padding:20px;border-radius:12px;border:1px dashed var(--bd);background:transparent;color:var(--mut);text-align:left;font:inherit;min-height:150px}
 .hmk strong{font-size:19px;color:var(--fg)}
@@ -114,7 +114,7 @@ dialog#libd select,dialog#libd input{padding:7px;border:1px solid var(--bd);bord
 <button class="hmk on" id="hmsn"><span class="hmt">Sedia digunakan</span><strong>Sains</strong><span class="sm">Kertas Sains dwibahasa dengan rajah timbul (grafik titik) selain deskripsi. Teks guna kod BM; simbol kimia dan unit khas masih dalam semakan, jadi semak pratonton.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
 <button class="hmk on" id="hmst"><span class="hmt">Baharu</span><strong>Studio Rajah</strong><span class="sm">Tukar gambar apa sahaja (imej, tangkap layar, tampal) kepada muka surat rajah timbul. Tak perlu fail Word. Boleh simpan sebagai projek untuk guna semula.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Pilih gambar →</span></button><input id="hstf" type="file" accept="image/*" multiple hidden>
 </div>
-<div class="row" style="margin-bottom:18px"><button class="g" id="hsk" type="button">Lakaran baharu</button><button class="g" id="hlib" type="button">Pustaka Rajah <span id="hlibn"></span></button><button class="g" id="hopen">Buka fail projek (.titik)</button><input id="hfile" type="file" accept=".titik" hidden><span class="sm">Fail projek daripada peranti lain atau rakan guru.</span></div>
+<div class="row" style="margin-bottom:18px"><button class="g" id="hsk" type="button">Lakaran baharu</button><button class="g" id="hemb" type="button">Embosser</button><button class="g" id="hlib" type="button">Pustaka Rajah <span id="hlibn"></span></button><button class="g" id="hopen">Buka fail projek (.titik)</button><input id="hfile" type="file" accept=".titik" hidden><span class="sm">Fail projek daripada peranti lain atau rakan guru.</span></div>
 <div id="hproj"></div>
 <div class="hmf"><b>Titik – Penterjemah Braille Kita</b><br>Dibangunkan oleh Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi) · SMK Pendidikan Khas Setapak, Kuala Lumpur</div>
 </div>
@@ -123,12 +123,23 @@ dialog#libd select,dialog#libd input{padding:7px;border:1px solid var(--bd);bord
 <input id="libq" type="search" placeholder="Cari tajuk, topik atau tag" aria-label="Cari rajah">
 <div class="libf" id="libsc" role="group" aria-label="Sumber pustaka"></div><div class="libf" id="libf" role="group" aria-label="Penapis mata pelajaran"></div>
 <select id="libz2" aria-label="Saiz kad"><option value="s">Kecil</option><option value="m">Sederhana</option><option value="l">Besar</option></select><select id="libs" aria-label="Isih"><option value="new">Terkini</option><option value="az">Tajuk A–Z</option><option value="topik">Topik</option></select>
-<label class="sm">IP embosser <input type="text" id="libip" inputmode="decimal" style="width:130px" placeholder="192.168.0.240"></label><button class="g" id="libx">Eksport pustaka</button><button class="g" id="libi">Import</button><input id="libif" type="file" accept=".zip,.pustaka" hidden>
+<label class="sm">Embosser <select id="lsel" aria-label="Pilih embosser"></select></label><button class="g" id="lman" type="button">Urus</button><button class="g" id="libx">Eksport pustaka</button><button class="g" id="libi">Import</button><input id="libif" type="file" accept=".zip,.pustaka" hidden>
 <button id="libc">Tutup</button></div>
 <div id="libp" class="libp" hidden></div>
 <div id="libsel" class="libsel"></div>
 <div id="libg" class="libg"></div>
 </div>
+<dialog id="embd"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Embosser</h3><button type="button" class="g" id="embx2">Tutup</button></div>
+<div class="sm" style="margin:6px 0 10px">Simpan nama embosser sekali sahaja. Selepas itu pilih nama dalam mana-mana ruang cetak, tak perlu taip IP lagi.</div>
+<div id="embl"></div>
+<div id="embr"></div>
+<details id="embf" style="margin-top:10px"><summary><b>Tambah atau ubah embosser</b></summary>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px"><label>Nama (cth Makmal Braille)<br><input type="text" id="em_n" style="width:100%"></label>
+<label>Jenis sambungan<br><select id="em_j"><option value="ip">Rangkaian (alamat IP)</option><option value="usb">USB (pencetak Windows)</option></select></label>
+<label id="em_ipw">Alamat IP<br><input type="text" id="em_ip" inputmode="decimal" placeholder="192.168.0.240" style="width:100%"></label>
+<label id="em_prw" hidden>Nama pencetak dalam Windows<br><input type="text" id="em_pr" placeholder="cth Index Basic-D V4" style="width:100%"></label>
+<div class="sm" id="em_h"></div>
+<div class="row"><button type="button" id="em_s">Simpan</button><button type="button" class="g" id="em_c">Kosongkan</button></div></div></details></dialog>
 <dialog id="libd"><form method="dialog" id="libdf"><h3 style="margin:0 0 10px">Simpan ke Pustaka</h3>
 <label>Tajuk<br><input type="text" id="ld_t" style="width:100%" required></label>
 <div class="row" style="margin-top:8px"><label>Mata pelajaran<br><select id="ld_s"><option>Sains</option><option>Matematik</option><option>Bahasa</option><option>Lain-lain</option></select></label><label>Topik<br><input type="text" id="ld_p" style="width:180px" placeholder="cth Sudut, Sel"></label></div>
@@ -201,7 +212,7 @@ dialog#libd select,dialog#libd input{padding:7px;border:1px solid var(--bd);bord
 <div class="row" id="prow" style="margin-top:10px"><b>Cetak</b><label>Bilangan set <input id="copies" type="number" min="1" max="200" value="1" style="width:64px"></label><label>Muka <input id="pfrom" type="number" min="1" placeholder="1" style="width:64px"> hingga <input id="pto" type="number" min="1" placeholder="akhir" style="width:64px"></label><label>Susunan salinan <select id="pord"><option value="set">Set demi set</option><option value="page">Muka demi muka</option></select></label><label><input id="ptest" type="checkbox"> Muka ujian dahulu</label><span class="sm" id="pinfo"></span></div>
 <div class="row" style="margin-top:10px"><span class="sm" id="psave"></span><button class="g" id="pjx">Simpan projek (.titik)</button><button class="g" id="pjxj">Eksport suntingan (.json)</button><button class="g" id="pji">Gabung suntingan (.json)</button><input id="pjf" type="file" accept=".json" hidden><button class="g" id="pjd" hidden>Padam simpanan</button></div>
 <div class="row" style="margin-top:10px"><button id="dl">Muat turun BRF (.zip)</button><button class="g" id="dl2">Muat turun .txt</button><label><input id="uni" type="checkbox" checked> Pratonton titik (gambar)</label><label><input id="side" type="checkbox" checked> Papar teks biasa di sebelah</label><button class="g" id="pdf">Muat turun PDF semakan</button><label>Lebar muka surat <input id="pw" type="range" min="240" max="900" step="20" value="420" style="width:140px"></label><label id="ackl" hidden><input id="ack" type="checkbox"> Teruskan walaupun ada gambar tanpa deskripsi</label></div>
-<div class="row" style="margin-top:10px"><label>IP embosser <input id="eip" type="text" placeholder="192.168.1.45" style="width:150px" inputmode="decimal"></label><button id="pcopy">Salin perintah cetak (PowerShell)</button><button class="g" id="tcopy">Salin teks BRF</button></div>
+<div class="row" style="margin-top:10px"><label>Embosser <select id="esel" aria-label="Pilih embosser"></select></label><button class="g" id="eman" type="button">Urus</button><button id="pcopy">Salin perintah cetak (PowerShell)</button><button class="g" id="tcopy">Salin teks BRF</button></div>
 <div class="sm" id="pnote" style="margin-top:6px">Cara biasa: tekan <b>Salin perintah cetak</b>, tampal dalam PowerShell pada PC yang disambung ke embosser, kemudian Enter. Tiada pemasangan diperlukan.</div>
 <details style="margin-top:8px"><summary class="sm">Pilihan tanpa tampal (perlu pemasangan sekali)</summary><div class="row" style="margin-top:6px"><button class="g" id="pdirect">Cetak terus ke embosser</button></div>
 <div class="sm" id="phint" style="margin-top:6px">Pada PC yang disambung ke Wi-Fi embosser, jalankan Pasang_Automatik.bat sekali sahaja. Selepas itu butang ini memulakan pelayan sendiri jika belum jalan. Atau letakkan fail .zip BRF dalam folder EMBOSSER yang dipantau dan ia dicetak sendiri.</div></details>
@@ -2103,13 +2114,45 @@ drawTC();
 {const v=LS.get('brl_pw');if(v)$('pw').value=v;const ap=applyPw;ap();$('pw').addEventListener('input',()=>{ap();LS.set('brl_pw',$('pw').value)})}
 
 // ---- salin / cetak terus (percubaan) ----
-$('eip').value=LS.get('brl_eip')||'192.168.0.240';
-$('eip').addEventListener('input',()=>LS.set('brl_eip',$('eip').value.trim()));
+// ---- senarai embosser (nama -> IP atau pencetak USB) ----
+let EMBS=[],EMBR=[],EMEDIT=null;
+try{EMBS=JSON.parse(LS.get('brl_embs')||'[]')||[]}catch(e){EMBS=[]}
+try{EMBR=JSON.parse(LS.get('brl_embs_rasmi')||'[]')||[]}catch(e){EMBR=[]}
+if(!EMBS.length&&LS.get('brl_eip')){EMBS=[{id:'e'+Date.now().toString(36),nama:'Embosser ('+LS.get('brl_eip')+')',jenis:'ip',ip:LS.get('brl_eip')}];LS.set('brl_embs',JSON.stringify(EMBS))}
+const embAll=()=>[...EMBS,...EMBR.map(e=>Object.assign({},e,{rasmi:true}))];
+const embSel=()=>{const a=embAll(),id=LS.get('brl_emb_sel');return a.find(e=>e.id===id)||a[0]||null};
+const embSaveL=()=>LS.set('brl_embs',JSON.stringify(EMBS));
+const embDesc=e=>e.jenis==='usb'?'USB · '+e.pencetak:e.ip;
+function embFill(sel){sel.innerHTML='';const a=embAll();if(!a.length){const o=document.createElement('option');o.value='';o.textContent='(belum ada, tekan Urus)';sel.append(o);return}const cur=embSel();a.forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=e.nama+' · '+embDesc(e);if(cur&&cur.id===e.id)o.selected=true;sel.append(o)})}
+function embRender(){['esel','lsel'].forEach(id=>{const x=$(id);if(x)embFill(x)});embList()}
+function embList(){const L=$('embl'),R=$('embr');if(!L)return;L.innerHTML='';R.innerHTML='';const cur=embSel();
+  const row=(e,host,acts)=>{const d=document.createElement('div');d.className='row';d.style.cssText='padding:8px 0;border-bottom:1px solid var(--bd)';const t=document.createElement('div');t.style.cssText='flex:1;min-width:150px';const b=document.createElement('b');b.textContent=e.nama+(cur&&cur.id===e.id?' (dipilih)':'');const m=document.createElement('div');m.className='sm';m.textContent=embDesc(e);t.append(b,m);d.append(t);acts.forEach(([x,fn])=>{const bt=document.createElement('button');bt.type='button';bt.className='g';bt.textContent=x;bt.onclick=fn;d.append(bt)});host.append(d)};
+  if(!EMBS.length){const p=document.createElement('div');p.className='sm';p.textContent='Belum ada embosser sendiri. Tambah di bawah.';L.append(p)}
+  EMBS.forEach(e=>row(e,L,[['Pilih',()=>{LS.set('brl_emb_sel',e.id);embRender()}],['Ubah',()=>embEdit(e)],['Padam',()=>{if(confirm('Padam "'+e.nama+'"?')){EMBS=EMBS.filter(x=>x.id!==e.id);embSaveL();embRender()}}]]));
+  if(EMBR.length){const h=document.createElement('div');h.className='sm';h.style.cssText='margin:12px 0 2px;font-weight:700';h.textContent='Embosser sekolah (daripada penyelia)';R.append(h);EMBR.forEach(e=>row(Object.assign({},e,{rasmi:true}),R,[['Pilih',()=>{LS.set('brl_emb_sel',e.id);embRender()}],['Salin ke senarai saya',()=>{EMBS.push(Object.assign({},e,{id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,4)}));embSaveL();embRender()}]]))}}
+function embJenis(){const u=$('em_j').value==='usb';$('em_ipw').hidden=u;$('em_prw').hidden=!u;$('em_h').textContent=u?'Embosser mesti dipasang dalam Windows sebagai pencetak (pemacu Index) dan kabel USB disambung. Nama mesti sama dengan yang tertera di Settings, Printers & scanners.':'Tekan HELP dan 10 pada embosser untuk melihat alamat IP. Komputer dan embosser mesti dalam rangkaian yang sama.'}
+function embEdit(e){EMEDIT=e?e.id:null;$('em_n').value=e?e.nama:'';$('em_j').value=e?e.jenis:'ip';$('em_ip').value=e&&e.ip||'';$('em_pr').value=e&&e.pencetak||'';embJenis();$('embf').open=true;$('em_n').focus()}
+function embManage(){embRender();embEdit(null);$('embf').open=!EMBS.length&&!EMBR.length;$('embd').showModal()}
+$('em_j').onchange=embJenis;$('em_c').onclick=()=>embEdit(null);$('embx2').onclick=()=>$('embd').close();
+$('em_s').onclick=()=>{const n=$('em_n').value.trim(),j=$('em_j').value,ip=$('em_ip').value.trim(),pr=$('em_pr').value.trim();
+  if(!n){$('em_h').textContent='Isi nama embosser.';return}
+  if(j==='ip'&&!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){$('em_h').textContent='Alamat IP tak sah (cth 192.168.0.240).';return}
+  if(j==='usb'&&!pr){$('em_h').textContent='Isi nama pencetak seperti dalam Windows.';return}
+  const it={id:EMEDIT||('e'+Date.now().toString(36)+Math.random().toString(36).slice(2,4)),nama:n,jenis:j,ip:j==='ip'?ip:'',pencetak:j==='usb'?pr:''};
+  const k=EMBS.findIndex(x=>x.id===it.id);if(k>=0)EMBS[k]=it;else EMBS.push(it);embSaveL();LS.set('brl_emb_sel',it.id);embRender();embEdit(null);$('embf').open=false};
+['esel','lsel'].forEach(id=>{$(id).onchange=e=>{if(e.target.value)LS.set('brl_emb_sel',e.target.value);embRender()}});
+['eman','lman','hemb'].forEach(id=>{$(id).onclick=embManage});
+const EMB_URLS=[...(/^https?:$/.test(location.protocol)?['embosser.json']:[]),'https://cikguikhwansuhaimi.github.io/braille-bm-kemaskini/embosser.json','https://raw.githubusercontent.com/CikguIkhwanSuhaimi/braille-bm-kemaskini/main/embosser.json','https://cdn.jsdelivr.net/gh/CikguIkhwanSuhaimi/braille-bm-kemaskini@main/embosser.json'];
+(async()=>{for(const u of EMB_URLS){try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)continue;const t=await r.text();if(/<html/i.test(t.slice(0,300)))continue;const a=JSON.parse(t);if(!Array.isArray(a))continue;EMBR=a.filter(e=>e&&e.id&&e.nama&&(e.jenis==='usb'?e.pencetak:/^\d{1,3}(\.\d{1,3}){3}$/.test(e.ip||'')));LS.set('brl_embs_rasmi',JSON.stringify(EMBR));break}catch(e){}}embRender()})();
+const RAWCS='using System;using System.Runtime.InteropServices;public class RawP{[StructLayout(LayoutKind.Sequential,CharSet=CharSet.Ansi)]public class DI{[MarshalAs(UnmanagedType.LPStr)]public string a;[MarshalAs(UnmanagedType.LPStr)]public string b;[MarshalAs(UnmanagedType.LPStr)]public string c;}[DllImport("winspool.Drv",EntryPoint="OpenPrinterA",SetLastError=true,CharSet=CharSet.Ansi,ExactSpelling=true)]public static extern bool OpenPrinter(string n,out IntPtr h,IntPtr d);[DllImport("winspool.Drv",SetLastError=true,ExactSpelling=true)]public static extern bool ClosePrinter(IntPtr h);[DllImport("winspool.Drv",EntryPoint="StartDocPrinterA",SetLastError=true,CharSet=CharSet.Ansi,ExactSpelling=true)]public static extern bool StartDocPrinter(IntPtr h,Int32 l,[In,MarshalAs(UnmanagedType.LPStruct)]DI d);[DllImport("winspool.Drv",SetLastError=true,ExactSpelling=true)]public static extern bool EndDocPrinter(IntPtr h);[DllImport("winspool.Drv",SetLastError=true,ExactSpelling=true)]public static extern bool StartPagePrinter(IntPtr h);[DllImport("winspool.Drv",SetLastError=true,ExactSpelling=true)]public static extern bool EndPagePrinter(IntPtr h);[DllImport("winspool.Drv",SetLastError=true,ExactSpelling=true)]public static extern bool WritePrinter(IntPtr h,IntPtr p,Int32 c,out Int32 w);public static string Send(string n,byte[] d){IntPtr h;if(!OpenPrinter(n,out h,IntPtr.Zero))return "Pencetak tidak dijumpai: "+n;DI di=new DI();di.a="Titik";di.b=null;di.c="RAW";if(!StartDocPrinter(h,1,di)){ClosePrinter(h);return "StartDoc gagal";}StartPagePrinter(h);IntPtr p=Marshal.AllocCoTaskMem(d.Length);Marshal.Copy(d,0,p,d.Length);int w;bool ok=WritePrinter(h,p,d.Length,out w);Marshal.FreeCoTaskMem(p);EndPagePrinter(h);EndDocPrinter(h);ClosePrinter(h);return ok?("Dihantar "+w+" bait"):"WritePrinter gagal";}}';
+function embCmd(T,text){const b64=btoa(text);if(T.jenis==='usb')return "$n='"+T.pencetak.replace(/'/g,"''")+"';$b=[Convert]::FromBase64String('"+b64+"');Add-Type -TypeDefinition '"+RAWCS+"';[RawP]::Send($n,$b)";
+  return "$b=[Convert]::FromBase64String('"+b64+"');$c=New-Object Net.Sockets.TcpClient('"+T.ip+"',9100);$s=$c.GetStream();$s.Write($b,0,$b.Length);$s.Flush();$s.Close();$c.Close()"}
 async function toClip(text,label){const fb=$('fb');fb.hidden=false;fb.value=text;
   try{await navigator.clipboard.writeText(text);$('fbm').textContent=label+' disalin ke papan klip.'}catch(e){fb.focus();fb.select();$('fbm').textContent='Teks sudah dipilih dalam kotak di bawah. Tekan Ctrl+C untuk menyalin.'}}
 function showBrf(){const t=brf();$('fb').hidden=false;$('fb').value=t;$('fbm').textContent='Teks BRF (tanda \\f ialah pemisah muka surat dan tak kelihatan).'}
 $('pdirect').onclick=async()=>{if(!last)return;const b=$('pdirect'),m=$('fbm');b.disabled=true;
-  if(DESK){const ip=$('eip').value.trim();if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){m.textContent='Taip IP embosser dahulu (cth 192.168.0.240). Tekan HELP dan 10 pada embosser untuk melihatnya.';$('eip').focus();b.disabled=false;return}
+  if(DESK){const T=embSel();if(!T){m.textContent='Pilih embosser dahulu: tekan Urus.';b.disabled=false;return}
+    if(T.jenis==='usb'){await toClip(embCmd(T,brf()),'Perintah cetak USB (tampal dalam PowerShell dan tekan Enter)');b.disabled=false;return}const ip=T.ip;
     m.textContent='Menghantar ke embosser '+ip+' ...';
     try{const t=brf(),u=new Uint8Array(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i)&255;const r=await window.embosser.print(ip,u);
       m.textContent=r&&r.ok?'Dihantar ke embosser ('+r.bytes+' bait). Embosser akan mula sebentar lagi.':'Gagal: '+((r&&r.error)||'tidak diketahui')}
@@ -2127,10 +2170,7 @@ $('pdirect').onclick=async()=>{if(!last)return;const b=$('pdirect'),m=$('fbm');b
   catch(e){m.textContent='Gagal menghubungi PC pantau: '+e.message}
   b.disabled=false};
 $('tcopy').onclick=()=>{if(!last)return;toClip(brf(),'Teks BRF')};
-$('pcopy').onclick=()=>{if(!last)return;const ip=$('eip').value.trim();
-  if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){$('fbm').textContent='Taip IP embosser dahulu (cth 192.168.1.45). Tekan HELP dan 10 pada embosser untuk melihatnya.';$('eip').focus();return}
-  const b64=btoa(brf());
-  toClip("$b=[Convert]::FromBase64String('"+b64+"');$c=New-Object Net.Sockets.TcpClient('"+ip+"',9100);$s=$c.GetStream();$s.Write($b,0,$b.Length);$s.Flush();$s.Close();$c.Close()",'Perintah PowerShell (tampal dalam tetingkap PowerShell dan tekan Enter)')};
+$('pcopy').onclick=()=>{if(!last)return;const T=embSel();if(!T){$('fbm').textContent='Pilih embosser dahulu: tekan Urus.';return}toClip(embCmd(T,brf()),'Perintah PowerShell (tampal dalam tetingkap PowerShell dan tekan Enter)')};
 
 if(DESK){try{window.embosser.version().then(v=>{$('verd').textContent=window.embosser.apk?'Aplikasi telefon':'Aplikasi desktop, versi '+v;$('hverd').textContent=window.embosser.apk?'Telefon':'Versi '+v})}catch(e){}$('pcopy').hidden=true;$('pcopy').before($('pdirect'));$('pdirect').className='';$('pnote').hidden=true;const dt=$('phint').closest('details');if(dt)dt.hidden=true;$('pdirect').textContent='Cetak ke embosser'}
 // ---- nombor muka surat ----
@@ -2180,7 +2220,8 @@ async function drawHome(){const m={};
   try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('brl_proj_')===0){let c=0,t=0;try{const o=JSON.parse(localStorage.getItem(k))||{};c=Object.keys(o.edits||{}).length;t=o.at||0}catch(e){}m[k.slice(9)]={c,t,has:false}}}}catch(e){}
   for(const k of await idbKeys()){const v=await idbGet(k);m[k]=Object.assign(m[k]||{c:0,t:0},{has:!!v,t:Math.max((m[k]||{}).t||0,(v&&v.t)||0)})}
   const n=Object.keys(m).sort((a,b)=>m[b].t-m[a].t);
-  $('hproj').innerHTML=n.length?'<h2 style="font-size:16px;margin:0 0 8px">Projek tersimpan</h2><div class="card" style="padding:0">'+n.map(a=>{const e=m[a],d=e.t?new Date(e.t).toLocaleDateString('ms-MY'):'';return '<div class="row" style="padding:12px 16px;border-bottom:1px solid var(--bd)"><b style="flex:1;min-width:140px">'+esc(a)+'</b><span class="sm">'+(d?d+' · ':'')+e.c+' suntingan</span>'+(e.has?'<button data-o="'+encodeURIComponent(a)+'">Buka</button>':'<span class="sm">(fail Word tiada: muat naik semula)</span>')+'<button class="g" data-x="'+encodeURIComponent(a)+'">Buang</button></div>'}).join('')+'</div><p class="sm">Buka terus menyambung suntingan yang disimpan. Fail Word disimpan dalam peranti ini sahaja. Buang memadam fail dan suntingan projek itu daripada peranti ini.</p>':''}
+  $('hproj').innerHTML=n.length?'<h2 style="font-size:16px;margin:0 0 8px">Projek tersimpan <span class="sm">('+n.length+')</span></h2>'+(n.length>5?'<input type="search" id="hpq" placeholder="Cari projek" aria-label="Cari projek" style="width:100%;max-width:340px;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg);font:inherit;margin-bottom:8px">':'')+'<div class="card" id="hpl" style="padding:0;max-height:min(55vh,480px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch">'+n.map(a=>{const e=m[a],d=e.t?new Date(e.t).toLocaleDateString('ms-MY'):'';return '<div class="row hpr" data-n="'+esc(a.toLowerCase())+'" style="padding:12px 16px;border-bottom:1px solid var(--bd)"><b style="flex:1;min-width:140px">'+esc(a)+'</b><span class="sm">'+(d?d+' · ':'')+e.c+' suntingan</span>'+(e.has?'<button data-o="'+encodeURIComponent(a)+'">Buka</button>':'<span class="sm">(fail Word tiada: muat naik semula)</span>')+'<button class="g" data-x="'+encodeURIComponent(a)+'">Buang</button></div>'}).join('')+'</div><p class="sm">Buka terus menyambung suntingan yang disimpan. Fail Word disimpan dalam peranti ini sahaja. Buang memadam fail dan suntingan projek itu daripada peranti ini.</p>':''}
+$('hproj').addEventListener('input',e=>{if(e.target.id!=='hpq')return;const v=e.target.value.trim().toLowerCase();document.querySelectorAll('#hpl .hpr').forEach(r=>{r.style.display=!v||r.dataset.n.includes(v)?'':'none'})});
 $('hproj').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.o){const k=decodeURIComponent(b.dataset.o),v=await idbGet(k);if(!v)return;setMod(LS.get('brl_pmod_'+k)||'bm');openApp();load(new File([v.buf],v.fname||k+'.docx'))}
   else if(b.dataset.x){if(b.dataset.s!=='1'){b.dataset.s='1';b.textContent='Pasti buang?';setTimeout(()=>{if(b.isConnected){b.dataset.s='';b.textContent='Buang'}},3500);return}
@@ -2260,15 +2301,14 @@ function libActions(it,la,st,after){const bt=(txt,fn,pri)=>{const b=document.cre
   if(!it.rasmi)bt('Padam',async()=>{if(confirm('Padam "'+it.title+'" daripada Pustaka?')){await libDel(it.id);LSEL.delete(it.id);after?after():libRender()}})}
 function libText(items){const c=cfg(),pages=[];for(const it of items){pages.push(K.pageLines({dots:it.dots,title:it.title,key:it.key},c.cols,c.rows,trb));if(c.interpoint)pages.push([''])}return E.L.toBRF(pages,1,Object.assign(c,{interpoint:false}))}
 function libBrf(items){items=Array.isArray(items)?items:[items];dl((items.length>1?'Rajah_'+items.length+'_muka':(items[0].title||'rajah').replace(/[^\w\-]+/g,'_'))+'.brf',new Blob([libText(items)]))}
-async function libPrint(items,st){items=Array.isArray(items)?items:[items];const text=libText(items),ip=($('libip').value||'').trim();
+async function libPrint(items,st){items=Array.isArray(items)?items:[items];const text=libText(items),T=embSel();
+  if(!T){st('Pilih embosser dahulu (tekan Urus).');return}
   const u=new Uint8Array(text.length);for(let i=0;i<text.length;i++)u[i]=text.charCodeAt(i)&255;
-  if(DESK||SRV){if(DESK&&!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){st('Taip IP embosser dahulu (cth 192.168.0.240). Tekan HELP dan 10 pada embosser untuk melihatnya.');$('libip').focus();return}
-    st('Menghantar '+items.length+' rajah ke embosser...');
-    try{if(DESK){const r=await window.embosser.print(ip,u);st(r&&r.ok?'Dihantar ke embosser ('+r.bytes+' bait). Embosser akan mula sebentar lagi.':'Gagal: '+((r&&r.error)||'tidak diketahui'))}
+  if((DESK||SRV)&&T.jenis==='ip'){st('Menghantar '+items.length+' rajah ke '+T.nama+'...');
+    try{if(DESK){const r=await window.embosser.print(T.ip,u);st(r&&r.ok?'Dihantar ke '+T.nama+' ('+r.bytes+' bait). Embosser akan mula sebentar lagi.':'Gagal: '+((r&&r.error)||'tidak diketahui'))}
       else{const r=await fetch(SBASE+'/print',{method:'POST',body:u});const j=await r.json().catch(()=>({}));st(r.ok?'Dihantar ke embosser ('+(j.bytes||u.length)+' bait).':'Gagal: '+(j.error||r.status))}}catch(e){st('Gagal: '+e.message)}return}
-  if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){st('Taip IP embosser dahulu (cth 192.168.0.240).');$('libip').focus();return}
-  const cmd="$b=[Convert]::FromBase64String('"+btoa(text)+"');$c=New-Object Net.Sockets.TcpClient('"+ip+"',9100);$s=$c.GetStream();$s.Write($b,0,$b.Length);$s.Flush();$s.Close();$c.Close()";
-  try{await navigator.clipboard.writeText(cmd);st('Perintah PowerShell disalin. Tampal dalam PowerShell pada PC yang bersambung ke embosser, kemudian Enter. (Pelayar tak boleh hantar terus; aplikasi desktop atau APK boleh.)')}catch(e){const p=$('libp');p.hidden=false;p.innerHTML='';const t=document.createElement('textarea');t.value=cmd;t.style.minHeight='70px';p.append(document.createTextNode('Salin perintah ini dan tampal dalam PowerShell:'),t);t.select();st('Salin perintah di atas.')}}
+  const cmd=embCmd(T,text);
+  try{await navigator.clipboard.writeText(cmd);st('Perintah untuk '+T.nama+' disalin. Tampal dalam PowerShell pada PC Windows yang bersambung ke embosser, kemudian Enter.')}catch(e){const p=$('libp');p.hidden=false;p.innerHTML='';const t=document.createElement('textarea');t.value=cmd;t.style.minHeight='70px';p.append(document.createTextNode('Salin perintah ini dan tampal dalam PowerShell:'),t);t.select();st('Salin perintah di atas.')}}
 async function libPiaf(it){const nm=(it.title||'rajah').replace(/[^\w\-]+/g,'_')+'_piaf.png';const sb=await psrc(it);
   if(sb){const G=await tacGray(sb,2400),cv=document.createElement('canvas');cv.width=G.w;cv.height=G.h;const g=cv.getContext('2d'),id=g.createImageData(G.w,G.h);for(let i=0;i<G.w*G.h;i++){const v=((G.gr[i]<it.opt.thr)!==!!it.opt.inv)?0:255;id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v;id.data[i*4+3]=255}g.putImageData(id,0,0);dl(nm,await new Promise(ok=>cv.toBlob(ok,'image/png')))}
   else{const cv=document.createElement('canvas');libThumb(cv,it,4,'#000');dl(nm,await new Promise(ok=>cv.toBlob(ok,'image/png')))}}
@@ -2292,8 +2332,7 @@ async function libRender(){
     const la=document.createElement('div');la.className='la';libActions(it,la,m=>{$('libsub').textContent=m});lb.append(la);c.append(lb);g.append(c)})}
 function libClose(){$('lib').hidden=true;document.body.style.overflow=''}
 function openLib(o){LPICK=o&&o.pick||null;const p=$('libp');p.hidden=!LPICK;p.textContent=LPICK?'Pilih rajah untuk Gambar '+LPICK+'. Titik dan tajuk akan disalin ke kertas ini; rajah dalam Pustaka tak berubah.':'';$('lib').hidden=false;document.body.style.overflow='hidden';libRender();$('libq').focus()}
-$('hlib').onclick=()=>openLib();$('hsk').onclick=async()=>studioFiles([await blankFile()]);$('libc').onclick=libClose;$('libz2').value=LSZ;$('libz2').onchange=e=>{LSZ=e.target.value;LS.set('brl_libsz',LSZ);libRender()};$('libip').value=LS.get('brl_eip')||'192.168.0.240';$('libip').oninput=()=>{LS.set('brl_eip',$('libip').value.trim());$('eip').value=$('libip').value.trim()};
-$('libq').oninput=e=>{LQ=e.target.value;libRender()};$('libs').onchange=e=>{LSORT=e.target.value;libRender()};
+$('hlib').onclick=()=>openLib();$('hsk').onclick=async()=>studioFiles([await blankFile()]);$('libc').onclick=libClose;$('libz2').value=LSZ;$('libz2').onchange=e=>{LSZ=e.target.value;LS.set('brl_libsz',LSZ);libRender()};$('libq').oninput=e=>{LQ=e.target.value;libRender()};$('libs').onchange=e=>{LSORT=e.target.value;libRender()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('lib').hidden&&!document.querySelector('dialog[open]'))libClose()});
 $('libx').onclick=async()=>{const a=await libAll();if(!a.length){$('libsub').textContent='Tiada rajah untuk dieksport.';return}const z=new JSZip();z.file('index.json',JSON.stringify(a.map(({src,...r})=>r)));for(const it of a)if(it.src)z.file('img/'+it.id+'.png',await it.src.arrayBuffer());const d=new Date();dl('Pustaka_Rajah_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.zip',await z.generateAsync({type:'blob'}))};
 $('libi').onclick=()=>$('libif').click();

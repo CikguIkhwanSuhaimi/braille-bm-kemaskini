@@ -1,5 +1,5 @@
 {
-  "version": "1.9.0",
-  "sha256": "c82521c720c5dc83a6e54417934ee8e0ea4aacfd3a9e71a1ff9e11a518772805",
-  "notes": "Pustaka: paparan galeri (Sebelum/Seterusnya), saiz kad, pilih beberapa, cetak terus ke embosser"
+  "version": "1.10.0",
+  "sha256": "98773d84ca557f2b08b3dbaa36b8cd1dffcdaa1733a4e20961cb1c313a385664",
+  "notes": "Senarai embosser (nama, IP atau USB), cetak USB melalui pencetak Windows, senarai projek boleh skrol dan dicari"
 }
