@@ -724,7 +724,15 @@ function handleTable(t, ctx, nested, PRINT_ONLY) {
 }
 
 // ---------- 1. Baca perenggan mentah ----------
-function readParagraphs(xml) {
+// format senarai (bullet / nombor) daripada numbering.xml
+function numFormats(nx) {
+  const abs = {}, num = {};
+  (nx || '').replace(/<w:abstractNum\b[^>]*w:abstractNumId="(\d+)"[\s\S]*?<\/w:abstractNum>/g, (m, id) => { abs[id] = {}; m.replace(/<w:lvl\b[^>]*w:ilvl="(\d+)"[\s\S]*?<\/w:lvl>/g, (l, il) => { abs[id][il] = (/<w:numFmt w:val="(\w+)"/.exec(l) || [])[1] || ''; return l; }); return m; });
+  (nx || '').replace(/<w:num\b[^>]*w:numId="(\d+)"[^>]*>[\s\S]*?<w:abstractNumId w:val="(\d+)"/g, (m, id, a) => { num[id] = a; return m; });
+  return (numId, ilvl) => { const a = abs[num[numId]]; return a ? a[ilvl] || '' : ''; };
+}
+function readParagraphs(xml, numXml) {
+  const nfmt = numFormats(numXml);
   const warnings = [];
   const PRINT_ONLY = /Untuk Kegunaan Pemeriksa|\bNama\b|No\.?\s*Kad|Disemak|Verifikasi|Markah Penuh|Markah Diperoleh|For Examiner|Examiner'?s Use|Index Number|Candidate'?s? Name|Marks Awarded/i;
   const ctx = { tabs: [], flattened: 0, layout: 0 }, tabs = ctx.tabs;
@@ -738,7 +746,10 @@ function readParagraphs(xml) {
   while ((m = re.exec(body))) {
     const p = m[0];
     const style = (p.match(/<w:pStyle w:val="([^"]+)"/) || [])[1] || '';
-    const hasNum = /<w:numPr>[\s\S]*?<w:numId w:val="(\d+)"/.test(p) && !/<w:numId w:val="0"/.test(p);
+    const hasNum0 = /<w:numPr>[\s\S]*?<w:numId w:val="(\d+)"/.test(p) && !/<w:numId w:val="0"/.test(p);
+    const nid = (/<w:numId w:val="(\d+)"/.exec(p) || [])[1], nil = (/<w:ilvl w:val="(\d+)"/.exec(p) || [])[1] || '0';
+    const isBullet = hasNum0 && nfmt(nid, nil) === 'bullet';
+    const hasNum = hasNum0 && !isBullet;
     let text = '';
     const runs = p.match(/<w:r[ >][\s\S]*?<\/w:r>/g) || [];
     for (const r of runs) {
@@ -764,7 +775,7 @@ function readParagraphs(xml) {
     const pbProp = /<w:pageBreakBefore\s*\/>|<w:pageBreakBefore\s+w:val="(?:1|true|on)"\s*\/>/.test(p);
     const bri = p.search(/<w:br\s+w:type="page"\s*\/>/), ti = p.search(/<w:t[ >]/);
     const pbBefore = pbProp || (bri >= 0 && (ti < 0 || bri < ti)), pbAfter = bri >= 0 && !pbBefore;
-    paras.push({ style, num: hasNum, text: tx, draw, alt: cleanAlt(dec(alt)), embed, keepNext, pbBefore, pbAfter });
+    paras.push({ style, num: hasNum, bullet: isBullet, lvl: +nil, text: tx, draw, alt: cleanAlt(dec(alt)), embed, keepNext, pbBefore, pbAfter });
   }
   paras.forEach(p => { const m = p.text.match(/^\u0007TABLE:(\d+)\u0007$/); if (m) p.table = tabs[+m[1]]; });
   return { paras, tables, realTables: tabs.length, warnings };
@@ -830,6 +841,11 @@ function classify(paras, opts = {}) {
       push({ role, text: t, blankBefore: pendingBlank }); pendingBlank = false; continue;
     }
 
+    // --- Poin berpeluru (bullet) ---
+    {
+      const lit = /^([\u0002\u0004\u000e]*)[\u2022\u25aa\u25cf\u25e6\u2023\u00b7\uf0b7\uf0a7]\s*(?=\S)/.exec(t);
+      if (p.bullet || lit) { push({ role: 'bullet', text: lit ? t.replace(lit[0], lit[1]) : t, lvl: p.bullet ? Math.min(2, p.lvl || 0) : 0 }); afterGroupHeading = false; continue; }
+    }
     // --- Tajuk kertas (4 baris pertama) ---
     if (inFront && !blocks.some(b => b.role === 'arahan-head') && !/^(ARAHAN|INSTRUCTIONS?|DIRECTIONS?)\s*:?$/i.test(plain)) {
       push({ role: 'title', text: plain }); continue;
@@ -1645,6 +1661,7 @@ function compose(blocks, dict, cfg = {}) {
       case 'instruction': return p.role === 'group-head' ? 0 : 1;
       case 'question': return (inArahan && p.role === 'question') ? 0 : 1;
       case 'roman': case 'option': case 'list-bahagian': return 0;
+      case 'bullet': return p.role === 'bullet' ? 0 : 1;
       case 'passage': return (p.role === 'passage') ? (b.blankBefore ? 1 : 0) : 1;
       case 'para': return 0;
       case 'image': return 1;
@@ -1680,6 +1697,7 @@ function compose(blocks, dict, cfg = {}) {
       case 'question': lb = { t: 'item', num: numLabel(b.n), text: tr(b.text), src: b.text, srcNum: b.n + '.' }; break;
       case 'roman': lb = { t: 'item', num: EN ? tr(b.label + '.') : romanLabel(b.label), text: tr(b.text), indent: 3, src: b.text, srcNum: b.label.toLowerCase() + '.' }; break;
       case 'option': lb = { t: 'item', num: EN ? tr(b.label + '.') : optLabel(b.label), text: tr(b.text), src: b.text, srcNum: b.label + '.' }; break;
+      case 'bullet': lb = { t: 'item', num: '_4', indent: 2 * (b.lvl || 0), text: tr(b.text), src: b.text, srcNum: '\u2022' }; break;
       case 'list-bahagian': lb = { t: 'para', text: tr(b.text), indent: 4, src: b.text }; break;
       case 'image': if (!b.text) continue; lb = { t: 'para', text: tr(IMGD + b.text), src: IMGD + b.text }; break;
       default: lb = { t: 'para', text: tr(b.text), src: b.text };
@@ -1857,7 +1875,7 @@ function furn(cfg = {}) {
 }
 
 function run(xml, dict, cfg = {}) {
-  const raw = R.readParagraphs(xml);
+  const raw = R.readParagraphs(xml, cfg.numXml);
   const cls = R.classify(raw.paras, { lang: cfg.lang });
   const desc = cfg.imageDesc || {};
   cls.blocks.forEach(b => { if (b.drawing && !b.text && desc[b.imageNo] && desc[b.imageNo].trim()) b.text = desc[b.imageNo].trim(); });
@@ -1927,7 +1945,7 @@ let punct={};try{punct=JSON.parse(LS.get('brl_punct')||'{}')||{}}catch(e){punct=
 let MOD=(()=>{try{const m=localStorage.getItem('brl_mod');return m==='sn'||m==='en'?m:'bm'}catch(e){return'bm'}})();
 const MODN={bm:'Bahasa Melayu',sn:'Sains',en:'English (UEB)'};
 const setMod=m=>{MOD=m==='sn'||m==='en'?m:'bm';try{localStorage.setItem('brl_mod',MOD)}catch(e){}if(E.setLang)E.setLang(MOD==='en'?'en':'bm');document.body.classList.toggle('en',MOD==='en');{const ln=document.getElementById('langn');if(ln)ln.textContent=MOD==='en'?'UEB, bahasa Inggeris':'Bahasa Melayu'}const l=document.getElementById('modl');if(l)l.textContent='Modul: '+MODN[MOD]};
-let xml=null,last=null,name='kertas',imgDesc={},imgTac={},imgBlobs={},edits={},editing={};
+let numXml='',xml=null,last=null,name='kertas',imgDesc={},imgTac={},imgBlobs={},edits={},editing={};
 // ---- muat turun ----
 let DL=null;
 (async()=>{try{DL=await window.claude.use('downloads')}catch(e){}if(!DL){$('sm2').hidden=false}})();
@@ -1993,7 +2011,7 @@ async function load(f){
   name=f.name.replace(/\.docx$/i,'');$('fname').textContent=f.name;edits={};editing={};imgBlobs={};restored=0;
   try{
     const ab=await f.arrayBuffer();curBuf=ab;const z=await JSZip.loadAsync(ab);const d=z.file('word/document.xml');if(!d)throw new Error('Bukan fail Word yang sah.');
-    xml=await d.async('string');
+    xml=await d.async('string');{const nf=z.file('word/numbering.xml');numXml=nf?await nf.async('string'):''}
     const rels=z.file('word/_rels/document.xml.rels');const map={};
     if(rels){(await rels.async('string')).replace(/<Relationship\b[^>]*>/g,t=>{const i=(t.match(/\bId="([^"]+)"/)||[])[1],g=(t.match(/\bTarget="([^"]+)"/)||[])[1];if(i&&g)map[i]=g;return t})}
     window.__rel=map;window.__zip=z;
@@ -2006,7 +2024,7 @@ async function load(f){
   }catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">'+esc(e.message)+'</div>'}
 }
 let brks=new Set(),restored=0,sTm=null,curBuf=null;
-function cfg(){return{tableMode:($('tmode')||{}).value||'auto',lang:MOD==='en'?'en':'bm',cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:MOD==='sn'?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
+function cfg(){return{numXml,tableMode:($('tmode')||{}).value||'auto',lang:MOD==='en'?'en':'bm',cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:MOD==='sn'?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
 function go(){
   let r;try{r=E.P.run(xml,dict(),cfg())}catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">Ralat: '+esc(e.message)+'</div>';return}
   last=r;buildPool();$('out').hidden=false;

@@ -1,5 +1,5 @@
 {
-  "version": "1.12.2",
-  "sha256": "c791a17dcf6dc6d4fb02585d5b21847aeab5e22e859206a660a95b22bd14d61a",
-  "notes": "Jadual lebar ditukar kepada senarai secara automatik hanya untuk English (UEB); Bahasa Melayu kekal bingkai seperti sebelum ini. Pilihan Auto/Bingkai/Senarai dalam Tetapan jadual."
+  "version": "1.12.3",
+  "sha256": "ef5bbeba82ae215e1157442558034c2acff60cdb1cdf0d34353b99551813f51f",
+  "notes": "Poin berpeluru (bullet, literal atau senarai Word) kini ada tanda bullet dan baris sambungan berinden seperti nombor soalan, untuk semua modul."
 }
