@@ -1,5 +1,5 @@
 {
-  "version": "1.6.0",
-  "sha256": "c1df85b883309424d5ece15d7dd5cdff3a8bc8d4713b1e469f953af7581d46b7",
-  "notes": "Pustaka Rajah: galeri rajah timbul dengan carian, tapisan, edit, BRF/PIAF, import/eksport"
+  "version": "1.7.0",
+  "sha256": "658466b6296f36141a12e96f7e585af609b62eec608cde82e569bfb780977dce",
+  "notes": "Pustaka sekolah: rajah rasmi diterbitkan ke GitHub dan dimuat turun automatik, boleh disalin ke pustaka sendiri"
 }
