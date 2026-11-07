@@ -1,5 +1,5 @@
 {
-  "version": "1.4.5",
-  "sha256": "18d0948abe4e209bed2b8e34f9b1058c471610829679e13fad74357ad15a4818",
-  "notes": "Rajah berlabel: buang teks bercetak dan letak huruf label (a, b, c); bersihkan teks alt automatik Word"
+  "version": "1.4.6",
+  "sha256": "682b707a62a1d384513f3ba5064d4f74474007c8841219ab8eeaedd4a3d25b0b",
+  "notes": "Baiki paparan sighted jadual (sejajar dengan sel braille walaupun dinding melekat pada teks); penanda sambungan perkataan ↳"
 }

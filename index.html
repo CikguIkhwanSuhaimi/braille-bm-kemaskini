@@ -883,7 +883,7 @@ function wrapPairs(btext, stext, width) {
   const push = () => { if (cur) { lines.push({ s: cur, w: cw }); cur = ''; cw = []; } };
   bw.forEach((w0, idx) => {
     let w = w0, sg = ok ? sw0[idx] : null;
-    while (w.length > width) { push(); lines.push({ s: w.slice(0, width), w: [sg] }); sg = sg === null ? null : '\u2026'; w = w.slice(width); }
+    while (w.length > width) { push(); lines.push({ s: w.slice(0, width), w: [sg] }); sg = sg === null ? null : '\u21b3'; w = w.slice(width); }
     if (!cur) { cur = w; cw = [sg]; } else if (cur.length + 1 + w.length <= width) { cur += ' ' + w; cw.push(sg); } else { push(); cur = w; cw = [sg]; }
   });
   push();
@@ -960,7 +960,9 @@ function render(tbl, tr, cfg = {}) {
         s += t !== undefined ? ' '.repeat(c.off) + place(t, c.cwid, c.x.c.align) + ' '.repeat(c.width - c.off - c.cwid) : ' '.repeat(c.width);
       }
       wpos.push(s.length); const full = s + C.wr; parts.push('\u2502'); lines.push(full);
-      const okTok = !bad && full.trim().split(/\s+/).length === parts.length;
+      const wset = new Set(wpos); let ntok = 0, inRun = false;      // pecah token ikut dinding sel (dinding boleh melekat pada teks)
+      for (let i = 0; i < full.length; i++) { if (wset.has(i)) { ntok++; inRun = false; } else if (full[i] !== ' ') { if (!inRun) { ntok++; inRun = true; } } else inRun = false; }
+      const okTok = !bad && ntok === parts.length;
       sws.push({ t: parts.join(' '), w: okTok ? parts : [], ap: false, lab: '', bx: 'row', wp: wpos.map(p => p / Math.max(1, full.length - 1)) });
     }
     const txt = cols.map(c => (c.x.c.text || '').replace(/\s+/g, ' ').trim()).join(' | ');
@@ -1738,7 +1740,9 @@ function paintPage(cv,i,lines,sr,o){
     const x0b=2+cols*CELLW+GAP,xlb=x0b+cw/2,xrb=x0b+tw-cw/2-2;
     let lay=null;if(s&&s.bx==='row'&&s.wp&&s.w&&s.w.length){const xs=s.wp.map(p=>xlb+(xrb-xlb)*p),out=[];let k=-1,acc='';
       s.w.forEach((pw,jj)=>{if(pw==='\u2502'){k++;acc='';out.push(null);return}const x=xs[Math.max(0,Math.min(k,xs.length-2))]+8;out.push(x+m.measureText(acc).width);acc+=pw+' '});lay={xs,out}}
-    if(s&&s.t&&!s.ap){const re=/\S+/g;let mt,j=0;const toks=[];while((mt=re.exec(l)))toks.push(mt);if(s.lab)toks.shift();
+    if(s&&s.t&&!s.ap){const re=/\S+/g;let mt,j=0;const toks=[];
+      if(s.bx==='row'&&s.wp){const ws=new Set(s.wp.map(p=>Math.round(p*(l.length-1))));let i=0;while(i<l.length){if(ws.has(i)){const a=[l[i]];a.index=i;toks.push(a);i++}else if(l[i]!==' '){let j2=i;while(j2<l.length&&l[j2]!==' '&&!ws.has(j2))j2++;const a=[l.slice(i,j2)];a.index=i;toks.push(a);i=j2}else i++}}
+      else while((mt=re.exec(l)))toks.push(mt);if(s.lab)toks.shift();
       toks.forEach((t,jj)=>{const pw=s.w[jj];if(pw===undefined||pw==='\u2502')return;const pre=(s.lab?s.lab+' ':'')+s.w.slice(0,jj).join(' ')+(jj||s.lab?' ':'');ent.push({i:t.index,b0:2+t.index*CELLW,b1:2+(t.index+t[0].length)*CELLW,p0:lay&&lay.out[jj]!=null?lay.out[jj]:2+cols*CELLW+GAP+m.measureText(pre).width,p1:lay&&lay.out[jj]!=null?lay.out[jj]+m.measureText(pw).width:2+cols*CELLW+GAP+m.measureText(pre+pw).width,w:pw,b:t[0],j:jj})})}
     map[y]=ent;
     if(o.sel&&o.sel.l===y){const e=ent[o.sel.j];if(e){g.fillStyle=o.hl;g.fillRect(e.b0-1,2+y*LH,e.b1-e.b0+2,LH-2);g.fillRect(e.p0-1,2+y*LH,e.p1-e.p0+2,LH-2)}}
