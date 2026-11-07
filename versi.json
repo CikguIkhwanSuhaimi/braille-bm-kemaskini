@@ -1,5 +1,5 @@
 {
-  "version": "1.4.3",
-  "sha256": "c977c832ab02da5b695d3d89bf5d7bfe374d140a314490338ac123f04f7fa7d7",
-  "notes": "Baiki ralat jadual (baris tak lengkap/sel gabung) dan amaran palsu antara jadual berturutan"
+  "version": "1.4.4",
+  "sha256": "26a0db1cea820447e0b1256c690bfacc39de7e5742b1d06f0bba7e2ea4873e40",
+  "notes": "Baiki jadual susun atur tanpa bingkai (kertas sekolah biasa): soalan dibaca sebagai soalan, hanya sel bergaris jadi jadual"
 }

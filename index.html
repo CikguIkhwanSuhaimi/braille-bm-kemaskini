@@ -604,17 +604,80 @@ function parseTable(t) {
   return { widths, rows };
 }
 
+
+// ---------- jadual: bersarang dan jadual susun atur ----------
+const escx = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const LABEL_RE = /^\(?([0-9]{1,3}|[a-zA-Z]|[ivxIVX]{1,4})[.)]?\.?\)?$/;
+const PLACE = n => '<w:p><w:r><w:t>\u0007TABLE:' + n + '\u0007</w:t></w:r></w:p>';
+function convertXml(xml, ctx, nested, PRINT_ONLY) {            // ganti jadual aras-atas (seimbang) dengan perenggan / penanda jadual
+  let out = '', last = 0, depth = 0, start = -1;
+  const re = /<w:tbl>|<\/w:tbl>/g; let m;
+  while ((m = re.exec(xml))) {
+    if (m[0] === '<w:tbl>') { if (depth === 0) start = m.index; depth++; }
+    else if (depth > 0) { depth--; if (depth === 0) { out += xml.slice(last, start) + handleTable(xml.slice(start, m.index + m[0].length), ctx, nested, PRINT_ONLY); last = m.index + m[0].length; } }
+  }
+  return out + xml.slice(last);
+}
+function tblNoBorders(t) {
+  const head = t.slice(0, (t.search(/<w:tr[ >]/) + 1 || t.length + 1) - 1);
+  const b = head.match(/<w:tblBorders>([\s\S]*?)<\/w:tblBorders>/);
+  if (!b) return false;
+  const vs = (b[1].match(/w:val="(\w+)"/g) || []).map(x => x.slice(7, -1));
+  return vs.length > 0 && vs.every(v => v === 'none' || v === 'nil');
+}
+function handleTable(t, ctx, nested, PRINT_ONLY) {
+  const layout = nested || tblNoBorders(t);
+  if (!layout) {
+    const plainT = (t.match(/<w:t[^>]*>[^<]*<\/w:t>/g) || []).join(' ').replace(/<[^>]+>/g, '');
+    if (PRINT_ONLY.test(plainT)) { ctx.flattened++; return t; }       // jadual cetak sahaja: dibaca seperti perenggan biasa
+    ctx.tabs.push(parseTable(t)); return PLACE(ctx.tabs.length - 1);
+  }
+  ctx.layout++;
+  const inner = convertXml(t.replace(/^<w:tbl>/, '').replace(/<\/w:tbl>$/, ''), ctx, true, PRINT_ONLY);   // jadual bersarang dahulu
+  const out = []; let grp = [];
+  const flush = () => {
+    if (!grp.length) return;
+    const widest = grp.reduce((a, r) => (r.length > a.length ? r : a), grp[0]);
+    const widths = widest.map(c => c.w || 1);
+    ctx.tabs.push({ widths, rows: grp.map(r => ({ cells: r.map(c => ({ text: c.text, align: c.align, span: 1 })) })) });
+    out.push(PLACE(ctx.tabs.length - 1)); grp = [];
+  };
+  for (const tr of (inner.match(/<w:tr[ >][\s\S]*?<\/w:tr>/g) || [])) {
+    const cells = (tr.match(/<w:tc>[\s\S]*?<\/w:tc>/g) || []).map(tc => {
+      const ps = tc.match(/<w:p[ >][\s\S]*?<\/w:p>/g) || [];
+      const bd = ((tc.match(/<w:tcBorders>[\s\S]*?<\/w:tcBorders>/) || [''])[0].match(/<w:(?:top|left|bottom|right)\s[^>]*w:val="(?:single|double|thick)"/g) || []).length;
+      const texts = ps.map(runText).filter(Boolean), draw = /<w:drawing>|<w:pict>/.test(tc);
+      const jc = (ps[0] && (ps[0].match(/<w:jc w:val="(\w+)"/) || [])[1]) || '';
+      return { ps, bordered: bd >= 3, text: texts.join('\n'), has: texts.length > 0 || draw, draw, w: +((tc.match(/<w:tcW w:w="(\d+)"/) || [])[1] || 0), align: jc === 'center' ? 'center' : (jc === 'right' || jc === 'end') ? 'right' : 'left' };
+    });
+    const bc = cells.filter(c => c.bordered);
+    if (bc.length) { grp.push(bc); continue; }
+    flush();
+    const items = cells.filter(c => c.has); let pend = '';
+    items.forEach((c, i) => {
+      const t1 = c.text.trim();
+      if (i < items.length - 1 && c.ps.length === 1 && !c.draw && t1.length <= 6 && LABEL_RE.test(t1)) { pend += t1 + ' '; return; }
+      c.ps.forEach((p, k) => {
+        const px = runText(p);
+        if (k === 0 && pend && px && !/\u0007/.test(px)) out.push(p.replace(/^(<w:p(?:\s[^>]*)?>)(<w:pPr>[\s\S]*?<\/w:pPr>)?/, (mm, a, b) => a + (b || '') + '<w:r><w:t xml:space="preserve">' + escx(pend) + '</w:t></w:r>'));
+        else { if (k === 0 && pend) out.push('<w:p><w:r><w:t xml:space="preserve">' + escx(pend.trim()) + '</w:t></w:r></w:p>'); out.push(p); }
+      });
+      pend = '';
+    });
+    if (pend) out.push('<w:p><w:r><w:t xml:space="preserve">' + escx(pend.trim()) + '</w:t></w:r></w:p>');
+  }
+  flush();
+  return out.join('');
+}
+
 // ---------- 1. Baca perenggan mentah ----------
 function readParagraphs(xml) {
   const warnings = [];
   const PRINT_ONLY = /Untuk Kegunaan Pemeriksa|\bNama\b|No\.?\s*Kad|Disemak|Verifikasi|Markah Penuh|Markah Diperoleh/i;
-  const tabs = []; let flattened = 0;
-  const body = xml.replace(/<w:tbl>[\s\S]*?<\/w:tbl>/g, t => {
-    const plainT = (t.match(/<w:t[^>]*>[^<]*<\/w:t>/g) || []).join(' ').replace(/<[^>]+>/g, '');
-    if (PRINT_ONLY.test(plainT)) { flattened++; return t; }          // jadual cetak sahaja: dibaca seperti perenggan biasa (dilangkau oleh peraturan klasifikasi)
-    tabs.push(parseTable(t));
-    return '<w:p><w:r><w:t>\u0007TABLE:' + (tabs.length - 1) + '\u0007</w:t></w:r></w:p>';
-  });
+  const ctx = { tabs: [], flattened: 0, layout: 0 }, tabs = ctx.tabs;
+  const body = convertXml(xml, ctx, false, PRINT_ONLY);
+  const flattened = ctx.flattened;
+  if (ctx.layout) warnings.push({ type: 'info', msg: `${ctx.layout} jadual susun atur (tanpa bingkai) dibaca seperti perenggan biasa; sel bergaris dijadikan jadual berbingkai. Semak pratonton.` });
   const tables = flattened;
   const paras = [];
   const re = /<w:p[ >][\s\S]*?<\/w:p>/g;
