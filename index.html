@@ -88,17 +88,17 @@ canvas.sc{vertical-align:middle;display:inline-block}
 <h1>Apa yang hendak diterjemah hari ini?</h1>
 <p class="s" style="max-width:640px">Pilih jenis dokumen. Muat naik fail Word, semak titik braille bersebelahan paparan biasa, kemudian cetak terus ke embosser.</p>
 <div class="hmc">
-<button class="hmk on" id="hmbm"><span class="hmt">Sedia digunakan</span><strong>Bahasa Melayu</strong><span class="sm">Braille Grade 2. Kod Braille BM Pindaan 2020, kamus sekolah, singkatan dan jadual.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
+<button class="hmk on" id="hmbm"><span class="hmt">Sedia digunakan</span><strong>Bahasa Melayu</strong><span class="sm">Braille Grade 2. Kod Braille BM Pindaan 2020, kamus sekolah, singkatan dan jadual. Rajah dengan deskripsi.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
 <div class="hmk"><span class="hmt">Akan datang</span><strong>English (UEB)</strong><span class="sm">Unified English Braille Grade 2 untuk kertas Bahasa Inggeris.</span></div>
 <div class="hmk"><span class="hmt">Akan datang</span><strong>Matematik</strong><span class="sm">Persamaan dan simbol matematik dengan paparan titik pada setiap simbol.</span></div>
-<button class="hmk on" id="hmsn"><span class="hmt">Sedia digunakan</span><strong>Sains</strong><span class="sm">Kertas Sains dwibahasa dengan rajah timbul. Teks guna kod BM; simbol kimia dan unit khas masih dalam semakan, jadi semak pratonton.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
+<button class="hmk on" id="hmsn"><span class="hmt">Sedia digunakan</span><strong>Sains</strong><span class="sm">Kertas Sains dwibahasa dengan rajah timbul (grafik titik) selain deskripsi. Teks guna kod BM; simbol kimia dan unit khas masih dalam semakan, jadi semak pratonton.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
 </div>
 <div class="row" style="margin-bottom:18px"><button class="g" id="hopen">Buka fail projek (.titik)</button><input id="hfile" type="file" accept=".titik" hidden><span class="sm">Fail projek daripada peranti lain atau rakan guru.</span></div>
 <div id="hproj"></div>
 <div class="hmf"><b>Titik – Penterjemah Braille Kita</b><br>Dibangunkan oleh Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi) · SMK Pendidikan Khas Setapak, Kuala Lumpur</div>
 </div>
 <main id="app">
-<div style="margin-bottom:8px"><button class="g" id="gohome">← Skrin utama</button></div>
+<div style="margin-bottom:8px"><button class="g" id="gohome">← Skrin utama</button> <span class="sm" id="modl"></span></div>
 <h1>Titik <span style="font-weight:400;font-size:.6em;opacity:.7">Penterjemah Braille Kita</span></h1>
 <p class="s"><span id="verd" class="sm" style="float:right"></span>Word (.docx) → Braille Grade 2 (Bahasa Melayu) untuk Index Basic-D. Semua diproses dalam pelayar anda; fail tidak dihantar ke mana-mana.</p>
 <p class="sm" style="margin:-6px 0 8px">Dibangunkan oleh <b>Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi)</b> · SMK Pendidikan Khas Setapak, Kuala Lumpur</p>
@@ -1303,6 +1303,8 @@ const KAMUS_URLS=[...(/^https?:$/.test(location.protocol)?['kamus.txt']:[]),'htt
 const loc=()=>{const t=fromText($('dict').value),o={};for(const k in t){if(k in OFF&&SCH[k]===t[k])continue;o[k]=t[k]}return o};
 const dict=()=>E.B.withOverrides(E.B.withOverrides(BASE,OFF),loc());
 let punct={};try{punct=JSON.parse(LS.get('brl_punct')||'{}')||{}}catch(e){punct={}}
+let MOD=(()=>{try{return localStorage.getItem('brl_mod')==='sn'?'sn':'bm'}catch(e){return'bm'}})();
+const setMod=m=>{MOD=m==='sn'?'sn':'bm';try{localStorage.setItem('brl_mod',MOD)}catch(e){}const l=document.getElementById('modl');if(l)l.textContent='Modul: '+(MOD==='sn'?'Sains':'Bahasa Melayu')};
 let xml=null,last=null,name='kertas',imgDesc={},imgTac={},imgBlobs={},edits={},editing={};
 // ---- muat turun ----
 let DL=null;
@@ -1375,12 +1377,13 @@ async function load(f){
     try{const sv=LS.get('brl_proj_'+name);if(sv){const o=JSON.parse(sv);edits=o.edits||{};restored=Object.keys(edits).length}}catch(e){}
     try{imgDesc=JSON.parse(LS.get('brl_img_'+name)||'{}')||{}}catch(e){imgDesc={}}
     try{imgTac=JSON.parse(LS.get('brl_tac_'+name)||'{}')||{}}catch(e){imgTac={}}
+    LS.set('brl_pmod_'+name,MOD);setMod(MOD);
     try{brks=new Set(JSON.parse(LS.get('brl_brk_'+name)||'[]'))}catch(e){brks=new Set()}
     go();idbPut(name,{buf:ab,fname:f.name,t:Date.now()});
   }catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">'+esc(e.message)+'</div>'}
 }
 let brks=new Set(),restored=0,sTm=null,curBuf=null;
-function cfg(){return{cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:imgTac,tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
+function cfg(){return{cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:MOD==='sn'?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
 function go(){
   let r;try{r=E.P.run(xml,dict(),cfg())}catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">Ralat: '+esc(e.message)+'</div>';return}
   last=r;buildPool();$('out').hidden=false;
@@ -1519,7 +1522,7 @@ async function blobFor(im){
 }
 async function drawImages(){
   const ims=last.images||[];$('imgcard').hidden=!ims.length;
-  const key=name+ims.map(i=>i.imageNo+(i.text?'1':'0')).join('');
+  const key=MOD+name+ims.map(i=>i.imageNo+(i.text?'1':'0')).join('');
   const fromWord={};ims.forEach(i=>{if(i.text&&!imgDesc[i.imageNo])fromWord[i.imageNo]=1});
   if(key===imgKey)return;imgKey=key;
   const host=$('imgs');host.innerHTML='';
@@ -1542,7 +1545,7 @@ async function drawImages(){
         ta.value=r.text.trim();ta.oninput();st.textContent='Semak dan betulkan sebelum guna.'}
       catch(e){st.textContent=(e&&e.code==='not_granted')?'Kebenaran tidak diberi.':'Gagal menjana.'}
       btn.disabled=false};
-    right.appendChild(tacUI(im,b));
+    if(MOD==='sn')right.appendChild(tacUI(im,b));
     row.append(left,right);host.append(row);
   }
 }
@@ -1555,7 +1558,7 @@ function projKey(){return 'brl_proj_'+name}
 function saveProj(){clearTimeout(sTm);sTm=setTimeout(()=>{if(!last||!name)return;const n=Object.keys(edits).length;
   LS.set(projKey(),n?JSON.stringify({v:1,name,edits,at:Date.now()}):'');
   $('psave').textContent=n?'Disimpan automatik dalam pelayar ini ('+n+' muka disunting).':'Tiada suntingan.';$('pjd').hidden=!n},400)}
-const projObj=()=>({v:2,name,fname:name+'.docx',edits,brks:[...brks],imgDesc,tac:imgTac,at:Date.now()});
+const projObj=()=>({mod:MOD,v:2,name,fname:name+'.docx',edits,brks:[...brks],imgDesc,tac:imgTac,at:Date.now()});
 $('pjxj').onclick=()=>{if(!last)return;dl(name+'.projek.json',JSON.stringify(projObj()))};
 $('pjx').onclick=async()=>{if(!last||!curBuf)return;const z=new JSZip();z.file('dokumen.docx',curBuf);z.file('projek.json',JSON.stringify(projObj()));dl(name+'.titik',await z.generateAsync({type:'blob',compression:'DEFLATE'}))};
 async function bukaTitik(f){try{const z=await JSZip.loadAsync(await f.arrayBuffer());const dj=z.file('projek.json'),dd=z.file('dokumen.docx');if(!dj||!dd)throw new Error('Bukan fail projek Titik yang sah.');
@@ -1563,7 +1566,7 @@ async function bukaTitik(f){try{const z=await JSZip.loadAsync(await f.arrayBuffe
   const loc=(()=>{try{return JSON.parse(LS.get('brl_proj_'+o.name)||'null')}catch(e){return null}})();
   if(loc&&loc.edits&&Object.keys(loc.edits).length&&(loc.at||0)>(o.at||0)&&!confirm('Peranti ini ada suntingan lebih baharu bagi "'+o.name+'" daripada fail projek. Guna suntingan daripada fail juga?'))return;
   LS.set('brl_proj_'+o.name,JSON.stringify({v:1,name:o.name,edits:o.edits||{},at:o.at||Date.now()}));
-  LS.set('brl_img_'+o.name,JSON.stringify(o.imgDesc||{}));LS.set('brl_tac_'+o.name,JSON.stringify(o.tac||{}));LS.set('brl_brk_'+o.name,JSON.stringify(o.brks||[]));
+  LS.set('brl_img_'+o.name,JSON.stringify(o.imgDesc||{}));LS.set('brl_tac_'+o.name,JSON.stringify(o.tac||{}));setMod(o.mod||(o.tac&&Object.values(o.tac).some(t=>t&&t.on)?'sn':'bm'));LS.set('brl_brk_'+o.name,JSON.stringify(o.brks||[]));
   const buf=await dd.async('arraybuffer');openApp();await load(new File([buf],(o.fname||o.name+'.docx')))}
   catch(e){openApp();$('out').hidden=false;$('warns').innerHTML='<div class="w e">'+esc(e.message||'Fail projek tidak sah.')+'</div>'}}
 $('pji').onclick=()=>$('pjf').click();
@@ -1997,15 +2000,16 @@ async function drawHome(){const m={};
   const n=Object.keys(m).sort((a,b)=>m[b].t-m[a].t);
   $('hproj').innerHTML=n.length?'<h2 style="font-size:16px;margin:0 0 8px">Projek tersimpan</h2><div class="card" style="padding:0">'+n.map(a=>{const e=m[a],d=e.t?new Date(e.t).toLocaleDateString('ms-MY'):'';return '<div class="row" style="padding:12px 16px;border-bottom:1px solid var(--bd)"><b style="flex:1;min-width:140px">'+esc(a)+'</b><span class="sm">'+(d?d+' · ':'')+e.c+' suntingan</span>'+(e.has?'<button data-o="'+encodeURIComponent(a)+'">Buka</button>':'<span class="sm">(fail Word tiada: muat naik semula)</span>')+'<button class="g" data-x="'+encodeURIComponent(a)+'">Buang</button></div>'}).join('')+'</div><p class="sm">Buka terus menyambung suntingan yang disimpan. Fail Word disimpan dalam peranti ini sahaja. Buang memadam fail dan suntingan projek itu daripada peranti ini.</p>':''}
 $('hproj').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.o){const k=decodeURIComponent(b.dataset.o),v=await idbGet(k);if(!v)return;openApp();load(new File([v.buf],v.fname||k+'.docx'))}
+  if(b.dataset.o){const k=decodeURIComponent(b.dataset.o),v=await idbGet(k);if(!v)return;setMod(LS.get('brl_pmod_'+k)||'bm');openApp();load(new File([v.buf],v.fname||k+'.docx'))}
   else if(b.dataset.x){if(b.dataset.s!=='1'){b.dataset.s='1';b.textContent='Pasti buang?';setTimeout(()=>{if(b.isConnected){b.dataset.s='';b.textContent='Buang'}},3500);return}
-    const k=decodeURIComponent(b.dataset.x);await idbDel(k);['brl_proj_','brl_img_','brl_brk_','brl_tac_'].forEach(p=>{try{localStorage.removeItem(p+k)}catch(e){}});drawHome()}};
+    const k=decodeURIComponent(b.dataset.x);await idbDel(k);['brl_proj_','brl_img_','brl_brk_','brl_tac_','brl_pmod_'].forEach(p=>{try{localStorage.removeItem(p+k)}catch(e){}});drawHome()}};
 function openApp(){$('home').hidden=true;$('app').hidden=false;scrollTo(0,0)}
 function openHome(){drawHome();$('hverd').textContent=$('verd').textContent?$('verd').textContent.replace('Aplikasi desktop, ',''):'';$('home').hidden=false;$('app').hidden=true;scrollTo(0,0)}
 const temaUpd=()=>{$('tema').textContent=document.documentElement.getAttribute('data-theme')==='dark'?'Mod cerah':'Mod gelap'};
 $('tema').onclick=()=>{const d=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',d);LS.set('brl_tema',d);temaUpd();try{if(typeof xml!=='undefined'&&xml)go2()}catch(e){}};temaUpd();
 $('hopen').onclick=()=>$('hfile').click();$('hfile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)bukaTitik(f)};
-$('hmbm').onclick=$('hmsn').onclick=()=>{if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('gohome').onclick=openHome;
+$('hmbm').onclick=()=>{setMod('bm');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};
+$('hmsn').onclick=()=>{setMod('sn');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('gohome').onclick=openHome;setMod(MOD);
 if(showHome)openHome();
 })();
 </script>

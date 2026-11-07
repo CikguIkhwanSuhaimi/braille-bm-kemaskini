@@ -1,5 +1,5 @@
 {
-  "version": "1.4.1",
-  "sha256": "fe085b7014a0b06a73c5d3c63d1ef221d6bab22729f81167bd012cc3d7d6a4e3",
-  "notes": "Kad Sains diaktifkan (guna modul BM + rajah timbul)"
+  "version": "1.4.2",
+  "sha256": "636a5bcd0c0b3182767421f54bd749cc16bccc6b39aabd011f20239f4940eb3a",
+  "notes": "BM kekal deskripsi sahaja; rajah timbul hanya dalam modul Sains"
 }
