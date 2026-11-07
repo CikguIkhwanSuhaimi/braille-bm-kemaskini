@@ -1,5 +1,6 @@
-<!doctype html><html lang="ms"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Penterjemah Braille BM</title>
+<!doctype html><html lang="ms"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Titik – Penterjemah Braille Kita</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#1f5f4a"><link rel="icon" href="icon-192.png">
 <style>
 :root{--bg:#f5f6f4;--fg:#1c2421;--mut:#5f6b66;--card:#fff;--bd:#d3d9d5;--ac:#1f5f4a;--acf:#fff;--warn:#fdf0d5;--warnb:#c98f22;--err:#fbe3e0;--errb:#c0392b;--pg:#fff;--pgfg:#14201b;--pgmut:#66736d}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121715;--fg:#e8eeeb;--mut:#93a09a;--card:#1b221f;--bd:#33403a;--ac:#6cc3a0;--acf:#0c1a14;--warn:#3a2f14;--warnb:#b88a2c;--err:#3d1e1a;--errb:#e0685a;--pg:#222b27;--pgfg:#e8eeeb;--pgmut:#93a09a;color-scheme:dark}}
@@ -63,10 +64,36 @@ canvas.sc{vertical-align:middle;display:inline-block}
 .im img{max-width:100%;border:1px solid var(--bd);border-radius:4px;background:#fff}
 .im textarea{min-height:70px}
 @media(max-width:560px){.im{grid-template-columns:1fr}}
+.hm{max-width:1100px;margin:0 auto}
+.hmh{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--bd);margin-bottom:28px}
+.hmh b{font-size:28px;line-height:1;letter-spacing:-.02em}.hmh small{display:block;color:var(--mut);font-size:13px}
+.hmc{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin:20px 0 28px}
+.hmk{display:flex;flex-direction:column;gap:10px;padding:20px;border-radius:12px;border:1px dashed var(--bd);background:transparent;color:var(--mut);text-align:left;font:inherit;min-height:150px}
+.hmk strong{font-size:19px;color:var(--fg)}
+.hmk.on{border:2px solid var(--ac);background:var(--card);color:var(--fg);cursor:pointer}
+.hmk.on:hover{box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.hmt{align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;background:var(--bd);color:var(--mut)}
+.hmk.on .hmt{background:var(--ac);color:var(--acf)}
+.hmf{margin-top:34px;padding-top:14px;border-top:1px solid var(--bd);font-size:13px;color:var(--mut)}
 </style>
-<main>
-<h1>Penterjemah Braille BM</h1>
-<p class="s"><span id="verd" class="sm" style="float:right"></span>Word (.docx) → BRF Grade 2 BM untuk Index Basic-D. Semua diproses dalam pelayar anda; fail tidak dihantar ke mana-mana.</p>
+<div id="home" class="hm" hidden>
+<div class="hmh"><svg width="30" height="42" viewBox="0 0 34 46" role="img" aria-label="Logo Titik: sel braille huruf t"><g fill="currentColor"><circle cx="9" cy="8" r="5" opacity=".18"/><circle cx="9" cy="23" r="5"/><circle cx="9" cy="38" r="5"/><circle cx="25" cy="8" r="5" opacity=".18"/><circle cx="25" cy="23" r="5"/><circle cx="25" cy="38" r="5" opacity=".18"/></g></svg>
+<div><b>Titik</b><small>Penterjemah Braille Kita</small></div><span id="hverd" class="sm" style="margin-left:auto"></span></div>
+<h1 style="font-size:30px">Apa yang hendak diterjemah hari ini?</h1>
+<p class="s" style="max-width:640px">Pilih jenis dokumen. Muat naik fail Word, semak titik braille bersebelahan paparan biasa, kemudian cetak terus ke embosser.</p>
+<div class="hmc">
+<button class="hmk on" id="hmbm"><span class="hmt">Sedia digunakan</span><strong>Bahasa Melayu</strong><span class="sm">Braille Grade 2. Kod Braille BM Pindaan 2020, kamus sekolah, singkatan dan jadual.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
+<div class="hmk"><span class="hmt">Akan datang</span><strong>English (UEB)</strong><span class="sm">Unified English Braille Grade 2 untuk kertas Bahasa Inggeris.</span></div>
+<div class="hmk"><span class="hmt">Akan datang</span><strong>Matematik</strong><span class="sm">Persamaan dan simbol matematik dengan paparan titik pada setiap simbol.</span></div>
+<div class="hmk"><span class="hmt">Akan datang</span><strong>Sains</strong><span class="sm">Simbol kimia, unit dan formula untuk kertas Sains.</span></div>
+</div>
+<div id="hproj"></div>
+<div class="hmf"><b>Titik – Penterjemah Braille Kita</b><br>Dibangunkan oleh Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi) · SMK Pendidikan Khas Setapak, Kuala Lumpur</div>
+</div>
+<main id="app">
+<div style="margin-bottom:8px"><button class="g" id="gohome">← Skrin utama</button></div>
+<h1>Titik <span style="font-weight:400;font-size:.6em;opacity:.7">Penterjemah Braille Kita</span></h1>
+<p class="s"><span id="verd" class="sm" style="float:right"></span>Word (.docx) → Braille Grade 2 (Bahasa Melayu) untuk Index Basic-D. Semua diproses dalam pelayar anda; fail tidak dihantar ke mana-mana.</p>
 <p class="sm" style="margin:-6px 0 8px">Dibangunkan oleh <b>Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi)</b> · SMK Pendidikan Khas Setapak, Kuala Lumpur</p>
 <div class="card"><div id="drop" tabindex="0">Seret fail .docx ke sini, atau klik untuk pilih<input id="file" type="file" accept=".docx" hidden></div><div id="fname" class="sm" style="margin-top:8px"></div></div>
 <div class="card"><h2>Tetapan</h2><div class="row">
@@ -83,12 +110,15 @@ canvas.sc{vertical-align:middle;display:inline-block}
 <p class="sm" style="margin-top:0">Murid buta tak nampak gambar, jadi setiap gambar mesti ada deskripsi. Taip sendiri, atau minta Claude cadangkan, kemudian semak dan betulkan. Deskripsi akan masuk di tempat gambar.</p><div id="imgs"></div></div>
 <div class="card"><h2>Kamus sekolah</h2>
 <p class="sm" style="margin-top:0">Perkataan yang braille-nya mengikut kehendak sekolah dan bukan terjemahan automatik. Cari, tambah atau betulkan. Braille ditunjuk sebagai titik, jadi tidak perlu tahu kod huruf. Disimpan dalam pelayar ini; guna Eksport untuk kongsi dengan guru lain.</p>
+<div class="row" style="margin-bottom:8px"><span class="sm" id="dof"></span></div>
 <div class="row" style="margin-bottom:8px"><input id="df" type="text" placeholder="cari perkataan" aria-label="Cari dalam kamus" style="width:180px"><label><input id="dbase" type="checkbox"> Cari juga dalam kamus asas</label><span class="sm" id="dc"></span><button id="dnew" style="margin-left:auto">Tambah perkataan</button></div>
 <div class="wl"><table><thead><tr><th>Perkataan</th><th>Braille</th><th></th></tr></thead><tbody id="db"></tbody></table></div>
 <div class="row" style="margin-top:10px"><input id="tw" type="text" placeholder="uji satu perkataan" aria-label="Uji perkataan"><span id="dres" class="sm"></span><span id="sm2" class="sm" hidden>Muat turun tidak tersedia dalam paparan ini. Buka halaman ini dalam Claude.</span></div>
+<div class="row" style="margin-top:10px"><button class="g" id="dcad">Cadangkan perkataan saya kepada penyelia</button><span class="sm" id="dcads"></span></div>
 <details style="margin-top:10px"><summary class="sm">Lanjutan: sunting teks, eksport dan import</summary>
 <p class="sm">Satu baris satu entri: <code>perkataan=kod braille</code> (ASCII). Untuk pengguna yang biasa dengan kod.</p>
 <textarea id="dict" spellcheck="false"></textarea>
+<div class="row" style="margin-top:8px"><button class="g" id="dgab">Penyelia: gabung fail cadangan</button><input id="dgabf" type="file" accept=".txt" multiple hidden><span class="sm" id="dgabs"></span></div>
 <div class="row" style="margin-top:8px"><button class="g" id="dexp">Eksport</button><button class="g" id="dimp">Import</button><input id="dfile" type="file" accept=".txt" hidden></div></details></div>
 <div class="card"><h2>Betulkan atau tambah perkataan</h2>
 <p class="sm" style="margin-top:0">Pilih perkataan daripada dokumen (senarai di bawah) atau taip perkataan baru. Masukkan kod braille dengan 6 kekunci, atau klik titik. Tidak perlu ingat kod teks.</p>
@@ -1170,7 +1200,10 @@ const toText=o=>Object.keys(o).map(k=>k+'='+o[k]).join('\n');
 const fromText=t=>{const o={};t.split(/\r?\n/).forEach(l=>{const m=l.match(/^\s*([^=#\s][^=]*?)\s*=\s*(\S+)\s*$/);if(m)o[m[1].toLowerCase()]=m[2]});return o};
 const saved=LS.get('brl_kamus_sekolah');
 $('dict').value=saved!==null?saved:toText(SCH);
-const dict=()=>E.B.withOverrides(BASE,fromText($('dict').value));
+let OFF=fromText(LS.get('brl_kamus_rasmi')||'');
+const KAMUS_URL='https://raw.githubusercontent.com/CikguIkhwanSuhaimi/braille-bm-kemaskini/main/kamus.txt';
+const loc=()=>{const t=fromText($('dict').value),o={};for(const k in t){if(k in OFF&&SCH[k]===t[k])continue;o[k]=t[k]}return o};
+const dict=()=>E.B.withOverrides(E.B.withOverrides(BASE,OFF),loc());
 let punct={};try{punct=JSON.parse(LS.get('brl_punct')||'{}')||{}}catch(e){punct={}}
 let xml=null,last=null,name='kertas',imgDesc={},imgBlobs={},edits={},editing={};
 // ---- muat turun ----
@@ -1742,9 +1775,33 @@ $('pcopy').onclick=()=>{if(!last)return;const ip=$('eip').value.trim();
   const b64=btoa(brf());
   toClip("$b=[Convert]::FromBase64String('"+b64+"');$c=New-Object Net.Sockets.TcpClient('"+ip+"',9100);$s=$c.GetStream();$s.Write($b,0,$b.Length);$s.Flush();$s.Close();$c.Close()",'Perintah PowerShell (tampal dalam tetingkap PowerShell dan tekan Enter)')};
 
-if(DESK){try{window.embosser.version().then(v=>{$('verd').textContent='Aplikasi desktop, versi '+v})}catch(e){}$('pcopy').hidden=true;$('pcopy').before($('pdirect'));$('pdirect').className='';$('pnote').hidden=true;const dt=$('phint').closest('details');if(dt)dt.hidden=true;$('pdirect').textContent='Cetak ke embosser'}
+if(DESK){try{window.embosser.version().then(v=>{$('verd').textContent='Aplikasi desktop, versi '+v;$('hverd').textContent='Versi '+v})}catch(e){}$('pcopy').hidden=true;$('pcopy').before($('pdirect'));$('pdirect').className='';$('pnote').hidden=true;const dt=$('phint').closest('details');if(dt)dt.hidden=true;$('pdirect').textContent='Cetak ke embosser'}
 // ---- nombor muka surat ----
 {const g=k=>LS.get(k);if(g('brl_pnpos'))$('pnpos').value=g('brl_pnpos');if(g('brl_pnstart'))$('pnstart').value=g('brl_pnstart');if(g('brl_pnfirst')!==null)$('pnfirst').checked=g('brl_pnfirst')==='1';if(['medium','big','none'].includes(g('brl_pnprint')))$('pnprint').value=g('brl_pnprint');
  ['pnpos','pnstart','pnfirst','pnprint'].forEach(i=>$(i).addEventListener('change',()=>{LS.set('brl_pnprint',$('pnprint').value);LS.set('brl_pnpos',$('pnpos').value);LS.set('brl_pnstart',$('pnstart').value);LS.set('brl_pnfirst',$('pnfirst').checked?'1':'0')}))}
+
+// ---- kamus rasmi sekolah (GitHub) + cadangan ----
+function offStat(t){const n=Object.keys(OFF).length;$('dof').textContent=t||(n?'Kamus rasmi sekolah: '+n+' perkataan.':'Kamus rasmi sekolah: belum ada.')}
+async function loadOff(){let m='';try{const r=await fetch(KAMUS_URL,{cache:'no-store'});if(!r.ok)throw new Error(r.status);const t=await r.text();OFF=fromText(t);LS.set('brl_kamus_rasmi',t);m='Kamus rasmi sekolah: '+Object.keys(OFF).length+' perkataan (dikemas kini).'}catch(e){m=Object.keys(OFF).length?'Kamus rasmi sekolah: '+Object.keys(OFF).length+' perkataan (salinan terakhir, tiada sambungan).':'Kamus rasmi sekolah: belum ada atau tiada sambungan.'}offStat(m);try{drawDict();if(typeof xml!=='undefined'&&xml)go()}catch(e){}}
+$('dcad').onclick=()=>{const l=loc(),o=[];for(const k in l){if(SCH[k]===l[k]||OFF[k]===l[k])continue;o.push(k+'='+l[k])}
+  if(!o.length){$('dcads').textContent='Tiada perkataan baharu untuk dicadangkan.';return}
+  dl('cadangan_kamus_'+new Date().toISOString().slice(0,10)+'.txt','# Cadangan perkataan untuk kamus rasmi Titik\n# '+o.length+' perkataan\n'+o.join('\n')+'\n');$('dcads').textContent=o.length+' perkataan dalam fail cadangan. Hantar fail itu kepada penyelia.'};
+$('dgab').onclick=()=>$('dgabf').click();
+$('dgabf').onchange=async e=>{const fs=[...e.target.files];if(!fs.length)return;const m=Object.assign({},OFF),seen={},conf=[];let add=0,chg=0;
+  for(const f of fs){const t=fromText(await f.text());for(const k in t){if(seen[k]&&seen[k]!==t[k])conf.push(k);seen[k]=t[k];m[k]=t[k]}}
+  for(const k in m){if(!(k in OFF))add++;else if(OFF[k]!==m[k])chg++}
+  const keys=Object.keys(m).sort();dl('kamus.txt','# Kamus rasmi Titik – SMK Pendidikan Khas Setapak\n# '+keys.length+' perkataan\n'+keys.map(k=>k+'='+m[k]).join('\n')+'\n');
+  $('dgabs').textContent=add+' baharu, '+chg+' diubah'+(conf.length?'. Pertembungan antara fail (yang terakhir digunakan): '+[...new Set(conf)].join(', '):'')+'. Upload kamus.txt ke GitHub.';e.target.value=''};
+offStat();loadOff();
+try{if(/^https?:$/.test(location.protocol)&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+
+// ---- skrin utama ----
+const showHome=!navigator.webdriver||location.hash==='#home';
+function drawHome(){let n=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('brl_proj_')===0){let c=0;try{c=Object.keys((JSON.parse(localStorage.getItem(k))||{}).edits||{}).length}catch(e){}n.push([k.slice(9),c])}}}catch(e){}
+  $('hproj').innerHTML=n.length?'<h2 style="font-size:16px;margin:0 0 8px">Projek tersimpan</h2><div class="card" style="padding:0">'+n.map(([a,c])=>'<div class="row" style="padding:12px 16px;border-bottom:1px solid var(--bd)"><b style="flex:1">'+esc(a)+'</b><span class="sm">'+c+' suntingan</span></div>').join('')+'</div><p class="sm">Untuk menyambung, muat naik semula fail Word yang sama. Suntingan akan dipulihkan.</p>':''}
+function openApp(){$('home').hidden=true;$('app').hidden=false;scrollTo(0,0)}
+function openHome(){drawHome();$('hverd').textContent=$('verd').textContent?$('verd').textContent.replace('Aplikasi desktop, ',''):'';$('home').hidden=false;$('app').hidden=true;scrollTo(0,0)}
+$('hmbm').onclick=openApp;$('gohome').onclick=openHome;
+if(showHome)openHome();
 })();
 </script>
