@@ -1,5 +1,5 @@
 {
-  "version": "1.7.1",
-  "sha256": "f2471ae4c8c1cc13cb4c62e7afae618c1de4af9c6d661a290634a4607a553d74",
-  "notes": "Studio Rajah: skrin khusus (tanpa tetapan dokumen), tambah gambar, saiz muka surat"
+  "version": "1.7.2",
+  "sha256": "3e070d3be857953724142a87e014fd476a5782ef0aa6b2148d2a5ffaba206077",
+  "notes": "Label teks pada rajah: huruf besar, nombor dan perkataan pendek"
 }
