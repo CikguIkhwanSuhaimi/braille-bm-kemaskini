@@ -80,6 +80,8 @@ body.studio main>.card:not(#imgcard):not(#stbar),body.studio main>details,body.s
 .libh select{padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg);font:inherit}
 .libf{display:flex;gap:6px;flex-wrap:wrap}.libf button{padding:6px 12px;border-radius:99px;background:transparent;color:var(--fg);border:1px solid var(--bd)}.libf button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .libp{max-width:1400px;margin:0 auto 12px;padding:10px 14px;border-radius:10px;background:var(--warn);border:1px solid var(--warnb)}
+.libsel{max-width:1400px;margin:0 auto 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.libsel button{padding:6px 12px;font-size:14px}
+.libg.sz-s{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))!important}.libg.sz-l{grid-template-columns:repeat(auto-fill,minmax(420px,1fr))!important}.lc .lsl{font-size:13px;display:flex;gap:6px;align-items:center}
 .libg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;max-width:1400px;margin:0 auto}
 .lc{background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
 .lc canvas{width:100%;padding:8px;display:block;background:var(--card);border-bottom:1px solid var(--bd);cursor:zoom-in}
@@ -120,10 +122,11 @@ dialog#libd select,dialog#libd input{padding:7px;border:1px solid var(--bd);bord
 <div class="libh"><div><b>Pustaka Rajah</b><div class="sm" id="libsub"></div></div>
 <input id="libq" type="search" placeholder="Cari tajuk, topik atau tag" aria-label="Cari rajah">
 <div class="libf" id="libsc" role="group" aria-label="Sumber pustaka"></div><div class="libf" id="libf" role="group" aria-label="Penapis mata pelajaran"></div>
-<select id="libs" aria-label="Isih"><option value="new">Terkini</option><option value="az">Tajuk A–Z</option><option value="topik">Topik</option></select>
-<button class="g" id="libx">Eksport pustaka</button><button class="g" id="libi">Import</button><input id="libif" type="file" accept=".zip,.pustaka" hidden>
+<select id="libz2" aria-label="Saiz kad"><option value="s">Kecil</option><option value="m">Sederhana</option><option value="l">Besar</option></select><select id="libs" aria-label="Isih"><option value="new">Terkini</option><option value="az">Tajuk A–Z</option><option value="topik">Topik</option></select>
+<label class="sm">IP embosser <input type="text" id="libip" inputmode="decimal" style="width:130px" placeholder="192.168.0.240"></label><button class="g" id="libx">Eksport pustaka</button><button class="g" id="libi">Import</button><input id="libif" type="file" accept=".zip,.pustaka" hidden>
 <button id="libc">Tutup</button></div>
 <div id="libp" class="libp" hidden></div>
+<div id="libsel" class="libsel"></div>
 <div id="libg" class="libg"></div>
 </div>
 <dialog id="libd"><form method="dialog" id="libdf"><h3 style="margin:0 0 10px">Simpan ke Pustaka</h3>
@@ -2221,7 +2224,7 @@ document.addEventListener('paste',e=>{const fs=[...(e.clipboardData&&e.clipboard
 const pdb=()=>new Promise((ok,no)=>{try{const r=indexedDB.open('titik_pustaka',1);r.onupgradeneeded=()=>r.result.createObjectStore('rajah',{keyPath:'id'});r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)}catch(e){no(e)}});
 const ptx=async(m,fn)=>{const d=await pdb();return new Promise((ok,no)=>{const t=d.transaction('rajah',m),q=fn(t.objectStore('rajah'));t.oncomplete=()=>ok(q&&q.result);t.onerror=()=>no(t.error)})};
 const libAll=()=>ptx('readonly',o=>o.getAll()).then(a=>a||[]).catch(()=>[]),libPut=it=>ptx('readwrite',o=>o.put(it)),libDel=id=>ptx('readwrite',o=>o.delete(id));
-let LQ='',LF='Semua',LSORT='new',LPICK=null,LSCOPE='saya',PUS=[];
+let LSZ=(LS.get('brl_libsz')||'m'),LQ='',LF='Semua',LSORT='new',LPICK=null,LSCOPE='saya',PUS=[];
 const PUS_BASES=[...(/^https?:$/.test(location.protocol)?['pustaka/']:[]),'https://cikguikhwansuhaimi.github.io/braille-bm-kemaskini/pustaka/','https://raw.githubusercontent.com/CikguIkhwanSuhaimi/braille-bm-kemaskini/main/pustaka/','https://cdn.jsdelivr.net/gh/CikguIkhwanSuhaimi/braille-bm-kemaskini@main/pustaka/'];
 try{PUS=JSON.parse(LS.get('brl_pustaka_rasmi')||'[]')||[]}catch(e){PUS=[]}
 async function loadPus(){for(const b of PUS_BASES){try{const r=await fetch(b+'index.json',{cache:'no-store'});if(!r.ok)continue;const t=await r.text();if(/<html/i.test(t.slice(0,300)))continue;const a=JSON.parse(t);if(!Array.isArray(a))continue;PUS=a.filter(i=>i&&i.id&&Array.isArray(i.dots)).map(i=>Object.assign(i,{rasmi:true}));try{LS.set('brl_pustaka_rasmi',JSON.stringify(PUS))}catch(e){}break}catch(e){}}if(!$('lib').hidden)libRender()}
@@ -2238,9 +2241,34 @@ function libSave(t,b,say2){
   dlg.showModal();$('ld_t').focus()}
 function libThumb(cv,it,SC,col){const W=it.W,H=it.H;cv.width=Math.round(W*K.CP*SC);cv.height=Math.round(((H-1)*K.LP+2*K.DP+4)*SC);const g=cv.getContext('2d');g.fillStyle=col||getComputedStyle(document.body).color;const r=Math.max(.9,.8*SC);
   for(let y=0;y<it.dots.length;y++){const row=it.dots[y];for(let x=0;x<row.length;x++)if(row[x]==='1'){const px=(x>>1)*K.CP+(x&1)*K.DP,py=((y/3)|0)*K.LP+(y%3)*K.DP;g.beginPath();g.arc((px+.5)*SC+1,(py+.5)*SC+1,r,0,6.3);g.fill()}}}
-function libZoom(it){let d=document.getElementById('libz');if(!d){d=document.createElement('dialog');d.id='libz';d.style.cssText='border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--fg);padding:14px;max-width:96vw;max-height:94vh;overflow:auto';document.body.append(d)}
-  d.innerHTML='<div class="row" style="justify-content:space-between"><b></b><button type="button" class="g">Tutup</button></div><canvas style="max-width:100%;display:block;margin-top:8px"></canvas>';d.querySelector('b').textContent=it.title;d.querySelector('button').onclick=()=>d.close();libThumb(d.querySelector('canvas'),it,3);d.showModal()}
-function libBrf(it){const c=cfg(),lines=K.pageLines({dots:it.dots,title:it.title,key:it.key},c.cols,c.rows,trb);dl((it.title||'rajah').replace(/[^\w\-]+/g,'_')+'.brf',new Blob([lines.join('\r\n')+'\r\n\f']))}
+let LCUR=[],LI=0,LSEL=new Set();
+function libView(i){LI=i;const it=LCUR[i];if(!it)return;let d=document.getElementById('libz');
+  if(!d){d=document.createElement('dialog');d.id='libz';d.style.cssText='border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--fg);padding:14px;width:min(96vw,920px);max-height:96vh;overflow:auto';
+    d.innerHTML='<div class="row" style="justify-content:space-between"><b class="vt"></b><span class="sm vc"></span><button type="button" class="g vx">Tutup</button></div><div class="vcv" style="touch-action:pan-y"><canvas style="max-width:100%;max-height:56vh;width:auto;height:auto;display:block;margin:8px auto 0"></canvas></div><div class="sm vm" style="margin:6px 0"></div><div class="row"><button type="button" class="g vp">◀ Sebelum</button><button type="button" class="g vn">Seterusnya ▶</button></div><div class="la row vact" style="margin-top:10px"></div><div class="sm vs" style="margin-top:8px"></div>';
+    document.body.append(d);const go=n=>{if(!LCUR.length)return;libView((LI+n+LCUR.length)%LCUR.length)};
+    d.querySelector('.vx').onclick=()=>d.close();d.querySelector('.vp').onclick=()=>go(-1);d.querySelector('.vn').onclick=()=>go(1);
+    d.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'){go(-1);e.preventDefault()}else if(e.key==='ArrowRight'){go(1);e.preventDefault()}});
+    let sx=null;const cv=d.querySelector('.vcv');cv.addEventListener('pointerdown',e=>{sx=e.clientX});cv.addEventListener('pointerup',e=>{if(sx!=null&&Math.abs(e.clientX-sx)>60)go(e.clientX<sx?1:-1);sx=null})}
+  d.querySelector('.vt').textContent=it.title;d.querySelector('.vc').textContent=(i+1)+' / '+LCUR.length;d.querySelector('.vm').textContent=[it.rasmi?'Rasmi sekolah':'',it.subjek,it.topik,(it.tags||[]).join(', ')].filter(Boolean).join(' · ');
+  libThumb(d.querySelector('canvas'),it,3);const st=d.querySelector('.vs');st.textContent='';const act=d.querySelector('.vact');act.innerHTML='';libActions(it,act,m=>{st.textContent=m},()=>{d.close();libRender()});
+  if(!d.open)d.showModal()}
+function libActions(it,la,st,after){const bt=(txt,fn,pri)=>{const b=document.createElement('button');b.type='button';b.textContent=txt;if(!pri)b.className='g';b.onclick=fn;la.append(b);return b};
+  if(LPICK){bt('Guna untuk Gambar '+LPICK,()=>libUse(it,LPICK),1);return}
+  if(it.rasmi){bt('Salin ke pustaka saya',async()=>{const sb=await psrc(it);await libPut(Object.assign({},it,{id:'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),rasmi:false,src:sb,at:Date.now()}));await libCount();st('Disalin ke Pustaka saya: '+it.title)},1)}
+  else if(it.src)bt('Edit',()=>{const z=document.getElementById('libz');if(z&&z.open)z.close();libEdit(it)},1);
+  bt('Cetak',()=>libPrint(it,st),!it.rasmi&&!it.src);bt('BRF',()=>libBrf(it));bt('PNG PIAF',()=>libPiaf(it));
+  if(!it.rasmi)bt('Padam',async()=>{if(confirm('Padam "'+it.title+'" daripada Pustaka?')){await libDel(it.id);LSEL.delete(it.id);after?after():libRender()}})}
+function libText(items){const c=cfg(),pages=[];for(const it of items){pages.push(K.pageLines({dots:it.dots,title:it.title,key:it.key},c.cols,c.rows,trb));if(c.interpoint)pages.push([''])}return E.L.toBRF(pages,1,Object.assign(c,{interpoint:false}))}
+function libBrf(items){items=Array.isArray(items)?items:[items];dl((items.length>1?'Rajah_'+items.length+'_muka':(items[0].title||'rajah').replace(/[^\w\-]+/g,'_'))+'.brf',new Blob([libText(items)]))}
+async function libPrint(items,st){items=Array.isArray(items)?items:[items];const text=libText(items),ip=($('libip').value||'').trim();
+  const u=new Uint8Array(text.length);for(let i=0;i<text.length;i++)u[i]=text.charCodeAt(i)&255;
+  if(DESK||SRV){if(DESK&&!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){st('Taip IP embosser dahulu (cth 192.168.0.240). Tekan HELP dan 10 pada embosser untuk melihatnya.');$('libip').focus();return}
+    st('Menghantar '+items.length+' rajah ke embosser...');
+    try{if(DESK){const r=await window.embosser.print(ip,u);st(r&&r.ok?'Dihantar ke embosser ('+r.bytes+' bait). Embosser akan mula sebentar lagi.':'Gagal: '+((r&&r.error)||'tidak diketahui'))}
+      else{const r=await fetch(SBASE+'/print',{method:'POST',body:u});const j=await r.json().catch(()=>({}));st(r.ok?'Dihantar ke embosser ('+(j.bytes||u.length)+' bait).':'Gagal: '+(j.error||r.status))}}catch(e){st('Gagal: '+e.message)}return}
+  if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){st('Taip IP embosser dahulu (cth 192.168.0.240).');$('libip').focus();return}
+  const cmd="$b=[Convert]::FromBase64String('"+btoa(text)+"');$c=New-Object Net.Sockets.TcpClient('"+ip+"',9100);$s=$c.GetStream();$s.Write($b,0,$b.Length);$s.Flush();$s.Close();$c.Close()";
+  try{await navigator.clipboard.writeText(cmd);st('Perintah PowerShell disalin. Tampal dalam PowerShell pada PC yang bersambung ke embosser, kemudian Enter. (Pelayar tak boleh hantar terus; aplikasi desktop atau APK boleh.)')}catch(e){const p=$('libp');p.hidden=false;p.innerHTML='';const t=document.createElement('textarea');t.value=cmd;t.style.minHeight='70px';p.append(document.createTextNode('Salin perintah ini dan tampal dalam PowerShell:'),t);t.select();st('Salin perintah di atas.')}}
 async function libPiaf(it){const nm=(it.title||'rajah').replace(/[^\w\-]+/g,'_')+'_piaf.png';const sb=await psrc(it);
   if(sb){const G=await tacGray(sb,2400),cv=document.createElement('canvas');cv.width=G.w;cv.height=G.h;const g=cv.getContext('2d'),id=g.createImageData(G.w,G.h);for(let i=0;i<G.w*G.h;i++){const v=((G.gr[i]<it.opt.thr)!==!!it.opt.inv)?0:255;id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v;id.data[i*4+3]=255}g.putImageData(id,0,0);dl(nm,await new Promise(ok=>cv.toBlob(ok,'image/png')))}
   else{const cv=document.createElement('canvas');libThumb(cv,it,4,'#000');dl(nm,await new Promise(ok=>cv.toBlob(ok,'image/png')))}}
@@ -2255,15 +2283,17 @@ async function libRender(){
   a.sort(LSORT==='az'?(x,y)=>x.title.localeCompare(y.title):LSORT==='topik'?(x,y)=>(x.topik||'~').localeCompare(y.topik||'~')||x.title.localeCompare(y.title):(x,y)=>y.at-x.at);
   $('libsub').textContent=all.length?(a.length+' daripada '+all.length+' rajah'+(LSCOPE==='sekolah'?' (rasmi sekolah)':'')):(LSCOPE==='sekolah'?'Pustaka sekolah belum ada rajah atau tiada sambungan':'Belum ada rajah');
   if(!a.length){const e=document.createElement('div');e.className='lempty';e.textContent=all.length?'Tiada rajah sepadan dengan carian.':LSCOPE==='sekolah'?'Belum ada rajah rasmi sekolah, atau peranti ini tiada sambungan. Penyelia menerbitkan rajah ke sini.':'Pustaka masih kosong. Siapkan satu rajah dalam Studio Rajah atau kertas Sains, kemudian tekan Simpan ke Pustaka.';g.append(e);return}
-  a.forEach(it=>{const c=document.createElement('article');c.className='lc';const cv=document.createElement('canvas');cv.setAttribute('role','img');cv.setAttribute('aria-label','Pratonton titik: '+it.title);cv.title='Klik untuk besarkan';libThumb(cv,it,1.6);cv.onclick=()=>libZoom(it);c.append(cv);
+  LCUR=a;g.className='libg sz-'+LSZ;
+  const sb=$('libsel');sb.innerHTML='';if(!LPICK&&a.length){const sbt=(t,fn,pri)=>{const b=document.createElement('button');b.type='button';b.textContent=t;if(!pri)b.className='g';b.onclick=fn;sb.append(b)};const nsel=a.filter(i=>LSEL.has(i.id)).length;const sp=document.createElement('span');sp.className='sm';sp.textContent=nsel+' dipilih';sb.append(sp);sbt('Pilih semua',()=>{a.forEach(i=>LSEL.add(i.id));libRender()});if(nsel){sbt('Kosongkan pilihan',()=>{LSEL.clear();libRender()});sbt('Cetak terpilih',()=>libPrint(a.filter(i=>LSEL.has(i.id)),m=>{$('libsub').textContent=m}),1);sbt('BRF terpilih',()=>libBrf(a.filter(i=>LSEL.has(i.id))))}}
+  a.forEach((it,ix)=>{const c=document.createElement('article');c.className='lc';const cv=document.createElement('canvas');cv.setAttribute('role','img');cv.setAttribute('aria-label','Pratonton titik: '+it.title);cv.title='Klik untuk besarkan';libThumb(cv,it,1.6);cv.onclick=()=>libView(ix);c.append(cv);
     const lb=document.createElement('div');lb.className='lb';const h=document.createElement('h3');h.textContent=it.title;const m=document.createElement('div');m.className='sm';m.textContent=[it.subjek,it.topik].filter(Boolean).join(' · ')+(it.subjek||it.topik?' · ':'')+it.W+'×'+it.H+' sel';if(it.rasmi){const bd=document.createElement('span');bd.textContent='Rasmi sekolah';bd.style.cssText='font-size:11px;font-weight:700;color:var(--ac)';lb.append(bd)}lb.append(h,m);
     if((it.tags||[]).length){const t=document.createElement('div');t.className='lt';it.tags.forEach(x=>{const s=document.createElement('span');s.textContent=x;t.append(s)});lb.append(t)}
-    const la=document.createElement('div');la.className='la';const bt=(txt,fn,pri)=>{const b=document.createElement('button');b.type='button';b.textContent=txt;if(!pri)b.className='g';b.onclick=fn;la.append(b);return b};
-    if(LPICK)bt('Guna untuk Gambar '+LPICK,()=>libUse(it,LPICK),1);else if(it.rasmi){bt('Salin ke pustaka saya',async()=>{const sb=await psrc(it);await libPut(Object.assign({},it,{id:'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),rasmi:false,src:sb,at:Date.now()}));await libCount();$('libsub').textContent='Disalin ke Pustaka saya: '+it.title},1);bt('BRF',()=>libBrf(it));bt('PNG PIAF',()=>libPiaf(it))}else{if(it.src)bt('Edit',()=>libEdit(it),1);bt('BRF',()=>libBrf(it));bt('PNG PIAF',()=>libPiaf(it));bt('Padam',async()=>{if(confirm('Padam "'+it.title+'" daripada Pustaka?')){await libDel(it.id);libRender()}})}
-    lb.append(la);c.append(lb);g.append(c)})}
+    if(!LPICK){const lab=document.createElement('label');lab.className='lsl';const cb=document.createElement('input');cb.type='checkbox';cb.checked=LSEL.has(it.id);cb.onchange=()=>{cb.checked?LSEL.add(it.id):LSEL.delete(it.id);libRender()};lab.append(cb,document.createTextNode('Pilih'));lb.append(lab)}
+    const la=document.createElement('div');la.className='la';libActions(it,la,m=>{$('libsub').textContent=m});lb.append(la);c.append(lb);g.append(c)})}
 function libClose(){$('lib').hidden=true;document.body.style.overflow=''}
 function openLib(o){LPICK=o&&o.pick||null;const p=$('libp');p.hidden=!LPICK;p.textContent=LPICK?'Pilih rajah untuk Gambar '+LPICK+'. Titik dan tajuk akan disalin ke kertas ini; rajah dalam Pustaka tak berubah.':'';$('lib').hidden=false;document.body.style.overflow='hidden';libRender();$('libq').focus()}
-$('hlib').onclick=()=>openLib();$('hsk').onclick=async()=>studioFiles([await blankFile()]);$('libc').onclick=libClose;$('libq').oninput=e=>{LQ=e.target.value;libRender()};$('libs').onchange=e=>{LSORT=e.target.value;libRender()};
+$('hlib').onclick=()=>openLib();$('hsk').onclick=async()=>studioFiles([await blankFile()]);$('libc').onclick=libClose;$('libz2').value=LSZ;$('libz2').onchange=e=>{LSZ=e.target.value;LS.set('brl_libsz',LSZ);libRender()};$('libip').value=LS.get('brl_eip')||'192.168.0.240';$('libip').oninput=()=>{LS.set('brl_eip',$('libip').value.trim());$('eip').value=$('libip').value.trim()};
+$('libq').oninput=e=>{LQ=e.target.value;libRender()};$('libs').onchange=e=>{LSORT=e.target.value;libRender()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('lib').hidden&&!document.querySelector('dialog[open]'))libClose()});
 $('libx').onclick=async()=>{const a=await libAll();if(!a.length){$('libsub').textContent='Tiada rajah untuk dieksport.';return}const z=new JSZip();z.file('index.json',JSON.stringify(a.map(({src,...r})=>r)));for(const it of a)if(it.src)z.file('img/'+it.id+'.png',await it.src.arrayBuffer());const d=new Date();dl('Pustaka_Rajah_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.zip',await z.generateAsync({type:'blob'}))};
 $('libi').onclick=()=>$('libif').click();

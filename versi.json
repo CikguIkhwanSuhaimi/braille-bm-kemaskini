@@ -1,5 +1,5 @@
 {
-  "version": "1.8.0",
-  "sha256": "200cf13389adf34f7b42dfe90fcf6c00ad2a4181a7ae17a480ae9fe9401c240e",
-  "notes": "Rajah timbul: saiz dan kedudukan gambar, alat lakaran (garis, segi empat, bulatan), buat asal, lakaran kosong"
+  "version": "1.9.0",
+  "sha256": "c82521c720c5dc83a6e54417934ee8e0ea4aacfd3a9e71a1ff9e11a518772805",
+  "notes": "Pustaka: paparan galeri (Sebelum/Seterusnya), saiz kad, pilih beberapa, cetak terus ke embosser"
 }
