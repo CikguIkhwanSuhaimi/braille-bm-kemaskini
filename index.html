@@ -1838,7 +1838,7 @@ tdraw('');
 
 window.__bukaTitik=(b64,n)=>{const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return bukaTitik(new File([u],n||'projek.titik'))};
 // ---- skrin utama ----
-const showHome=!navigator.webdriver||location.hash==='#home';
+const showHome=location.hash!=='#app'&&(!navigator.webdriver||location.hash==='#home');
 async function drawHome(){const m={};
   try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('brl_proj_')===0){let c=0,t=0;try{const o=JSON.parse(localStorage.getItem(k))||{};c=Object.keys(o.edits||{}).length;t=o.at||0}catch(e){}m[k.slice(9)]={c,t,has:false}}}}catch(e){}
   for(const k of await idbKeys()){const v=await idbGet(k);m[k]=Object.assign(m[k]||{c:0,t:0},{has:!!v,t:Math.max((m[k]||{}).t||0,(v&&v.t)||0)})}
@@ -1853,7 +1853,7 @@ function openHome(){drawHome();$('hverd').textContent=$('verd').textContent?$('v
 const temaUpd=()=>{$('tema').textContent=document.documentElement.getAttribute('data-theme')==='dark'?'Mod cerah':'Mod gelap'};
 $('tema').onclick=()=>{const d=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',d);LS.set('brl_tema',d);temaUpd();try{if(typeof xml!=='undefined'&&xml)go2()}catch(e){}};temaUpd();
 $('hopen').onclick=()=>$('hfile').click();$('hfile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)bukaTitik(f)};
-$('hmbm').onclick=openApp;$('gohome').onclick=openHome;
+$('hmbm').onclick=()=>{if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('gohome').onclick=openHome;
 if(showHome)openHome();
 })();
 </script>

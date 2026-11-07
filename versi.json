@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
-  "sha256": "fee14d868fa931e45faf9d75aeaf780b5b981e96fb9f4f9fb3dab21b90febfbb",
-  "notes": "Templat tetapan, buka .titik dengan klik dua kali, pemasang Windows"
+  "version": "1.3.1",
+  "sha256": "50aff6e9b1d85fed174a6104c0b1b7850fd87f73276d9021ad4a3935a29dc2ff",
+  "notes": "Mula = mulakan kosong; sambung projek melalui Projek tersimpan"
 }
