@@ -1,5 +1,5 @@
 {
-  "version": "1.4.0",
-  "sha256": "ec66f6a608ba2fa3de0b752540c187b86bc0d0baef73e800001b5fddba37e756",
-  "notes": "Rajah timbul: gambar jadi muka surat titik (edit titik, label, padam kotak, panduan gambar asal, kunci) dan PNG untuk PIAF"
+  "version": "1.4.1",
+  "sha256": "fe085b7014a0b06a73c5d3c63d1ef221d6bab22729f81167bd012cc3d7d6a4e3",
+  "notes": "Kad Sains diaktifkan (guna modul BM + rajah timbul)"
 }

@@ -91,7 +91,7 @@ canvas.sc{vertical-align:middle;display:inline-block}
 <button class="hmk on" id="hmbm"><span class="hmt">Sedia digunakan</span><strong>Bahasa Melayu</strong><span class="sm">Braille Grade 2. Kod Braille BM Pindaan 2020, kamus sekolah, singkatan dan jadual.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
 <div class="hmk"><span class="hmt">Akan datang</span><strong>English (UEB)</strong><span class="sm">Unified English Braille Grade 2 untuk kertas Bahasa Inggeris.</span></div>
 <div class="hmk"><span class="hmt">Akan datang</span><strong>Matematik</strong><span class="sm">Persamaan dan simbol matematik dengan paparan titik pada setiap simbol.</span></div>
-<div class="hmk"><span class="hmt">Akan datang</span><strong>Sains</strong><span class="sm">Simbol kimia, unit dan formula untuk kertas Sains.</span></div>
+<button class="hmk on" id="hmsn"><span class="hmt">Sedia digunakan</span><strong>Sains</strong><span class="sm">Kertas Sains dwibahasa dengan rajah timbul. Teks guna kod BM; simbol kimia dan unit khas masih dalam semakan, jadi semak pratonton.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
 </div>
 <div class="row" style="margin-bottom:18px"><button class="g" id="hopen">Buka fail projek (.titik)</button><input id="hfile" type="file" accept=".titik" hidden><span class="sm">Fail projek daripada peranti lain atau rakan guru.</span></div>
 <div id="hproj"></div>
@@ -2005,7 +2005,7 @@ function openHome(){drawHome();$('hverd').textContent=$('verd').textContent?$('v
 const temaUpd=()=>{$('tema').textContent=document.documentElement.getAttribute('data-theme')==='dark'?'Mod cerah':'Mod gelap'};
 $('tema').onclick=()=>{const d=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',d);LS.set('brl_tema',d);temaUpd();try{if(typeof xml!=='undefined'&&xml)go2()}catch(e){}};temaUpd();
 $('hopen').onclick=()=>$('hfile').click();$('hfile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)bukaTitik(f)};
-$('hmbm').onclick=()=>{if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('gohome').onclick=openHome;
+$('hmbm').onclick=$('hmsn').onclick=()=>{if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('gohome').onclick=openHome;
 if(showHome)openHome();
 })();
 </script>
