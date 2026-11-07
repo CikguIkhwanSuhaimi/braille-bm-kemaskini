@@ -111,7 +111,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 <div class="hmc">
 <button class="hmk on" id="hmbm"><span class="hmt">Sedia digunakan</span><strong>Bahasa Melayu</strong><span class="sm">Braille Grade 2. Kod Braille BM Pindaan 2020, kamus sekolah, singkatan dan jadual. Rajah dengan deskripsi.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
 <button class="hmk on" id="hmen"><span class="hmt">Sedia digunakan</span><strong>English (UEB)</strong><span class="sm">Unified English Braille Grade 2 untuk kertas Bahasa Inggeris. Susun atur dan cetakan sama seperti Bahasa Melayu. Semak pratonton, terutama singkatan dan nama khas.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
-<div class="hmk"><span class="hmt">Akan datang</span><strong>Matematik</strong><span class="sm">Persamaan dan simbol matematik dengan paparan titik pada setiap simbol.</span></div>
+<button class="hmk on" id="hmmt"><span class="hmt">Versi awal – sila semak</span><strong>Matematik</strong><span class="sm">Persamaan Word (pecahan, kuasa, punca, simbol) ditukar kepada Kod Nemeth. Teks biasa kekal Braille BM. Jadual simbol belum disahkan dengan kertas DBT sebenar.</span></button>
 <button class="hmk on" id="hmsn"><span class="hmt">Sedia digunakan</span><strong>Sains</strong><span class="sm">Kertas Sains dwibahasa dengan rajah timbul (grafik titik) selain deskripsi. Teks guna kod BM; simbol kimia dan unit khas masih dalam semakan, jadi semak pratonton.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
 <div class="hmk on" id="hmstc" style="cursor:default"><span class="hmt">Baharu</span><strong>Studio Rajah</strong><span class="sm">Tukar gambar (imej, tangkap layar, tampal) atau lakaran sendiri kepada muka surat rajah timbul. Tak perlu fail Word. Simpan dalam Pustaka untuk guna semula.</span>
 <div class="row" style="margin-top:auto"><button id="hmst" type="button">Pilih gambar</button><button class="g" id="hsk" type="button">Lakaran baharu</button><button class="g" id="hlib" type="button">Pustaka Rajah <span id="hlibn"></span></button></div></div><input id="hstf" type="file" accept="image/*" multiple hidden>
@@ -731,7 +731,8 @@ function numFormats(nx) {
   (nx || '').replace(/<w:num\b[^>]*w:numId="(\d+)"[^>]*>[\s\S]*?<w:abstractNumId w:val="(\d+)"/g, (m, id, a) => { num[id] = a; return m; });
   return (numId, ilvl) => { const a = abs[num[numId]]; return a ? a[ilvl] || '' : ''; };
 }
-function readParagraphs(xml, numXml) {
+function readParagraphs(xml, numXml, opts) {
+  if (opts && opts.math) { const MM = require('./math.js'); const esc = x => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); xml = xml.replace(/<m:oMath>[\s\S]*?<\/m:oMath>/g, om => '<w:r><w:t xml:space="preserve">' + esc(MM.fromOmml(om)) + '</w:t></w:r>'); }
   const nfmt = numFormats(numXml);
   const warnings = [];
   const PRINT_ONLY = /Untuk Kegunaan Pemeriksa|\bNama\b|No\.?\s*Kad|Disemak|Verifikasi|Markah Penuh|Markah Diperoleh|For Examiner|Examiner'?s Use|Index Number|Candidate'?s? Name|Marks Awarded/i;
@@ -1606,9 +1607,256 @@ function text(src, dict, punct) {
 module.exports = { text, word, segment, shortform, SHORT, tokenize, P };
 
 return module.exports})();
+__m['math']=(function(){const module={exports:{}};const require=k=>__m[k.replace(/^\.\/|\.js$/g,'')];'use strict';
+// Titik – modul Matematik (versi awal): Kod Nemeth, ASCII braille.
+// Jadual simbol disusun daripada senarai Nemeth awam; BELUM disahkan dengan kertas DBT sebenar.
+const FO = '', FM = '', FC = '', SO = '', SC = '', BO = '', BC = '',
+  RO = '', RD = '', RC = '', ZO = '', ZC = '';
+const MK = { FO, FM, FC, SO, SC, BO, BC, RO, RD, RC, ZO, ZC };
+
+// ---------- jadual simbol (ASCII braille) ----------
+const SYM = {
+  '+': '+', '-': '-', '−': '-', '–': '-', '—': '-',
+  '×': '@*', '*': '@*', '·': '*', '⋅': '*', '÷': './', '/': '/', '∕': '/',
+  '±': '+-', '∓': '-+',
+  '(': '(', ')': ')', '[': '@(', ']': '@)', '{': '.(', '}': '.)',
+  ',': ',', '%': '@0', '°': '.*', '∞': ',=', ':': '"3', ';': '"2', '!': '"6', '?': '"8', "'": '3', '′': '3',
+  '∴': '"#', '|': '_', '∠': '_<', '△': '.#', '⊥': '_a'
+};
+const COMP = { '=': '.k', '≠': '/.k', '<': '"k', '>': '.1', '≤': '"k:', '≥': '.1:', '≈': '"=', '≡': '.k:' };
+// selaras dengan senarai Nemeth: ≈ dan ≡ ialah tekaan; ditanda dalam pengesahan
+const GREEK = { 'α': 'a', 'β': 'b', 'γ': 'g', 'δ': 'd', 'ε': 'e', 'θ': '?', 'λ': 'l', 'μ': 'm', 'π': 'p', 'σ': 's', 'φ': 'f', 'ω': 'w', 'ρ': 'r', 'τ': 't', 'ϕ': 'f', 'ζ': 'z', 'η': ':', 'ν': 'n', 'ξ': 'x', 'χ': '&', 'ψ': '=', 'κ': 'k', 'ι': 'i',
+  'Δ': ',d', 'Σ': ',s', 'Ω': ',w', 'Π': ',p', 'Θ': ',?', 'Λ': ',l', 'Φ': ',f' };
+const SUPD = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', 'ⁿ': 'n', '⁺': '+', '⁻': '-' };
+const SUBD = { '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9' };
+const FRAC1 = { '½': ['1', '2'], '⅓': ['1', '3'], '⅔': ['2', '3'], '¼': ['1', '4'], '¾': ['3', '4'], '⅕': ['1', '5'], '⅛': ['1', '8'] };
+const UNK = new Set();
+
+// ---------- penghurai rentetan linear -> pokok ----------
+// nod: {t:'num',v} {t:'let',v} {t:'grk',v} {t:'op',v} {t:'cmp',v} {t:'sp'} {t:'frac',n,d} {t:'sup',c} {t:'sub',c} {t:'rad',c,deg} {t:'raw',v}
+function parse(s) {
+  const a = Array.from(s); let i = 0;
+  function seq(stop) {
+    const out = [];
+    while (i < a.length) {
+      const c = a[i];
+      if (stop && stop.includes(c)) break;
+      if (c === FO) { i++; const n = seq([FM]); i++; const d = seq([FC]); i++; out.push({ t: 'frac', n, d }); continue; }
+      if (c === SO) { i++; const x = seq([SC]); i++; out.push({ t: 'sup', c: x }); continue; }
+      if (c === BO) { i++; const x = seq([BC]); i++; out.push({ t: 'sub', c: x }); continue; }
+      if (c === RO) { i++; let deg = null, x = seq([RD, RC]); if (a[i] === RD) { i++; deg = x; x = seq([RC]); } i++; out.push({ t: 'rad', c: x, deg }); continue; }
+      if (c === FM || c === FC || c === SC || c === BC || c === RC || c === RD) { i++; continue; }
+      if (/\s/.test(c)) { while (i < a.length && /\s/.test(a[i])) i++; out.push({ t: 'sp' }); continue; }
+      if (/[0-9]/.test(c)) {
+        let v = c; i++;
+        while (i < a.length && (/[0-9]/.test(a[i]) || ((a[i] === '.' || a[i] === ',') && /[0-9]/.test(a[i + 1] || '')))) v += a[i++];
+        out.push({ t: 'num', v }); continue;
+      }
+      if (/[A-Za-z]/.test(c)) { out.push({ t: 'let', v: c }); i++; continue; }
+      if (GREEK[c]) { out.push({ t: 'grk', v: c }); i++; continue; }
+      if (SUPD[c]) { let v = ''; while (i < a.length && SUPD[a[i]]) v += SUPD[a[i++]]; out.push({ t: 'sup', c: parse(v) }); continue; }
+      if (SUBD[c]) { let v = ''; while (i < a.length && SUBD[a[i]]) v += SUBD[a[i++]]; out.push({ t: 'sub', c: parse(v) }); continue; }
+      if (FRAC1[c]) { out.push({ t: 'frac', n: [{ t: 'num', v: FRAC1[c][0] }], d: [{ t: 'num', v: FRAC1[c][1] }] }); i++; continue; }
+      if (c === '^' || c === '_') {
+        i++; let x;
+        if (a[i] === '(' || a[i] === '{') {
+          const op = a[i], cl = op === '(' ? ')' : '}'; i++; x = seq([cl]); i++;
+        } else {
+          x = [];
+          if (a[i] === '-' || a[i] === '+' || a[i] === '−') x.push({ t: 'op', v: a[i++] });
+          if (/[0-9]/.test(a[i] || '')) { let v = ''; while (i < a.length && /[0-9]/.test(a[i])) v += a[i++]; x.push({ t: 'num', v }); }
+          else if (i < a.length && /[A-Za-z]/.test(a[i])) x.push({ t: 'let', v: a[i++] });
+          else if (i < a.length && GREEK[a[i]]) x.push({ t: 'grk', v: a[i++] });
+        }
+        out.push({ t: c === '^' ? 'sup' : 'sub', c: x }); continue;
+      }
+      if (c === '√') {
+        i++; let x;
+        if (a[i] === '(') { i++; x = seq([')']); i++; }
+        else { x = []; if (/[0-9]/.test(a[i] || '')) { let v = ''; while (i < a.length && /[0-9]/.test(a[i])) v += a[i++]; x.push({ t: 'num', v }); } else if (/[A-Za-z]/.test(a[i] || '')) x.push({ t: 'let', v: a[i++] }); }
+        out.push({ t: 'rad', c: x, deg: null }); continue;
+      }
+      if (COMP[c]) { out.push({ t: 'cmp', v: c }); i++; continue; }
+      if (c === '/') {
+        // a/b dengan operan nombor/huruf tunggal pada kedua-dua sisi -> pecahan
+        const p = out[out.length - 1];
+        if (p && p.t === 'num' && /[0-9]/.test(a[i + 1] || '')) {
+          i++; let v = ''; while (i < a.length && /[0-9]/.test(a[i])) v += a[i++];
+          out[out.length - 1] = { t: 'frac', n: [p], d: [{ t: 'num', v }] }; continue;
+        }
+      }
+      out.push(SYM[c] !== undefined ? { t: 'op', v: c } : { t: 'raw', v: c }); i++;
+    }
+    return out;
+  }
+  return seq(null);
+}
+
+// ---------- penjana Nemeth ----------
+const isOpT = n => n && ((n.t === 'op' && /[+\-−–—×\*·⋅÷±∓]/.test(n.v)));
+const isCmp = n => n && n.t === 'cmp';
+function emit(nodes, st, depthF, depthR, lvl) {
+  // buang ruang sebelah operator / tanda banding (dikawal sendiri)
+  const ns = nodes.filter((n, k) => !(n.t === 'sp' && (isOpT(nodes[k - 1]) || isOpT(nodes[k + 1]) || isCmp(nodes[k - 1]) || isCmp(nodes[k + 1]))));
+  let o = '';
+  for (let k = 0; k < ns.length; k++) {
+    const n = ns[k], nx = ns[k + 1];
+    switch (n.t) {
+      case 'sp': if (o && !o.endsWith(' ') && nx) { o += ' '; st.start = true; } break;
+      case 'num': if (st.start && lvl === 0 && !st.noNum) o += '#'; o += n.v.replace(/\./g, '4'); st.start = false; st.noNum = false; break;
+      case 'let': {
+        let run = n.v; while (ns[k + 1] && ns[k + 1].t === 'let' && /[a-z]/.test(ns[k + 1].v) && /[a-z]/.test(run[run.length - 1])) { run += ns[++k].v; }
+        if (/^[a-z]+$/.test(run)) o += ';' + run; else o += ';' + (/[A-Z]/.test(run) ? ',' : '') + run.toLowerCase();
+        st.start = false; st.noNum = false; break;
+      }
+      case 'grk': { const g = GREEK[n.v]; o += '.' + g; st.start = false; break; }
+      case 'op': { const sy = SYM[n.v]; o += sy; st.start = false; if (/[+\-−×\*÷±∓]/.test(n.v)) st.noNum = true; break; }
+      case 'cmp': o = o.replace(/ +$/, ''); o += (o ? ' ' : '') + COMP[n.v] + (nx ? ' ' : ''); st.start = true; st.noNum = true; break;
+      case 'raw': UNK.add(n.v); o += n.v; st.start = false; break;
+      case 'frac': {
+        const pf = ','.repeat(depthF);
+        o += pf + '?' + emit(n.n, { start: false }, depthF + 1, depthR, lvl) + pf + '/' + emit(n.d, { start: false }, depthF + 1, depthR, lvl) + pf + '#';
+        st.start = false; st.noNum = false; break;
+      }
+      case 'rad': {
+        const pr = '.'.repeat(Math.min(depthR, 1));
+        o += (n.deg ? '<' + emit(n.deg, { start: false }, depthF, depthR, lvl + 1) : '') + pr + '>' + emit(n.c, { start: false }, depthF, depthR + 1, lvl) + pr + ']';
+        st.start = false; break;
+      }
+      case 'sup': case 'sub': {
+        const ind = (n.t === 'sup' ? '^' : ';').repeat(lvl + 1);
+        o += ind + emit(n.c, { start: false }, depthF, depthR, lvl + 1);
+        st.start = false;
+        if (lvl === 0 && nx && nx.t !== 'sp' && !isCmp(nx) && !(nx.t === 'sup' || nx.t === 'sub')) o += '"';
+        else if (lvl > 0 && nx && nx.t !== 'sp' && !isCmp(nx)) o += '"';
+        break;
+      }
+    }
+  }
+  return o.replace(/ +$/, '');
+}
+function expr(s) { return emit(parse(s), { start: true }, 0, 0, 0); }
+
+// ---------- teks biasa: kesan petak matematik ----------
+const OPCH = /[=≠<>≤≥×÷±√\^²³½¼¾≈]|[α-ωΔΣΩΠ]/;
+function isMathTok(t) { return /^[\s]*$/.test(t) ? false : (OPCH.test(t) || /^[+\-*−]$/.test(t) || /^\d+\/\d+$/.test(t)) && !/[\u0000-\u0006\u000e\u000f]/.test(t) && !/[A-Za-z]{4,}/.test(t); }
+function operand(t) { return /^[(\[]?[A-Za-z0-9.,]{1,6}[)\]]?[.,;:]?$/.test(t) || /^[(\[]?\(?[A-Za-z0-9.,+\-*−×÷\/\^²³()]{1,12}[)\]]?[.,;:]?$/.test(t); }
+function autoZones(s) {
+  if (s.indexOf(ZO) >= 0) {
+    // sudah ada petak OMML; kesan hanya pada bahagian di luar petak
+    return s.split(/([^]*)/).map((p, k) => k % 2 ? p : autoZones(p)).join('');
+  }
+  const parts = s.split(/(\s+)/); // simpan pemisah
+  const tok = [], idx = [];
+  parts.forEach((p, k) => { if (k % 2 === 0 && p) { tok.push(p); idx.push(k); } });
+  const mt = tok.map(isMathTok);
+  const inZ = tok.map(() => false);
+  for (let k = 0; k < tok.length; k++) if (mt[k]) {
+    inZ[k] = true;
+    for (let j = k - 1; j >= 0 && !mt[j] && operand(tok[j]) && (j === k - 1) && !/^[A-Za-z]{2,}[.,;:]?$/.test(tok[j]) ; j--) { inZ[j] = true; break; }
+    for (let j = k + 1; j < tok.length && !mt[j] && operand(tok[j]) && !/^[A-Za-z]{2,}[.,;:]?$/.test(tok[j]); j++) { inZ[j] = true; if (j + 1 < tok.length && !mt[j + 1]) { /* hanya satu operan selepas operator */ break; } }
+  }
+  // cantum petak bersebelahan
+  let out = '', open = false;
+  for (let k = 0; k < tok.length; k++) {
+    const pi = idx[k];
+    const sep = pi > 0 ? parts[pi - 1] : '';
+    if (inZ[k]) {
+      if (!open) { out += sep + ZO + tok[k]; open = true; }
+      else out += sep + tok[k];
+    } else {
+      if (open) { out += ZC; open = false; }
+      out += sep + tok[k];
+    }
+  }
+  if (open) out += ZC;
+  // sisa pemisah di hujung
+  if (parts.length % 2 === 0) out += parts[parts.length - 1];
+  return out;
+}
+// tanda baca di hujung petak (cth. "x = 2.") keluar dari petak
+function trimZone(z) { const m = z.match(/^(.*?)([.,;:]+)$/); return m ? [m[1], m[2]] : [z, '']; }
+
+// ---------- teks penuh ----------
+// tr = penterjemah teks biasa (BM); pengendali campuran: petak dalam teks dibungkus _% ... _:
+function text(src, tr, opt) {
+  if (!src) return tr ? tr(src) : '';
+  const s = autoZones(src);
+  if (s.indexOf(ZO) < 0) return tr(s);
+  const segs = s.split(/([^]*)/);
+  const pure = segs.every((p, k) => k % 2 ? true : !p.replace(/[\s\u0002-\u0005\u000e\u000f]/g, ''));
+  let o = '';
+  segs.forEach((p, k) => {
+    if (k % 2 === 0) { o += p ? tr(p) : ''; return; }
+    let inner = p.slice(1, -1), tail = '';
+    [inner, tail] = trimZone(inner);
+    const m = expr(inner);
+    o += pure ? m + (tail ? tr(tail) : '') : '_%' + m + '_:' + (tail ? tr(tail) : '');
+  });
+  return o;
+}
+// teks cetak boleh dibaca (untuk pratonton/semakan)
+function plain(s) {
+  if (!s || !/[-]/.test(s)) return s;
+  const mp = { [FO]: '(', [FM]: ')/(', [FC]: ')', [SO]: '^(', [SC]: ')', [BO]: '_(', [BC]: ')', [RO]: '√(', [RD]: ';', [RC]: ')', [ZO]: '', [ZC]: '' };
+  return s.replace(/[-]/g, c => mp[c]);
+}
+
+// ---------- OMML -> rentetan linear ----------
+function ommlTree(xml) {
+  const root = { n: 'root', k: [] }, st = [root];
+  const re = /<(\/)?(m:[A-Za-z]+|w:t)((?:\s[^>]*?)?)(\/)?>|([^<]+)/g; let m;
+  while ((m = re.exec(xml))) {
+    if (m[5] !== undefined) { st[st.length - 1].k.push({ n: '#t', v: m[5] }); continue; }
+    if (m[1]) { if (st.length > 1) st.pop(); continue; }
+    const nd = { n: m[2], a: m[3] || '', k: [] };
+    st[st.length - 1].k.push(nd);
+    if (!m[4]) st.push(nd);
+  }
+  return root;
+}
+const dec = x => x.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
+function kid(nd, name) { return nd.k.find(c => c.n === name); }
+function txt(nd) { return nd.k.map(c => c.n === '#t' ? dec(c.v) : txt(c)).join(''); }
+function lin(nd) {
+  if (!nd) return '';
+  switch (nd.n) {
+    case 'm:t': return txt(nd);
+    case 'm:f': return FO + lin(kid(nd, 'm:num')) + FM + lin(kid(nd, 'm:den')) + FC;
+    case 'm:sSup': return lin(kid(nd, 'm:e')) + SO + lin(kid(nd, 'm:sup')) + SC;
+    case 'm:sSub': return lin(kid(nd, 'm:e')) + BO + lin(kid(nd, 'm:sub')) + BC;
+    case 'm:sSubSup': return lin(kid(nd, 'm:e')) + BO + lin(kid(nd, 'm:sub')) + BC + SO + lin(kid(nd, 'm:sup')) + SC;
+    case 'm:rad': {
+      const dg = kid(nd, 'm:deg'), d = dg ? lin(dg).trim() : '';
+      return RO + (d && d !== '2' ? d + RD : '') + lin(kid(nd, 'm:e')) + RC;
+    }
+    case 'm:d': {
+      const pr = kid(nd, 'm:dPr') || { k: [] };
+      const ch = n => { const e = kid(pr, n); const v = e && /m:val="([^"]*)"/.exec(e.a || ''); return v ? dec(v[1]) : null; };
+      let b = ch('m:begChr'), e = ch('m:endChr'), sp = ch('m:sepChr');
+      if (b === null) b = '('; if (e === null) e = ')'; if (sp === null) sp = '|';
+      return b + nd.k.filter(c => c.n === 'm:e').map(lin).join(sp) + e;
+    }
+    case 'm:nary': {
+      const pr = kid(nd, 'm:naryPr') || { k: [] }; const e = kid(pr, 'm:chr'); const v = e && /m:val="([^"]*)"/.exec(e.a || '');
+      const sub = lin(kid(nd, 'm:sub')), sup = lin(kid(nd, 'm:sup'));
+      return (v ? dec(v[1]) : '∫') + (sub ? BO + sub + BC : '') + (sup ? SO + sup + SC : '') + lin(kid(nd, 'm:e'));
+    }
+    case 'm:func': return lin(kid(nd, 'm:fName')) + ' ' + lin(kid(nd, 'm:e'));
+    case 'm:limLow': return lin(kid(nd, 'm:e')) + BO + lin(kid(nd, 'm:lim')) + BC;
+    case 'm:limUpp': return lin(kid(nd, 'm:e')) + SO + lin(kid(nd, 'm:lim')) + SC;
+    case 'm:acc': return lin(kid(nd, 'm:e'));
+    default: return nd.k.map(lin).join('');
+  }
+}
+function fromOmml(xml) { return ZO + lin(ommlTree(xml)).replace(/[\r\n]+/g, ' ') + ZC; }
+
+module.exports = { MK, expr, text, plain, fromOmml, parse, autoZones, SYM, COMP, GREEK, UNK };
+
+return module.exports})();
 __m['pipeline']=(function(){const module={exports:{}};const require=k=>__m[k.replace(/^\.\/|\.js$/g,'')];// Paip penuh: XML Word -> blok -> Braille -> atom -> muka surat -> BRF
 'use strict';
-const R = require('./docx-reader.js'), B = require('./braille-bm.js'), L = require('./layout.js'), T = require('./table.js'), TAC = require('./tactile.js'), U = require('./ueb.js');
+const R = require('./docx-reader.js'), B = require('./braille-bm.js'), L = require('./layout.js'), T = require('./table.js'), TAC = require('./tactile.js'), U = require('./ueb.js'), MT = require('./math.js');
 
 const numLabel = n => '#' + [...String(n)].map(d => 'jabcdefghi'[+d]).join('') + '4';
 const romanLabel = r => (r === 'I' ? ';,i4' : ',,' + r.toLowerCase() + '4');
@@ -1648,7 +1896,8 @@ function compose(blocks, dict, cfg = {}) {
   if (nWide) warnings.push({ type: 'info', msg: nWide + ' jadual lebar ditukar kepada senarai (Tajuk lajur: nilai) kerana lajur terlalu sempit untuk bingkai braille. Dalam Tetapan jadual, pilih Bingkai jika mahu bingkai.' });                 // {role, blocks:[layoutBlock], gap, unit}
   let prev = null, inArahan = false, answerLines = 0, bahagianSeen = false;
   const EN = cfg.lang === 'en';
-  const tr = EN ? (t => U.text(t)) : (t => B.text(t, dict, cfg.punct));
+  const MATH = cfg.lang === 'mt';
+  const tr = EN ? (t => U.text(t)) : MATH ? (t => MT.text(t, x => B.text(x, dict, cfg.punct))) : (t => B.text(t, dict, cfg.punct));
   const IMGD = EN ? 'Image description: ' : 'Deskripsi gambar: ';
   const gapFor = (b, p) => {
     if (!p) return 0;
@@ -1688,19 +1937,19 @@ function compose(blocks, dict, cfg = {}) {
         if (labm[k]) src += (src ? '  ' : '') + 'Label ' + labm[k].join(', ');
         return { t: 'raw', text: l, src };
       });
-      if (b.text) flat.push({ role: 'image', gap: gapFor(b, prev), lb: { t: 'para', text: tr(IMGD + b.text), src: IMGD + b.text }, pb: !!b.pageBreak });
+      if (b.text) flat.push({ role: 'image', gap: gapFor(b, prev), lb: { t: 'para', text: tr(IMGD + b.text), src: MT.plain(IMGD + b.text) }, pb: !!b.pageBreak });
       flat.push({ role: 'tac', gap: 0, lb: lbs, pb: true });
       prev = b; continue;
     }
     let lb;
     switch (b.role) {
-      case 'question': lb = { t: 'item', num: numLabel(b.n), text: tr(b.text), src: b.text, srcNum: b.n + '.' }; break;
-      case 'roman': lb = { t: 'item', num: EN ? tr(b.label + '.') : romanLabel(b.label), text: tr(b.text), indent: 3, src: b.text, srcNum: b.label.toLowerCase() + '.' }; break;
-      case 'option': lb = { t: 'item', num: EN ? tr(b.label + '.') : optLabel(b.label), text: tr(b.text), src: b.text, srcNum: b.label + '.' }; break;
-      case 'bullet': lb = { t: 'item', num: EN ? '_4' : ((cfg.punct && cfg.punct['\u2022']) || B.PUNCT['\u2022'] || '3'), indent: 2 * (b.lvl || 0), text: tr(b.text), src: b.text, srcNum: '\u2022' }; break;
-      case 'list-bahagian': lb = { t: 'para', text: tr(b.text), indent: 4, src: b.text }; break;
-      case 'image': if (!b.text) continue; lb = { t: 'para', text: tr(IMGD + b.text), src: IMGD + b.text }; break;
-      default: lb = { t: 'para', text: tr(b.text), src: b.text };
+      case 'question': lb = { t: 'item', num: numLabel(b.n), text: tr(b.text), src: MT.plain(b.text), srcNum: b.n + '.' }; break;
+      case 'roman': lb = { t: 'item', num: EN ? tr(b.label + '.') : romanLabel(b.label), text: tr(b.text), indent: 3, src: MT.plain(b.text), srcNum: b.label.toLowerCase() + '.' }; break;
+      case 'option': lb = { t: 'item', num: EN ? tr(b.label + '.') : optLabel(b.label), text: tr(b.text), src: MT.plain(b.text), srcNum: b.label + '.' }; break;
+      case 'bullet': lb = { t: 'item', num: EN ? '_4' : ((cfg.punct && cfg.punct['\u2022']) || B.PUNCT['\u2022'] || '3'), indent: 2 * (b.lvl || 0), text: tr(b.text), src: MT.plain(b.text), srcNum: '\u2022' }; break;
+      case 'list-bahagian': lb = { t: 'para', text: tr(b.text), indent: 4, src: MT.plain(b.text) }; break;
+      case 'image': if (!b.text) continue; lb = { t: 'para', text: tr(IMGD + b.text), src: MT.plain(IMGD + b.text) }; break;
+      default: lb = { t: 'para', text: tr(b.text), src: MT.plain(b.text) };
     }
     if (b.keepNext) (Array.isArray(lb) ? lb : [lb]).forEach(x => { x.kn = true; });
     flat.push({ role: b.role, gap, lb, pb: !!b.pageBreak });
@@ -1875,8 +2124,8 @@ function furn(cfg = {}) {
 }
 
 function run(xml, dict, cfg = {}) {
-  const raw = R.readParagraphs(xml, cfg.numXml);
-  const cls = R.classify(raw.paras, { lang: cfg.lang });
+  const raw = R.readParagraphs(xml, cfg.numXml, { math: cfg.lang === 'mt' });
+  const cls = R.classify(raw.paras, { lang: cfg.lang === 'en' ? 'en' : 'bm' });
   const desc = cfg.imageDesc || {};
   cls.blocks.forEach(b => { if (b.drawing && !b.text && desc[b.imageNo] && desc[b.imageNo].trim()) b.text = desc[b.imageNo].trim(); });
   cls.warnings = cls.warnings.filter(w => w.type !== 'gambar' || !cls.blocks.some(b => b.drawing && b.imageNo === w.imageNo && b.text));
@@ -1921,7 +2170,7 @@ function run(xml, dict, cfg = {}) {
 module.exports = { run, compose, numLabel, furn };
 
 return module.exports})();
-window.BrailleEngine={B:__m['braille-bm'],L:__m['layout'],P:__m['pipeline'],T:__m['table'],K:__m['tactile'],U:__m['ueb']};(function(){const E=window.BrailleEngine,B=E.B,U=E.U,t0=B.text,w0=B.word;E.LANG='bm';E.setLang=function(l){E.LANG=l==='en'?'en':'bm'};B.text=function(s,d,p){return E.LANG==='en'?U.text(s):t0(s,d,p)};B.word=function(w,d){return E.LANG==='en'?U.word(String(w).toLowerCase(),true,false):w0(w,d)}})();
+window.BrailleEngine={B:__m['braille-bm'],L:__m['layout'],P:__m['pipeline'],T:__m['table'],K:__m['tactile'],U:__m['ueb'],MT:__m['math']};(function(){const E=window.BrailleEngine,B=E.B,U=E.U,t0=B.text,w0=B.word;E.LANG='bm';E.setLang=function(l){E.LANG=l==='en'?'en':'bm'};B.text=function(s,d,p){return E.LANG==='en'?U.text(s):t0(s,d,p)};B.word=function(w,d){return E.LANG==='en'?U.word(String(w).toLowerCase(),true,false):w0(w,d)}})();
 const DATA_WHOLE="{\"atau\":\"a\",\"bahawa\":\"b\",\"contoh\":\"c\",\"dengan\":\"d\",\"erti\":\"e\",\"faedah\":\"f\",\"guru\":\"g\",\"hendak\":\"h\",\"ini\":\"i\",\"jangan\":\"j\",\"kerana\":\"k\",\"lagi\":\"l\",\"mereka\":\"m\",\"nampak\":\"n\",\"orang\":\"o\",\"pun\":\"p\",\"ramai\":\"r\",\"supaya\":\"s\",\"tetapi\":\"t\",\"untuk\":\"u\",\"virus\":\"v\",\"waktu\":\"w\",\"itu\":\"x\",\"yang\":\"y\",\"seperti\":\"z\",\"cakap\":\"\\\"c\",\"dapat\":\"\\\"d\",\"emas\":\"\\\"e\",\"faham\":\"\\\"f\",\"ganti\":\"\\\"g\",\"hanya\":\"\\\"h\",\"imbang\":\"\\\"i\",\"jadi\":\"\\\"j\",\"kaki\":\"\\\"k\",\"lain\":\"\\\"l\",\"masuk\":\"\\\"m\",\"negara\":\"\\\"n\",\"oleh\":\"\\\"o\",\"pagi\":\"\\\"p\",\"rakyat\":\"\\\"r\",\"sangat\":\"\\\"s\",\"tiada\":\"\\\"t\",\"ulang\":\"\\\"u\",\"wakil\":\"\\\"w\",\"yakin\":\"\\\"y\",\"zaman\":\"\\\"z\",\"kami\":\"\\\"=\",\"khabar\":\"\\\"*\",\"nyanyi\":\"\\\"[\",\"syarah\":\"\\\"%\",\"sedang\":\"\\\"?\",\"ambang\":\"\\\"!\",\"cari\":\"^c\",\"dari\":\"^d\",\"fikir\":\"^f\",\"hari\":\"^h\",\"ingat\":\"^i\",\"jika\":\"^j\",\"kalau\":\"^k\",\"lalu\":\"^l\",\"minta\":\"^m\",\"negeri\":\"^n\",\"ombak\":\"^o\",\"perempuan\":\"^p\",\"rancang\":\"^r\",\"suatu\":\"^s\",\"tidak\":\"^t\",\"umpama\":\"^u\",\"wang\":\"^w\",\"khidmat\":\"^*\",\"syarat\":\"^%\",\"semua\":\"^?\",\"ambil\":\"^!\",\"banyak\":\"_b\",\"cuba\":\"_c\",\"datang\":\"_d\",\"erat\":\"_e\",\"guna\":\"_g\",\"hingga\":\"_h\",\"juga\":\"_j\",\"kali\":\"_k\",\"lebih\":\"_l\",\"mula\":\"_m\",\"nombor\":\"_n\",\"otak\":\"_o\",\"petang\":\"_p\",\"rupa\":\"_r\",\"sungguh\":\"_s\",\"tunjuk\":\"_t\",\"usaha\":\"_u\",\"wanita\":\"_w\",\"khusus\":\"_*\",\"syukur\":\"_%\",\"sentiasa\":\"_?\",\"ampai\":\"_!\",\"bagaimana\":\"bmn\",\"begini\":\"bi\",\"begitu\":\"bx\",\"berhad\":\"bhd\",\"braille\":\"brl\",\"dalam\":\"dlm\",\"daripada\":\"dpd\",\"demikian\":\"dmk\",\"jalan\":\"jln\",\"jawatankuasa\":\"jks\",\"kampung\":\"kg\",\"kemudian\":\"kmd\",\"kepada\":\"kpd\",\"lorong\":\"lrg\",\"malam\":\"mlm\",\"masyarakat\":\"m%kt\",\"organisasi\":\"org\",\"pejabat\":\"\\\\j\",\"saudara\":\"sdr\",\"saudari\":\"sdri\",\"sebagai\":\"sbg\",\"sekarang\":\"sk+\",\"sendirian\":\"sdn\",\"sungai\":\"s+\",\"syarikat\":\"%kt\",\"taman\":\"tmn\",\"tanggungjawab\":\"tjb\",\"tanjung\":\"tg\",\"vitamin\":\"vit\",\"khas\":\"*\",\"nyaris\":\"[\",\"syor\":\"%\",\"dan\":\"&\",\"ada\":\"(\",\"apa\":\")\",\"ahli\":\"$\",\"am\":\"!\",\"anda\":\"]\",\"kita\":\"=\",\"di\":\"4\",\"ke\":\"6\",\"beberapa\":\"2\",\"pula\":\"0\"}";const DATA_SCH="{\"iaitu\":\"ia3x\",\"apabila\":\")bila\",\"frasa\":\"frasa\",\"badan\":\"ba&\",\"perumahan\":\"\\\\rum$]\",\"keperluan\":\"60lu]\",\"bekerjasama\":\"be6rjasm\",\"kerjasama\":\"6rjasm\",\"condong\":\"condong\",\"beriadah\":\"beriad$\",\"dikehendaki\":\"463h3i\",\"peranan\":\"\\\\r]]\",\"bertanggungjawab\":\"2ta+gu+jawab\",\"setiausaha\":\"?tia_u\",\"peranti\":\"\\\\r]ti\",\"padi\":\"padi\",\"petikan\":\"\\\\tik]\",\"boleh\":\"b\\\"o\",\"membolehkan\":\"/mb\\\"o>\",\"memperolehi\":\"/m0\\\"oi\",\"keusahawanan\":\"6_uw]]\",\"melalui\":\"/^li\",\"kecemasan\":\"6c\\\"e]\",\"juruwang\":\"juru^w\",\"bagaimanapun\":\"bmn3p\",\"mendepani\":\"/ndep]i\",\"kesibukan\":\"6sibuk]\",\"metabolisme\":\"/tabolisme\",\"dititikberatkan\":\"4titikb_e>\",\"peringkat\":\"\\\\ri+kat\"}";
 (function(){
 const $=id=>document.getElementById(id);
@@ -1942,9 +2191,9 @@ const KAMUS_URLS=[...(/^https?:$/.test(location.protocol)?['kamus.txt']:[]),'htt
 const loc=()=>{const t=fromText($('dict').value),o={};for(const k in t){if(k in OFF&&SCH[k]===t[k])continue;o[k]=t[k]}return o};
 const dict=()=>E.B.withOverrides(E.B.withOverrides(BASE,OFF),loc());
 let punct={};try{punct=JSON.parse(LS.get('brl_punct')||'{}')||{}}catch(e){punct={}}
-let MOD=(()=>{try{const m=localStorage.getItem('brl_mod');return m==='sn'||m==='en'?m:'bm'}catch(e){return'bm'}})();
-const MODN={bm:'Bahasa Melayu',sn:'Sains',en:'English (UEB)'};
-const setMod=m=>{MOD=m==='sn'||m==='en'?m:'bm';try{localStorage.setItem('brl_mod',MOD)}catch(e){}if(E.setLang)E.setLang(MOD==='en'?'en':'bm');document.body.classList.toggle('en',MOD==='en');{const ln=document.getElementById('langn');if(ln)ln.textContent=MOD==='en'?'UEB, bahasa Inggeris':'Bahasa Melayu'}const l=document.getElementById('modl');if(l)l.textContent='Modul: '+MODN[MOD]};
+let MOD=(()=>{try{const m=localStorage.getItem('brl_mod');return m==='sn'||m==='en'||m==='mt'?m:'bm'}catch(e){return'bm'}})();
+const MODN={bm:'Bahasa Melayu',sn:'Sains',en:'English (UEB)',mt:'Matematik (awal)'};
+const setMod=m=>{MOD=m==='sn'||m==='en'||m==='mt'?m:'bm';try{localStorage.setItem('brl_mod',MOD)}catch(e){}if(E.setLang)E.setLang(MOD==='en'?'en':'bm');document.body.classList.toggle('en',MOD==='en');{const ln=document.getElementById('langn');if(ln)ln.textContent=MOD==='en'?'UEB, bahasa Inggeris':MOD==='mt'?'Bahasa Melayu + Kod Nemeth (awal)':'Bahasa Melayu'}const l=document.getElementById('modl');if(l)l.textContent='Modul: '+MODN[MOD]};
 let numXml='',xml=null,last=null,name='kertas',imgDesc={},imgTac={},imgBlobs={},edits={},editing={};
 // ---- muat turun ----
 let DL=null;
@@ -2024,7 +2273,7 @@ async function load(f){
   }catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">'+esc(e.message)+'</div>'}
 }
 let brks=new Set(),restored=0,sTm=null,curBuf=null;
-function cfg(){return{numXml,tableMode:($('tmode')||{}).value||'auto',lang:MOD==='en'?'en':'bm',cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:MOD==='sn'?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
+function cfg(){return{numXml,tableMode:($('tmode')||{}).value||'auto',lang:MOD==='en'?'en':MOD==='mt'?'mt':'bm',cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:MOD==='sn'?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
 function go(){
   let r;try{r=E.P.run(xml,dict(),cfg())}catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">Ralat: '+esc(e.message)+'</div>';return}
   last=r;buildPool();$('out').hidden=false;
@@ -2708,6 +2957,7 @@ const temaUpd=()=>{$('tema').textContent=document.documentElement.getAttribute('
 $('tema').onclick=()=>{const d=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',d);LS.set('brl_tema',d);temaUpd();try{if(typeof xml!=='undefined'&&xml)go2()}catch(e){}};temaUpd();
 $('hopen').onclick=()=>$('hfile').click();$('hfile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)bukaTitik(f)};
 $('hmen').onclick=()=>{document.body.classList.remove('studio');setMod('en');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};
+$('hmmt').onclick=()=>{document.body.classList.remove('studio');setMod('mt');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};
 $('hmbm').onclick=()=>{document.body.classList.remove('studio');setMod('bm');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};
 let STUDIO=null;
 async function blankFile(){const c=document.createElement('canvas');c.width=1000;c.height=700;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,1000,700);return new File([await new Promise(ok=>c.toBlob(ok,'image/png'))],'Lakaran.png',{type:'image/png'})}

@@ -1,5 +1,5 @@
 {
-  "version": "1.12.4",
-  "sha256": "7cb68dfd0217c4d1078748d07674f204aeba9c521415609c7e208790f60f1d76",
-  "notes": "Bullet BM guna titik 25 (boleh ubah dalam Tanda baca); UEB guna titik 456+256."
+  "version": "1.13.0",
+  "sha256": "f36835ebc27adad6d5b6073fe92cfd307c6e6513a9b41b679824a14a64adfe8d",
+  "notes": "Modul Matematik (versi awal): persamaan Word ke Kod Nemeth"
 }
