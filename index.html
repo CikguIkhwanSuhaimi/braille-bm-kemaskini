@@ -90,6 +90,7 @@ canvas.sc{vertical-align:middle;display:inline-block}
 <div class="hmk"><span class="hmt">Akan datang</span><strong>Matematik</strong><span class="sm">Persamaan dan simbol matematik dengan paparan titik pada setiap simbol.</span></div>
 <div class="hmk"><span class="hmt">Akan datang</span><strong>Sains</strong><span class="sm">Simbol kimia, unit dan formula untuk kertas Sains.</span></div>
 </div>
+<div class="row" style="margin-bottom:18px"><button class="g" id="hopen">Buka fail projek (.titik)</button><input id="hfile" type="file" accept=".titik" hidden><span class="sm">Fail projek daripada peranti lain atau rakan guru.</span></div>
 <div id="hproj"></div>
 <div class="hmf"><b>Titik – Penterjemah Braille Kita</b><br>Dibangunkan oleh Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi) · SMK Pendidikan Khas Setapak, Kuala Lumpur</div>
 </div>
@@ -98,7 +99,7 @@ canvas.sc{vertical-align:middle;display:inline-block}
 <h1>Titik <span style="font-weight:400;font-size:.6em;opacity:.7">Penterjemah Braille Kita</span></h1>
 <p class="s"><span id="verd" class="sm" style="float:right"></span>Word (.docx) → Braille Grade 2 (Bahasa Melayu) untuk Index Basic-D. Semua diproses dalam pelayar anda; fail tidak dihantar ke mana-mana.</p>
 <p class="sm" style="margin:-6px 0 8px">Dibangunkan oleh <b>Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi)</b> · SMK Pendidikan Khas Setapak, Kuala Lumpur</p>
-<div class="card"><div id="drop" tabindex="0">Seret fail .docx ke sini, atau klik untuk pilih<input id="file" type="file" accept=".docx" hidden></div><div id="fname" class="sm" style="margin-top:8px"></div></div>
+<div class="card"><div id="drop" tabindex="0">Seret fail .docx (atau projek .titik) ke sini, atau klik untuk pilih<input id="file" type="file" accept=".docx,.titik" hidden></div><div id="fname" class="sm" style="margin-top:8px"></div></div>
 <div class="card"><h2>Tetapan</h2><div class="row">
 <label><input id="inter" type="checkbox" checked> Interpoint (genapkan muka surat setiap set)</label>
 <label>Sel/baris <input id="cols" type="number" min="20" max="42" value="36"></label>
@@ -155,7 +156,7 @@ canvas.sc{vertical-align:middle;display:inline-block}
 <div id="out" hidden>
 <div class="card"><h2>Hasil</h2><div id="sum" class="sm"></div><div id="warns"></div>
 <div class="row" id="prow" style="margin-top:10px"><b>Cetak</b><label>Bilangan set <input id="copies" type="number" min="1" max="200" value="1" style="width:64px"></label><label>Muka <input id="pfrom" type="number" min="1" placeholder="1" style="width:64px"> hingga <input id="pto" type="number" min="1" placeholder="akhir" style="width:64px"></label><label>Susunan salinan <select id="pord"><option value="set">Set demi set</option><option value="page">Muka demi muka</option></select></label><label><input id="ptest" type="checkbox"> Muka ujian dahulu</label><span class="sm" id="pinfo"></span></div>
-<div class="row" style="margin-top:10px"><span class="sm" id="psave"></span><button class="g" id="pjx">Simpan projek (.json)</button><button class="g" id="pji">Buka projek</button><input id="pjf" type="file" accept=".json" hidden><button class="g" id="pjd" hidden>Padam simpanan</button></div>
+<div class="row" style="margin-top:10px"><span class="sm" id="psave"></span><button class="g" id="pjx">Simpan projek (.titik)</button><button class="g" id="pjxj">Eksport suntingan (.json)</button><button class="g" id="pji">Gabung suntingan (.json)</button><input id="pjf" type="file" accept=".json" hidden><button class="g" id="pjd" hidden>Padam simpanan</button></div>
 <div class="row" style="margin-top:10px"><button id="dl">Muat turun BRF (.zip)</button><button class="g" id="dl2">Muat turun .txt</button><label><input id="uni" type="checkbox" checked> Pratonton titik (gambar)</label><label><input id="side" type="checkbox" checked> Papar teks biasa di sebelah</label><button class="g" id="pdf">Muat turun PDF semakan</button><label>Lebar muka surat <input id="pw" type="range" min="240" max="900" step="20" value="420" style="width:140px"></label><label id="ackl" hidden><input id="ack" type="checkbox"> Teruskan walaupun ada gambar tanpa deskripsi</label></div>
 <div class="row" style="margin-top:10px"><label>IP embosser <input id="eip" type="text" placeholder="192.168.1.45" style="width:150px" inputmode="decimal"></label><button id="pcopy">Salin perintah cetak (PowerShell)</button><button class="g" id="tcopy">Salin teks BRF</button></div>
 <div class="sm" id="pnote" style="margin-top:6px">Cara biasa: tekan <b>Salin perintah cetak</b>, tampal dalam PowerShell pada PC yang disambung ke embosser, kemudian Enter. Tiada pemasangan diperlukan.</div>
@@ -1260,10 +1261,14 @@ drop.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')$('file').click()};
 drop.ondragover=e=>{e.preventDefault();drop.classList.add('on')};drop.ondragleave=()=>drop.classList.remove('on');
 drop.ondrop=e=>{e.preventDefault();drop.classList.remove('on');if(e.dataTransfer.files[0])load(e.dataTransfer.files[0])};
 $('file').onchange=e=>{if(e.target.files[0])load(e.target.files[0])};
+const idb=()=>new Promise((ok,no)=>{try{const r=indexedDB.open('titik',1);r.onupgradeneeded=()=>r.result.createObjectStore('docx');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)}catch(e){no(e)}});
+const idbTx=async(m,fn)=>{try{const d=await idb();return await new Promise((ok,no)=>{const t=d.transaction('docx',m),q=fn(t.objectStore('docx'));t.oncomplete=()=>ok(q&&q.result);t.onerror=()=>no(t.error)})}catch(e){return null}};
+const idbPut=(k,v)=>idbTx('readwrite',o=>o.put(v,k)),idbGet=k=>idbTx('readonly',o=>o.get(k)),idbDel=k=>idbTx('readwrite',o=>o.delete(k)),idbKeys=async()=>(await idbTx('readonly',o=>o.getAllKeys()))||[];
 async function load(f){
+  if(/\.titik$/i.test(f.name))return bukaTitik(f);
   name=f.name.replace(/\.docx$/i,'');$('fname').textContent=f.name;edits={};editing={};imgBlobs={};restored=0;
   try{
-    const z=await JSZip.loadAsync(await f.arrayBuffer());const d=z.file('word/document.xml');if(!d)throw new Error('Bukan fail Word yang sah.');
+    const ab=await f.arrayBuffer();curBuf=ab;const z=await JSZip.loadAsync(ab);const d=z.file('word/document.xml');if(!d)throw new Error('Bukan fail Word yang sah.');
     xml=await d.async('string');
     const rels=z.file('word/_rels/document.xml.rels');const map={};
     if(rels){(await rels.async('string')).replace(/<Relationship\b[^>]*>/g,t=>{const i=(t.match(/\bId="([^"]+)"/)||[])[1],g=(t.match(/\bTarget="([^"]+)"/)||[])[1];if(i&&g)map[i]=g;return t})}
@@ -1271,10 +1276,10 @@ async function load(f){
     try{const sv=LS.get('brl_proj_'+name);if(sv){const o=JSON.parse(sv);edits=o.edits||{};restored=Object.keys(edits).length}}catch(e){}
     try{imgDesc=JSON.parse(LS.get('brl_img_'+name)||'{}')||{}}catch(e){imgDesc={}}
     try{brks=new Set(JSON.parse(LS.get('brl_brk_'+name)||'[]'))}catch(e){brks=new Set()}
-    go();
+    go();idbPut(name,{buf:ab,fname:f.name,t:Date.now()});
   }catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">'+esc(e.message)+'</div>'}
 }
-let brks=new Set(),restored=0,sTm=null;
+let brks=new Set(),restored=0,sTm=null,curBuf=null;
 function cfg(){return{cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
 function go(){
   let r;try{r=E.P.run(xml,dict(),cfg())}catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">Ralat: '+esc(e.message)+'</div>';return}
@@ -1396,7 +1401,17 @@ function projKey(){return 'brl_proj_'+name}
 function saveProj(){clearTimeout(sTm);sTm=setTimeout(()=>{if(!last||!name)return;const n=Object.keys(edits).length;
   LS.set(projKey(),n?JSON.stringify({v:1,name,edits,at:Date.now()}):'');
   $('psave').textContent=n?'Disimpan automatik dalam pelayar ini ('+n+' muka disunting).':'Tiada suntingan.';$('pjd').hidden=!n},400)}
-$('pjx').onclick=()=>{if(!last)return;dl(name+'.projek.json',JSON.stringify({v:1,name,edits,brks:[...brks],imgDesc,at:Date.now()}))};
+const projObj=()=>({v:2,name,fname:name+'.docx',edits,brks:[...brks],imgDesc,at:Date.now()});
+$('pjxj').onclick=()=>{if(!last)return;dl(name+'.projek.json',JSON.stringify(projObj()))};
+$('pjx').onclick=async()=>{if(!last||!curBuf)return;const z=new JSZip();z.file('dokumen.docx',curBuf);z.file('projek.json',JSON.stringify(projObj()));dl(name+'.titik',await z.generateAsync({type:'blob',compression:'DEFLATE'}))};
+async function bukaTitik(f){try{const z=await JSZip.loadAsync(await f.arrayBuffer());const dj=z.file('projek.json'),dd=z.file('dokumen.docx');if(!dj||!dd)throw new Error('Bukan fail projek Titik yang sah.');
+  const o=JSON.parse(await dj.async('string'));if(!o||!o.name)throw new Error('Fail projek rosak.');
+  const loc=(()=>{try{return JSON.parse(LS.get('brl_proj_'+o.name)||'null')}catch(e){return null}})();
+  if(loc&&loc.edits&&Object.keys(loc.edits).length&&(loc.at||0)>(o.at||0)&&!confirm('Peranti ini ada suntingan lebih baharu bagi "'+o.name+'" daripada fail projek. Guna suntingan daripada fail juga?'))return;
+  LS.set('brl_proj_'+o.name,JSON.stringify({v:1,name:o.name,edits:o.edits||{},at:o.at||Date.now()}));
+  LS.set('brl_img_'+o.name,JSON.stringify(o.imgDesc||{}));LS.set('brl_brk_'+o.name,JSON.stringify(o.brks||[]));
+  const buf=await dd.async('arraybuffer');openApp();await load(new File([buf],(o.fname||o.name+'.docx')))}
+  catch(e){openApp();$('out').hidden=false;$('warns').innerHTML='<div class="w e">'+esc(e.message||'Fail projek tidak sah.')+'</div>'}}
 $('pji').onclick=()=>$('pjf').click();
 $('pjf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f||!last)return;try{const o=JSON.parse(await f.text());if(!o||!o.edits)throw 0;
   if(o.name&&o.name!==name&&!confirm('Projek ini untuk "'+o.name+'", bukan "'+name+'". Teruskan?'))return;
@@ -1800,12 +1815,20 @@ try{if(/^https?:$/.test(location.protocol)&&'serviceWorker' in navigator)navigat
 
 // ---- skrin utama ----
 const showHome=!navigator.webdriver||location.hash==='#home';
-function drawHome(){let n=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('brl_proj_')===0){let c=0;try{c=Object.keys((JSON.parse(localStorage.getItem(k))||{}).edits||{}).length}catch(e){}n.push([k.slice(9),c])}}}catch(e){}
-  $('hproj').innerHTML=n.length?'<h2 style="font-size:16px;margin:0 0 8px">Projek tersimpan</h2><div class="card" style="padding:0">'+n.map(([a,c])=>'<div class="row" style="padding:12px 16px;border-bottom:1px solid var(--bd)"><b style="flex:1">'+esc(a)+'</b><span class="sm">'+c+' suntingan</span></div>').join('')+'</div><p class="sm">Untuk menyambung, muat naik semula fail Word yang sama. Suntingan akan dipulihkan.</p>':''}
+async function drawHome(){const m={};
+  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('brl_proj_')===0){let c=0,t=0;try{const o=JSON.parse(localStorage.getItem(k))||{};c=Object.keys(o.edits||{}).length;t=o.at||0}catch(e){}m[k.slice(9)]={c,t,has:false}}}}catch(e){}
+  for(const k of await idbKeys()){const v=await idbGet(k);m[k]=Object.assign(m[k]||{c:0,t:0},{has:!!v,t:Math.max((m[k]||{}).t||0,(v&&v.t)||0)})}
+  const n=Object.keys(m).sort((a,b)=>m[b].t-m[a].t);
+  $('hproj').innerHTML=n.length?'<h2 style="font-size:16px;margin:0 0 8px">Projek tersimpan</h2><div class="card" style="padding:0">'+n.map(a=>{const e=m[a],d=e.t?new Date(e.t).toLocaleDateString('ms-MY'):'';return '<div class="row" style="padding:12px 16px;border-bottom:1px solid var(--bd)"><b style="flex:1;min-width:140px">'+esc(a)+'</b><span class="sm">'+(d?d+' · ':'')+e.c+' suntingan</span>'+(e.has?'<button data-o="'+encodeURIComponent(a)+'">Buka</button>':'<span class="sm">(fail Word tiada: muat naik semula)</span>')+'<button class="g" data-x="'+encodeURIComponent(a)+'">Buang</button></div>'}).join('')+'</div><p class="sm">Buka terus menyambung suntingan yang disimpan. Fail Word disimpan dalam peranti ini sahaja. Buang memadam fail dan suntingan projek itu daripada peranti ini.</p>':''}
+$('hproj').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.o){const k=decodeURIComponent(b.dataset.o),v=await idbGet(k);if(!v)return;openApp();load(new File([v.buf],v.fname||k+'.docx'))}
+  else if(b.dataset.x){if(b.dataset.s!=='1'){b.dataset.s='1';b.textContent='Pasti buang?';setTimeout(()=>{if(b.isConnected){b.dataset.s='';b.textContent='Buang'}},3500);return}
+    const k=decodeURIComponent(b.dataset.x);await idbDel(k);['brl_proj_','brl_img_','brl_brk_'].forEach(p=>{try{localStorage.removeItem(p+k)}catch(e){}});drawHome()}};
 function openApp(){$('home').hidden=true;$('app').hidden=false;scrollTo(0,0)}
 function openHome(){drawHome();$('hverd').textContent=$('verd').textContent?$('verd').textContent.replace('Aplikasi desktop, ',''):'';$('home').hidden=false;$('app').hidden=true;scrollTo(0,0)}
 const temaUpd=()=>{$('tema').textContent=document.documentElement.getAttribute('data-theme')==='dark'?'Mod cerah':'Mod gelap'};
 $('tema').onclick=()=>{const d=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',d);LS.set('brl_tema',d);temaUpd();try{if(typeof xml!=='undefined'&&xml)go2()}catch(e){}};temaUpd();
+$('hopen').onclick=()=>$('hfile').click();$('hfile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)bukaTitik(f)};
 $('hmbm').onclick=openApp;$('gohome').onclick=openHome;
 if(showHome)openHome();
 })();
