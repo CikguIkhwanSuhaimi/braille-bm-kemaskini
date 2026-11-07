@@ -1,5 +1,5 @@
 {
-  "version": "1.4.2",
-  "sha256": "636a5bcd0c0b3182767421f54bd749cc16bccc6b39aabd011f20239f4940eb3a",
-  "notes": "BM kekal deskripsi sahaja; rajah timbul hanya dalam modul Sains"
+  "version": "1.4.3",
+  "sha256": "c977c832ab02da5b695d3d89bf5d7bfe374d140a314490338ac123f04f7fa7d7",
+  "notes": "Baiki ralat jadual (baris tak lengkap/sel gabung) dan amaran palsu antara jadual berturutan"
 }

@@ -858,7 +858,7 @@ function render(tbl, tr, cfg = {}) {
   const rowInfo = tbl.rows.map(r => {
     const cells = []; let col = 0;
     for (const c of r.cells) { const span = Math.max(1, Math.min(c.span || 1, n - col)); cells.push({ col, span, c }); col += span; }
-    while (col < n) { cells.push({ col, span: 1, c: { text: '', align: 'left' } }); col++; }
+    while (col < n) { cells.push({ col, span: 1, c: { text: '', align: 'left', _ls: [], _ss: [] } }); col++; }
     const wall = Array(n + 1).fill(false); wall[0] = wall[n] = true; cells.forEach(x => { wall[x.col] = true; wall[x.col + x.span] = true; });
     return { cells, wall };
   });
@@ -1112,7 +1112,7 @@ function compose(blocks, dict, cfg = {}) {
       const nx = atoms[i + 1], f0 = nx.blocks[0] || {}, fs0 = (f0.src || '').trim();
       const nextBahan = f0.t === 'raw' || LABEL.test(fs0) || /^(bahan|petikan|rajah|gambar|teks|carta|jadual|puisi|sajak|iklan|poster|grafik|peta)\b/i.test(fs0) || /^soalan\s+\d/i.test(fs0);
       const refers = /\bdi\s+(bawah|atas)\b|\bberikut\b/i.test(s) && nextBahan;
-      const st = s.trim(), titleLike = st.length > 0 && st.length <= 70 && !/[.!?:;,]$/.test(st) && (f0.t === 'raw' || (st === st.toUpperCase() && /[A-Z]/.test(st)) || (st.length <= 40 && /^(baca|lihat|perhatikan|amati|dengar|rujuk)\b/i.test(fs0)));   // tajuk pendek (tanpa noktah) sebelum jadual/petikan kekal bersamanya
+      const st = s.trim(), titleLike = !/^[\u2500-\u257f]/.test(st) && st.length > 0 && st.length <= 70 && !/[.!?:;,]$/.test(st) && (f0.t === 'raw' || (st === st.toUpperCase() && /[A-Z]/.test(st)) || (st.length <= 40 && /^(baca|lihat|perhatikan|amati|dengar|rujuk)\b/i.test(fs0)));   // tajuk pendek (tanpa noktah) sebelum jadual/petikan kekal bersamanya
       if (!(last && last.kn) && !(s && (TRIG.test(st) || LABEL.test(st) || refers || titleLike))) break;
       const cand = { gap: a.gap, newPage: a.newPage, role: a.role, blocks: a.blocks.concat(Array(nx.gap || 0).fill({ t: 'blank' }), nx.blocks) };
       const n = cand.blocks.reduce((t, b) => t + L.blockLines(b, Object.assign({}, L.DEFAULT, cfg)).length, 0);
