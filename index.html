@@ -1138,15 +1138,15 @@ function mapXY(x, y, iw, ih, W, H) {
 }
 // letak huruf (a, b, c ...) pada sel yang paling hampir dengan setiap kelompok teks yang dibuang; pulang {dots, letters}
 function placeLabels(dots, clusters, iw, ih, W, H, max = 12) {
-  const d = dots.slice(), used = new Set(), out = [];
+  const d = dots.slice(), used = new Set(), out = [], pos = [];
   const put = (r, c, ch) => { const b = bitsOf(ch); for (const [dy, dx, v] of BIT) { const y = r * 3 + dy, x = c * 2 + dx; d[y] = d[y].slice(0, x) + ((b & v) ? '1' : '0') + d[y].slice(x + 1); } };
   clusters.slice(0, max).forEach((k, i) => {
     const [mx, my] = mapXY((k.x0 + k.x1) / 2, (k.y0 + k.y1) / 2, iw, ih, W, H);
     let r = Math.max(0, Math.min(H - 1, Math.round((my - DP) / LP))), c = Math.max(0, Math.min(W - 1, Math.floor(mx / CP)));
     for (let t = 0; t < 12 && used.has(r + ',' + c); t++) c = Math.min(W - 1, c + 1);
-    used.add(r + ',' + c); const ch = 'abcdefghijkl'[i]; put(r, c, ch); out.push(ch);
+    used.add(r + ',' + c); const ch = 'abcdefghijkl'[i]; put(r, c, ch); out.push(ch); pos.push({ r, c, tx: ch });
   });
-  return { dots: d, letters: out };
+  return { dots: d, letters: out, pos };
 }
 // halaman penuh: tajuk, grid, kunci. Pulangkan baris aksara tepat `rows` baris
 function pageLines(t, cols, rows, tr) {
@@ -1203,7 +1203,9 @@ function compose(blocks, dict, cfg = {}) {
     if (b.role === 'image' && b.tactile) {              // muka surat rajah timbul: satu muka penuh, bersendirian
       const rows = cfg.rows || L.DEFAULT.rows, cols = cfg.cols || L.DEFAULT.cols;
       const pl = TAC.pageLines(b.tactile, cols, rows, tr);
-      const lbs = pl.map((l, k) => ({ t: 'raw', text: l, src: k === 0 ? 'Rajah timbul (gambar ' + b.imageNo + ')' : '' }));
+      const hd = tr((b.tactile.title || '').trim()) ? 2 : 0, labm = {};
+      (b.tactile.labels || []).forEach(l => { if (l && TAC.cellBits(b.tactile.dots, l.r, l.c)) (labm[hd + l.r] = labm[hd + l.r] || []).push(l.tx + ' (sel ' + (l.c + 1) + ')'); });
+      const lbs = pl.map((l, k) => ({ t: 'raw', text: l, src: (k === 0 ? 'Rajah timbul (gambar ' + b.imageNo + ')' : '') + (labm[k] ? (k === 0 ? '  ' : '') + 'Label ' + labm[k].join(', ') : '') }));
       if (b.text) flat.push({ role: 'image', gap: gapFor(b, prev), lb: { t: 'para', text: tr('Deskripsi gambar: ' + b.text), src: 'Deskripsi gambar: ' + b.text }, pb: !!b.pageBreak });
       flat.push({ role: 'tac', gap: 0, lb: lbs, pb: true });
       prev = b; continue;
@@ -1647,7 +1649,7 @@ function tacUI(im,b){
     return bd<=9?{dot:best}:{}};
   let down=false;
   const act=ev=>{const h=hit(ev),t=T();if(mode==='l'){if(!h.cell)return;const tx=(q('.tl').value||'').trim();if(!tx)return;const seq=[];let num=false;for(const ch of tx){if(/[0-9]/.test(ch)){if(!num){seq.push(K.bitsOf('#'));num=true}seq.push(K.bitsOf('jabcdefghi'[+ch]))}else{num=false;if(/[A-Z]/.test(ch)){seq.push(K.bitsOf(','));seq.push(K.bitsOf(ch.toLowerCase()))}else seq.push(K.bitsOf(ch))}}
-      const dd=tacDims(t);seq.forEach((bits,k)=>{const c=h.cell[1]+k;if(c>=dd.W)return;for(const[dy,dx,v]of K.BIT)setDot(h.cell[0]*3+dy,c*2+dx,bits&v)})}else if(h.dot)setDot(h.dot[0],h.dot[1],mode==='d');draw()};
+      (t.labels=t.labels||[]).push({r:h.cell[0],c:h.cell[1],tx});const dd=tacDims(t);seq.forEach((bits,k)=>{const c=h.cell[1]+k;if(c>=dd.W)return;for(const[dy,dx,v]of K.BIT)setDot(h.cell[0]*3+dy,c*2+dx,bits&v)})}else if(h.dot)setDot(h.dot[0],h.dot[1],mode==='d');draw()};
   cv.onpointerdown=ev=>{down=true;cv.setPointerCapture(ev.pointerId);if(mode==='b'){bs=mm(ev)}else act(ev);ev.preventDefault()};
   const mm=ev=>{const R=cv.getBoundingClientRect(),k=cv.width/R.width;return[(ev.clientX-R.left)*k/SC,(ev.clientY-R.top)*k/SC]};
   cv.onpointermove=ev=>{if(down&&mode!=='l'&&mode!=='b')act(ev)};
@@ -1656,8 +1658,8 @@ function tacUI(im,b){
   const gen=async()=>{const t=T();if(!b){ts.textContent='Gambar tidak tersedia untuk ditukar.';return}
     try{if(!gray)gray=await tacGray(b,1200);const d=tacDims(t);let g=gray.gr,cl=[];if(t.rmText){const f=K.findText(gray.gr,gray.w,gray.h,{thr:t.thr,invert:t.inv});cl=f.clusters;g=gray.gr.slice();for(let i=0;i<g.length;i++)if(f.mask[i])g[i]=255}
       let dots=K.sample(g,gray.w,gray.h,d.W,d.H,{thr:t.thr,rad:t.rad/10,frac:t.frac/100,invert:t.inv,edge:t.edge});let msg='';
-      if(t.rmText){if(cl.length){const r=K.placeLabels(dots,cl,gray.w,gray.h,d.W,d.H);dots=r.dots;if(!(t.key||'').trim()||/^([a-l] = ?\n?)+$/.test(t.key.trim()+'\n')){t.key=r.letters.map(x=>x+' = ').join('\n');q('.tkey').value=t.key}msg=cl.length+' label dikesan, huruf '+r.letters.join(', ')+' diletakkan. Isi kunci di bawah.'}else msg='Tiada kelompok teks dikesan.'}
-      t.dots=dots;t.edited=false;draw();if(msg)ts.textContent+=' · '+msg;tacSave()}catch(e){ts.textContent='Gagal menukar gambar.'}};
+      if(t.rmText){if(cl.length){const r=K.placeLabels(dots,cl,gray.w,gray.h,d.W,d.H);dots=r.dots;t.labels=r.pos;if(!(t.key||'').trim()||/^([a-l] = ?\n?)+$/.test(t.key.trim()+'\n')){t.key=r.letters.map(x=>x+' = ').join('\n');q('.tkey').value=t.key}msg=cl.length+' label dikesan, huruf '+r.letters.join(', ')+' diletakkan. Isi kunci di bawah.'}else msg='Tiada kelompok teks dikesan.'}
+      t.dots=dots;t.edited=false;t.labels=[];draw();if(msg)ts.textContent+=' · '+msg;tacSave()}catch(e){ts.textContent='Gagal menukar gambar.'}};
   q('.tk').onchange=async()=>{const t=T();t.on=q('.tk').checked;tb.hidden=!t.on;if(t.on&&!t.edited&&!(t.dots||[]).some(r=>r.includes('1'))){await gen()}else{draw();tacSave()}};
   [['.ta','thr'],['.tr','rad'],['.tf','frac']].forEach(([s2,k])=>{q(s2).oninput=()=>{T()[k]=+q(s2).value;clearTimeout(dn);dn=setTimeout(()=>{if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()},350)}});
   q('.ti').onchange=()=>{T().inv=q('.ti').checked;if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
@@ -1665,7 +1667,7 @@ function tacUI(im,b){
   q('.te').onchange=()=>{T().edge=q('.te').checked;if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
   q('.tg').onclick=()=>{if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
   q('.tg2').onchange=async()=>{if(q('.tg2').checked&&!gray&&b){try{gray=await tacGray(b,1200)}catch(e){}}draw()};
-  q('.tclr').onclick=()=>{const t=T(),d=tacDims(t);t.dots=K.blank(d.W,d.H);t.edited=true;draw();tacSave()};
+  q('.tclr').onclick=()=>{const t=T(),d=tacDims(t);t.dots=K.blank(d.W,d.H);t.labels=[];t.edited=true;draw();tacSave()};
   q('.tt').oninput=()=>{T().title=q('.tt').value;draw();tacSave()};
   q('.tkey').oninput=()=>{T().key=q('.tkey').value;draw();tacSave()};
   q('.tpiaf').onclick=async()=>{if(!b){ts.textContent='Gambar tidak tersedia.';return}const t=T();try{const G=await tacGray(b,2400),cv2=document.createElement('canvas');cv2.width=G.w;cv2.height=G.h;const g=cv2.getContext('2d'),id=g.createImageData(G.w,G.h);
@@ -2218,7 +2220,7 @@ function libSave(t,b,say2){
   $('ld_x').onclick=()=>dlg.close('x');
   dlg.onclose=async()=>{if(dlg.returnValue!=='ok')return;const d=tacDims(t),title=$('ld_t').value.trim()||'Rajah tanpa tajuk';
     const id=t.libId||('r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
-    const it={id,title,subjek:$('ld_s').value,topik:$('ld_p').value.trim(),tags:$('ld_g').value.split(',').map(s=>s.trim()).filter(Boolean),dots:t.dots.slice(),W:d.W,H:d.H,key:t.key||'',opt:{thr:t.thr,rad:t.rad,frac:t.frac,inv:!!t.inv,edge:!!t.edge,rmText:!!t.rmText,edited:!!t.edited},src:await srcPng(b),at:Date.now()};
+    const it={id,title,subjek:$('ld_s').value,topik:$('ld_p').value.trim(),tags:$('ld_g').value.split(',').map(s=>s.trim()).filter(Boolean),dots:t.dots.slice(),labels:(t.labels||[]).slice(),W:d.W,H:d.H,key:t.key||'',opt:{thr:t.thr,rad:t.rad,frac:t.frac,inv:!!t.inv,edge:!!t.edge,rmText:!!t.rmText,edited:!!t.edited},src:await srcPng(b),at:Date.now()};
     try{await libPut(it);t.libId=id;t.title=t.title||title;say2('Disimpan ke Pustaka: '+title);libCount()}catch(e){say2('Gagal simpan ke Pustaka.')}};
   dlg.showModal();$('ld_t').focus()}
 function libThumb(cv,it,SC){const W=it.W,H=it.H;cv.width=Math.round(W*K.CP*SC);cv.height=Math.round(((H-1)*K.LP+2*K.DP+4)*SC);const g=cv.getContext('2d');g.fillStyle=getComputedStyle(document.body).color;const r=Math.max(.9,.8*SC);
@@ -2229,8 +2231,8 @@ function libBrf(it){const c=cfg(),lines=K.pageLines({dots:it.dots,title:it.title
 async function libPiaf(it){const nm=(it.title||'rajah').replace(/[^\w\-]+/g,'_')+'_piaf.png';const sb=await psrc(it);
   if(sb){const G=await tacGray(sb,2400),cv=document.createElement('canvas');cv.width=G.w;cv.height=G.h;const g=cv.getContext('2d'),id=g.createImageData(G.w,G.h);for(let i=0;i<G.w*G.h;i++){const v=((G.gr[i]<it.opt.thr)!==!!it.opt.inv)?0:255;id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v;id.data[i*4+3]=255}g.putImageData(id,0,0);dl(nm,await new Promise(ok=>cv.toBlob(ok,'image/png')))}
   else{const cv=document.createElement('canvas');libThumb(cv,it,4);dl(nm,await new Promise(ok=>cv.toBlob(ok,'image/png')))}}
-function libUse(it,no){const d=tacDims(it);imgTac[no]={on:true,thr:it.opt.thr,rad:it.opt.rad,frac:it.opt.frac,inv:it.opt.inv,edge:it.opt.edge,rmText:it.opt.rmText,title:it.title,key:it.key,dots:K.fit(it.dots,d.W,d.H),edited:true,libId:it.id};LS.set('brl_tac_'+name,JSON.stringify(imgTac));libClose();imgKey='';drawImages().then(()=>go2())}
-function libEdit(it){libClose();const seed={on:true,thr:it.opt.thr,rad:it.opt.rad,frac:it.opt.frac,inv:it.opt.inv,edge:it.opt.edge,rmText:it.opt.rmText,title:it.title,key:it.key,dots:it.dots.slice(),edited:true,libId:it.id,topik:it.topik,tags:it.tags,subjek:it.subjek};studioFiles([new File([it.src],(it.title||'rajah')+'.png',{type:'image/png'})],[seed])}
+function libUse(it,no){const d=tacDims(it);imgTac[no]={on:true,thr:it.opt.thr,rad:it.opt.rad,frac:it.opt.frac,inv:it.opt.inv,edge:it.opt.edge,rmText:it.opt.rmText,title:it.title,key:it.key,dots:K.fit(it.dots,d.W,d.H),labels:(it.labels||[]).slice(),edited:true,libId:it.id};LS.set('brl_tac_'+name,JSON.stringify(imgTac));libClose();imgKey='';drawImages().then(()=>go2())}
+function libEdit(it){libClose();const seed={on:true,thr:it.opt.thr,rad:it.opt.rad,frac:it.opt.frac,inv:it.opt.inv,edge:it.opt.edge,rmText:it.opt.rmText,title:it.title,key:it.key,dots:it.dots.slice(),labels:(it.labels||[]).slice(),edited:true,libId:it.id,topik:it.topik,tags:it.tags,subjek:it.subjek};studioFiles([new File([it.src],(it.title||'rajah')+'.png',{type:'image/png'})],[seed])}
 async function libRender(){
   await libCount();const all=LSCOPE==='sekolah'?PUS:await libAll(),g=$('libg');g.innerHTML='';
   const sc=$('libsc');sc.innerHTML='';[['saya','Pustaka saya'],['sekolah','Pustaka sekolah'+(PUS.length?' ('+PUS.length+')':'')]].forEach(([k,t])=>{const b=document.createElement('button');b.type='button';b.textContent=t;b.className=k===LSCOPE?'on':'';b.setAttribute('aria-pressed',k===LSCOPE);b.onclick=()=>{LSCOPE=k;LF='Semua';libRender()};sc.append(b)});

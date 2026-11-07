@@ -1,5 +1,5 @@
 {
-  "version": "1.7.2",
-  "sha256": "3e070d3be857953724142a87e014fd476a5782ef0aa6b2148d2a5ffaba206077",
-  "notes": "Label teks pada rajah: huruf besar, nombor dan perkataan pendek"
+  "version": "1.7.3",
+  "sha256": "af3bff713358b9f09aefc2648220f56486dd12ad8ed22681a777ae1615df9821",
+  "notes": "Label rajah timbul dipaparkan sebagai teks biasa di lajur kanan pratonton dan PDF semakan"
 }
