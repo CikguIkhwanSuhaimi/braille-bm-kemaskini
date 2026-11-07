@@ -206,7 +206,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 <div id="pt" class="pt"></div><div class="row" style="margin-top:10px"><button class="g" id="ptreset">Pulihkan lalai</button><button class="g" id="ptexp">Eksport</button><button class="g" id="ptimp">Import</button><input id="ptfile" type="file" accept=".json,.txt" hidden></div></div>
 <div class="card"><h2>Jadual</h2>
 <p class="sm" style="margin-top:0">Jadual dalam Word dibina semula dengan bingkai titik. Lebar lajur ikut Word, teks dilipat dalam sel, dan dinding sentiasa sejajar. Klik titik untuk ubah sel bagi setiap bahagian bingkai (lalai: ikut jadual DXB sekolah).</p>
-<div class="row"><label>Baris kosong atas dan bawah dalam sel <input id="tpv" type="number" min="0" max="3" value="1"></label><label>Jadual lebar <select id="tmode"><option value="auto">Auto (senarai jika lajur sempit)</option><option value="frame">Sentiasa bingkai</option><option value="list">Sentiasa senarai</option></select></label></div>
+<div class="row"><label>Baris kosong atas dan bawah dalam sel <input id="tpv" type="number" min="0" max="3" value="1"></label><label>Jadual lebar <select id="tmode"><option value="auto">Auto (English: senarai jika lajur sempit)</option><option value="frame">Sentiasa bingkai</option><option value="list">Sentiasa senarai</option></select></label></div>
 <div id="tc" class="pt" style="margin-top:10px"></div>
 <div class="row" style="margin-top:10px"><button class="g" id="tcreset">Pulihkan lalai</button></div></div>
 <div id="out" hidden>
@@ -1603,6 +1603,7 @@ const optLabel = l => ';,' + l.toLowerCase() + '4';
 const cleanCell = t => String(t || '').replace(/[\u0002-\u0005\u0007\u000e\u000f\u0010]/g, '').replace(/\s*\n\s*/g, ' ').replace(/\s+/g, ' ').trim();
 function tableWide(tbl, cfg) {
   const mode = cfg.tableMode || 'auto';
+  if (mode === 'auto' && cfg.lang !== 'en') return false;      // BM kekal bingkai (sudah disahkan dengan jadual DXB sekolah)
   if (mode === 'frame') return false;
   if (mode === 'list') return true;
   const n = Math.max(1, tbl.widths.length), W = cfg.cols || 36, avail = Math.max(n * 3, W - (n + 1));

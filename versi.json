@@ -1,5 +1,5 @@
 {
-  "version": "1.12.1",
-  "sha256": "094ba22501e56a61dcfd990999012832fcdf2bc8c8c49104fc0cec3cc337439f",
-  "notes": "Jadual lebar (lajur sempit, sel bercantum) kini ditukar automatik kepada senarai Tajuk: nilai supaya boleh dibaca. Pilihan Auto/Bingkai/Senarai dalam Tetapan jadual."
+  "version": "1.12.2",
+  "sha256": "c791a17dcf6dc6d4fb02585d5b21847aeab5e22e859206a660a95b22bd14d61a",
+  "notes": "Jadual lebar ditukar kepada senarai secara automatik hanya untuk English (UEB); Bahasa Melayu kekal bingkai seperti sebelum ini. Pilihan Auto/Bingkai/Senarai dalam Tetapan jadual."
 }
