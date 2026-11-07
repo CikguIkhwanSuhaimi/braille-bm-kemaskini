@@ -104,7 +104,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 </style>
 <div id="home" class="hm" hidden>
 <div class="hmh"><svg width="30" height="42" viewBox="0 0 34 46" role="img" aria-label="Logo Titik: sel braille huruf t"><g fill="currentColor"><circle cx="9" cy="8" r="5" opacity=".18"/><circle cx="9" cy="23" r="5"/><circle cx="9" cy="38" r="5"/><circle cx="25" cy="8" r="5" opacity=".18"/><circle cx="25" cy="23" r="5"/><circle cx="25" cy="38" r="5" opacity=".18"/></g></svg>
-<div><b>Titik</b><small>Penterjemah Braille Kita</small></div><span id="hverd" class="sm" style="margin-left:auto"></span><button class="g" id="tema" type="button"></button></div>
+<div><b>Titik</b><small>Penterjemah Braille Kita</small></div><span id="hverd" class="sm" style="margin-left:auto"></span><button class="g" id="hemb" type="button">Embosser</button><button class="g" id="tema" type="button"></button></div>
 <h1>Apa yang hendak diterjemah hari ini?</h1>
 <p class="s" style="max-width:640px">Pilih jenis dokumen. Muat naik fail Word, semak titik braille bersebelahan paparan biasa, kemudian cetak terus ke embosser.</p>
 <div class="hmc">
@@ -112,9 +112,10 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 <div class="hmk"><span class="hmt">Akan datang</span><strong>English (UEB)</strong><span class="sm">Unified English Braille Grade 2 untuk kertas Bahasa Inggeris.</span></div>
 <div class="hmk"><span class="hmt">Akan datang</span><strong>Matematik</strong><span class="sm">Persamaan dan simbol matematik dengan paparan titik pada setiap simbol.</span></div>
 <button class="hmk on" id="hmsn"><span class="hmt">Sedia digunakan</span><strong>Sains</strong><span class="sm">Kertas Sains dwibahasa dengan rajah timbul (grafik titik) selain deskripsi. Teks guna kod BM; simbol kimia dan unit khas masih dalam semakan, jadi semak pratonton.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
-<button class="hmk on" id="hmst"><span class="hmt">Baharu</span><strong>Studio Rajah</strong><span class="sm">Tukar gambar apa sahaja (imej, tangkap layar, tampal) kepada muka surat rajah timbul. Tak perlu fail Word. Boleh simpan sebagai projek untuk guna semula.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Pilih gambar →</span></button><input id="hstf" type="file" accept="image/*" multiple hidden>
+<div class="hmk on" id="hmstc" style="cursor:default"><span class="hmt">Baharu</span><strong>Studio Rajah</strong><span class="sm">Tukar gambar (imej, tangkap layar, tampal) atau lakaran sendiri kepada muka surat rajah timbul. Tak perlu fail Word. Simpan dalam Pustaka untuk guna semula.</span>
+<div class="row" style="margin-top:auto"><button id="hmst" type="button">Pilih gambar</button><button class="g" id="hsk" type="button">Lakaran baharu</button><button class="g" id="hlib" type="button">Pustaka Rajah <span id="hlibn"></span></button></div></div><input id="hstf" type="file" accept="image/*" multiple hidden>
 </div>
-<div class="row" style="margin-bottom:18px"><button class="g" id="hsk" type="button">Lakaran baharu</button><button class="g" id="hemb" type="button">Embosser</button><button class="g" id="hlib" type="button">Pustaka Rajah <span id="hlibn"></span></button><button class="g" id="hopen">Buka fail projek (.titik)</button><input id="hfile" type="file" accept=".titik" hidden><span class="sm">Fail projek daripada peranti lain atau rakan guru.</span></div>
+<div class="row" style="margin-bottom:18px"><button class="g" id="hopen">Buka fail projek (.titik)</button><input id="hfile" type="file" accept=".titik" hidden><span class="sm">Fail projek daripada peranti lain atau rakan guru.</span></div>
 <div id="hproj"></div>
 <div class="hmf"><b>Titik – Penterjemah Braille Kita</b><br>Dibangunkan oleh Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi) · SMK Pendidikan Khas Setapak, Kuala Lumpur</div>
 </div>
