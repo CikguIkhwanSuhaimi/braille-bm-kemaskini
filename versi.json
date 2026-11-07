@@ -1,5 +1,5 @@
 {
-  "version": "1.12.0",
-  "sha256": "b795701eb972598dd0a846e719f2ea5a1984fac046bfeea4421dba1217916273",
-  "notes": "Modul baharu: English (UEB) Gred 2. Kad English di skrin utama, layout dan cetakan sama seperti Bahasa Melayu. Semak pratonton, terutama nama khas dan singkatan."
+  "version": "1.12.1",
+  "sha256": "094ba22501e56a61dcfd990999012832fcdf2bc8c8c49104fc0cec3cc337439f",
+  "notes": "Jadual lebar (lajur sempit, sel bercantum) kini ditukar automatik kepada senarai Tajuk: nilai supaya boleh dibaca. Pilihan Auto/Bingkai/Senarai dalam Tetapan jadual."
 }

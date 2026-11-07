@@ -206,7 +206,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 <div id="pt" class="pt"></div><div class="row" style="margin-top:10px"><button class="g" id="ptreset">Pulihkan lalai</button><button class="g" id="ptexp">Eksport</button><button class="g" id="ptimp">Import</button><input id="ptfile" type="file" accept=".json,.txt" hidden></div></div>
 <div class="card"><h2>Jadual</h2>
 <p class="sm" style="margin-top:0">Jadual dalam Word dibina semula dengan bingkai titik. Lebar lajur ikut Word, teks dilipat dalam sel, dan dinding sentiasa sejajar. Klik titik untuk ubah sel bagi setiap bahagian bingkai (lalai: ikut jadual DXB sekolah).</p>
-<div class="row"><label>Baris kosong atas dan bawah dalam sel <input id="tpv" type="number" min="0" max="3" value="1"></label></div>
+<div class="row"><label>Baris kosong atas dan bawah dalam sel <input id="tpv" type="number" min="0" max="3" value="1"></label><label>Jadual lebar <select id="tmode"><option value="auto">Auto (senarai jika lajur sempit)</option><option value="frame">Sentiasa bingkai</option><option value="list">Sentiasa senarai</option></select></label></div>
 <div id="tc" class="pt" style="margin-top:10px"></div>
 <div class="row" style="margin-top:10px"><button class="g" id="tcreset">Pulihkan lalai</button></div></div>
 <div id="out" hidden>
@@ -1598,8 +1598,37 @@ const numLabel = n => '#' + [...String(n)].map(d => 'jabcdefghi'[+d]).join('') +
 const romanLabel = r => (r === 'I' ? ';,i4' : ',,' + r.toLowerCase() + '4');
 const optLabel = l => ';,' + l.toLowerCase() + '4';
 
+
+// ---- Jadual lebar -> senarai (lajur terlalu sempit untuk bingkai braille) ----
+const cleanCell = t => String(t || '').replace(/[\u0002-\u0005\u0007\u000e\u000f\u0010]/g, '').replace(/\s*\n\s*/g, ' ').replace(/\s+/g, ' ').trim();
+function tableWide(tbl, cfg) {
+  const mode = cfg.tableMode || 'auto';
+  if (mode === 'frame') return false;
+  if (mode === 'list') return true;
+  const n = Math.max(1, tbl.widths.length), W = cfg.cols || 36, avail = Math.max(n * 3, W - (n + 1));
+  const total = tbl.widths.reduce((a, b) => a + b, 0) || n;
+  const inner = tbl.widths.map(w => Math.max(3, Math.floor(avail * w / total)));
+  return tbl.rows.some(r => { let col = 0; return r.cells.some(c => { const sp = Math.max(1, c.span || 1); const w = inner.slice(col, col + sp).reduce((a, b) => a + b, 0) + (sp - 1); col += sp; return cleanCell(c.text) && w < 8; }); });
+}
+function tableList(tbl, b) {
+  const rows = tbl.rows.map(r => r.cells.map(c => ({ t: cleanCell(c.text), sp: Math.max(1, c.span || 1) })));
+  const hdr = rows.length > 2 && rows[0].length >= 3 && rows[0].every(c => c.t && c.t.length <= 45 && c.sp === 1) ? rows[0].map(c => c.t) : null;
+  const out = []; let first = true;
+  rows.slice(hdr ? 1 : 0).forEach(cells => {
+    const lines = [];
+    if (hdr && cells.length === hdr.length) cells.forEach((c, i) => { if (c.t) lines.push(hdr[i] + ': ' + c.t); });
+    else if (cells.length === 2) { if (cells[0].t && cells[1].t) lines.push(cells[0].t + ': ' + cells[1].t); else lines.push(cells[0].t || cells[1].t); }
+    else if (cells.length % 2 === 0 && cells.filter((c, i) => i % 2 === 0).every(c => c.t.length <= 30)) { for (let i = 0; i < cells.length; i += 2) if (cells[i].t || cells[i + 1].t) lines.push(cells[i].t + (cells[i + 1].t ? ': ' + cells[i + 1].t : '')); }
+    else { const t = cells.map(c => c.t).filter(Boolean).join(' | '); if (t) lines.push(t); }
+    lines.forEach((t, i) => { out.push({ role: 'passage', text: t, blankBefore: i === 0 && !first, pageBreak: first && b.pageBreak }); first = false; });
+  });
+  return out;
+}
 function compose(blocks, dict, cfg = {}) {
-  const warnings = []; const flat = [];                 // {role, blocks:[layoutBlock], gap, unit}
+  const warnings = []; const flat = [];
+  let nWide = 0;
+  blocks = blocks.flatMap(b => (b.role === 'table' && b.table && tableWide(b.table, cfg)) ? (nWide++, tableList(b.table, b)) : [b]);
+  if (nWide) warnings.push({ type: 'info', msg: nWide + ' jadual lebar ditukar kepada senarai (Tajuk lajur: nilai) kerana lajur terlalu sempit untuk bingkai braille. Dalam Tetapan jadual, pilih Bingkai jika mahu bingkai.' });                 // {role, blocks:[layoutBlock], gap, unit}
   let prev = null, inArahan = false, answerLines = 0, bahagianSeen = false;
   const EN = cfg.lang === 'en';
   const tr = EN ? (t => U.text(t)) : (t => B.text(t, dict, cfg.punct));
@@ -1976,7 +2005,7 @@ async function load(f){
   }catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">'+esc(e.message)+'</div>'}
 }
 let brks=new Set(),restored=0,sTm=null,curBuf=null;
-function cfg(){return{lang:MOD==='en'?'en':'bm',cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:MOD==='sn'?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
+function cfg(){return{tableMode:($('tmode')||{}).value||'auto',lang:MOD==='en'?'en':'bm',cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:MOD==='sn'?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
 function go(){
   let r;try{r=E.P.run(xml,dict(),cfg())}catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">Ralat: '+esc(e.message)+'</div>';return}
   last=r;buildPool();$('out').hidden=false;
@@ -2531,11 +2560,11 @@ eDraw();
 
 // ---- tetapan jadual ----
 let tchars={};try{tchars=JSON.parse(LS.get('brl_tchars')||'{}')||{}}catch(e){tchars={}}
-$('tpv').value=LS.get('brl_tpv')||'1';
+$('tpv').value=LS.get('brl_tpv')||'1';$('tmode').value=LS.get('brl_tmode')||'auto';
 function drawTC(){$('tc').innerHTML=E.T.CHAR_LABELS.map(([k,l])=>bfHtml('t',k,l,tchars[k]!==undefined?tchars[k]:E.T.CHARS[k])).join('')}
 $('tc').addEventListener('click',e=>bfClick(e,'t',drawTC));
 $('tcreset').onclick=()=>{tchars={};LS.set('brl_tchars','{}');drawTC();later()};
-$('tpv').addEventListener('change',()=>{LS.set('brl_tpv',$('tpv').value);later()});
+$('tpv').addEventListener('change',()=>{LS.set('brl_tpv',$('tpv').value);later()});$('tmode').addEventListener('change',()=>{LS.set('brl_tmode',$('tmode').value);later()});
 drawTC();
 
 // ---- saiz pratonton ----
