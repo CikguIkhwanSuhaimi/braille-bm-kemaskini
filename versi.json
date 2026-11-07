@@ -1,5 +1,5 @@
 {
-  "version": "1.10.2",
-  "sha256": "2b17aa680ec46f7b6e3d6a67b1fffbd0581ed28eb3177799743a45206f2ad89b",
-  "notes": "Label rajah: panjang sampai 60 aksara, dialih atau dipecah supaya muat pada muka surat"
+  "version": "1.11.0",
+  "sha256": "f24fa7ab6854238acd73c261039162ed3dd14984cc3c9d54ce21ebe2739a99ca",
+  "notes": "Studio Rajah jadi satu projek tetap (tambah/buang rajah), pratonton dan PDF semakan menulis tajuk, kunci dan label"
 }
