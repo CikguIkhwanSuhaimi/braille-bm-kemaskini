@@ -92,6 +92,7 @@ canvas.sc{vertical-align:middle;display:inline-block}
 <div class="hmk"><span class="hmt">Akan datang</span><strong>English (UEB)</strong><span class="sm">Unified English Braille Grade 2 untuk kertas Bahasa Inggeris.</span></div>
 <div class="hmk"><span class="hmt">Akan datang</span><strong>Matematik</strong><span class="sm">Persamaan dan simbol matematik dengan paparan titik pada setiap simbol.</span></div>
 <button class="hmk on" id="hmsn"><span class="hmt">Sedia digunakan</span><strong>Sains</strong><span class="sm">Kertas Sains dwibahasa dengan rajah timbul (grafik titik) selain deskripsi. Teks guna kod BM; simbol kimia dan unit khas masih dalam semakan, jadi semak pratonton.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
+<button class="hmk on" id="hmst"><span class="hmt">Baharu</span><strong>Studio Rajah</strong><span class="sm">Tukar gambar apa sahaja (imej, tangkap layar, tampal) kepada muka surat rajah timbul. Tak perlu fail Word. Boleh simpan sebagai projek untuk guna semula.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Pilih gambar →</span></button><input id="hstf" type="file" accept="image/*" multiple hidden>
 </div>
 <div class="row" style="margin-bottom:18px"><button class="g" id="hopen">Buka fail projek (.titik)</button><input id="hfile" type="file" accept=".titik" hidden><span class="sm">Fail projek daripada peranti lain atau rakan guru.</span></div>
 <div id="hproj"></div>
@@ -1668,7 +1669,8 @@ async function drawImages(){
         ta.value=r.text.trim();ta.oninput();st.textContent='Semak dan betulkan sebelum guna.'}
       catch(e){st.textContent=(e&&e.code==='not_granted')?'Kebenaran tidak diberi.':'Gagal menjana.'}
       btn.disabled=false};
-    if(MOD==='sn')right.appendChild(tacUI(im,b));
+    if(MOD==='sn'){let seed=false;if(STUDIO&&!imgTac[im.imageNo]){imgTac[im.imageNo]={on:false,thr:160,rad:13,frac:8,inv:false,edge:false,rmText:false,title:STUDIO[im.imageNo-1]||'',key:'',dots:null,edited:false};seed=true}
+      const ui=tacUI(im,b);right.appendChild(ui);if(seed)setTimeout(()=>{const k=ui.querySelector('.tk');if(k&&!k.checked)k.click()},0)}
     row.append(left,right);host.append(row);
   }
 }
@@ -2134,6 +2136,28 @@ const temaUpd=()=>{$('tema').textContent=document.documentElement.getAttribute('
 $('tema').onclick=()=>{const d=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',d);LS.set('brl_tema',d);temaUpd();try{if(typeof xml!=='undefined'&&xml)go2()}catch(e){}};temaUpd();
 $('hopen').onclick=()=>$('hfile').click();$('hfile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)bukaTitik(f)};
 $('hmbm').onclick=()=>{setMod('bm');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};
+let STUDIO=null;
+async function studioFiles(files){
+  files=[...files].filter(f=>/^image\//.test(f.type));if(!files.length)return;
+  const z=new JSZip(),titles=[];let body='',rels='';
+  for(let i=0;i<files.length;i++){
+    const bm=await createImageBitmap(files[i]),sc=Math.min(1,2400/Math.max(bm.width,bm.height)),w=Math.max(1,Math.round(bm.width*sc)),h=Math.max(1,Math.round(bm.height*sc));
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(bm,0,0,w,h);
+    const pb=await new Promise(ok=>cv.toBlob(ok,'image/png'));z.file('word/media/img'+(i+1)+'.png',await pb.arrayBuffer());
+    rels+='<Relationship Id="rId'+(i+10)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/img'+(i+1)+'.png"/>';
+    body+='<w:p><w:r><w:drawing><wp:inline><wp:docPr id="'+(i+1)+'" name="Rajah '+(i+1)+'" descr=""/><a:graphic><a:graphicData><pic:pic><pic:blipFill><a:blip r:embed="rId'+(i+10)+'"/></pic:blipFill></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
+    titles.push((files[i].name||'').replace(/\.[a-z0-9]+$/i,'').replace(/^image$/i,'').replace(/[_]+/g,' ').slice(0,40));
+  }
+  z.file('[Content_Types].xml','<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+  z.file('_rels/.rels','<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+  z.file('word/_rels/document.xml.rels','<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+rels+'</Relationships>');
+  z.file('word/document.xml','<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>'+body+'</w:body></w:document>');
+  const d=new Date(),p2=n=>String(n).padStart(2,'0'),nm='Rajah_'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'_'+p2(d.getHours())+p2(d.getMinutes());
+  const blob=await z.generateAsync({type:'blob',compression:'DEFLATE'});
+  STUDIO=titles;setMod('sn');openApp();await load(new File([blob],nm+'.docx'));
+}
+$('hmst').onclick=()=>$('hstf').click();$('hstf').onchange=e=>{studioFiles(e.target.files);e.target.value=''};
+document.addEventListener('paste',e=>{const fs=[...(e.clipboardData&&e.clipboardData.files||[])].filter(f=>/^image\//.test(f.type));if(fs.length&&(!xml||!$('home').hidden)){e.preventDefault();studioFiles(fs)}});
 $('hmsn').onclick=()=>{setMod('sn');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('gohome').onclick=openHome;setMod(MOD);
 if(showHome)openHome();
 })();
