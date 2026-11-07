@@ -1,5 +1,5 @@
 {
-  "version": "1.5.0",
-  "sha256": "dce575135a5c7ae8e88539239f6ead4d7e9c851ff7e326c6db973bc9e6ee2a92",
-  "notes": "Studio Rajah: tukar imej/tangkap layar/tampal kepada muka surat rajah timbul tanpa fail Word"
+  "version": "1.6.0",
+  "sha256": "c1df85b883309424d5ece15d7dd5cdff3a8bc8d4713b1e469f953af7581d46b7",
+  "notes": "Pustaka Rajah: galeri rajah timbul dengan carian, tapisan, edit, BRF/PIAF, import/eksport"
 }
