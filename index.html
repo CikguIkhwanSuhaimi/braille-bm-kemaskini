@@ -564,7 +564,9 @@ __m['docx-reader']=(function(){const module={exports:{}};const require=k=>__m[k.
 'use strict';
 
 const ENT = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&apos;': "'" };
-const dec = s => s.replace(/&(amp|lt|gt|quot|apos);/g, m => ENT[m]);
+const dec = s => s.replace(/&(amp|lt|gt|quot|apos);/g, m => ENT[m]).replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (m, d) => String.fromCodePoint(+d));
+// teks alt automatik Word / nama fail bukan deskripsi sebenar
+const cleanAlt = a => { let t = String(a || '').replace(/\s*Description automatically generated\.?\s*$/i, '').replace(/\s+/g, ' ').trim(); if (/^(IMG[_ -]?\d*|image\d*|picture\s*\d*|WhatsApp Image.*|Screenshot.*|DSC[_ -]?\d*)(\.\w{3,4})?$/i.test(t) || /\.(png|jpe?g|gif|bmp|webp)$/i.test(t)) return ''; return t; };
 
 
 // ---------- Jadual Word -> {widths, rows:[{cells:[{text,align,span}]}]} ----------
@@ -711,7 +713,7 @@ function readParagraphs(xml) {
     const pbProp = /<w:pageBreakBefore\s*\/>|<w:pageBreakBefore\s+w:val="(?:1|true|on)"\s*\/>/.test(p);
     const bri = p.search(/<w:br\s+w:type="page"\s*\/>/), ti = p.search(/<w:t[ >]/);
     const pbBefore = pbProp || (bri >= 0 && (ti < 0 || bri < ti)), pbAfter = bri >= 0 && !pbBefore;
-    paras.push({ style, num: hasNum, text: tx, draw, alt: dec(alt), embed, keepNext, pbBefore, pbAfter });
+    paras.push({ style, num: hasNum, text: tx, draw, alt: cleanAlt(dec(alt)), embed, keepNext, pbBefore, pbAfter });
   }
   paras.forEach(p => { const m = p.text.match(/^\u0007TABLE:(\d+)\u0007$/); if (m) p.table = tabs[+m[1]]; });
   return { paras, tables, realTables: tabs.length, warnings };
@@ -1054,12 +1056,64 @@ function sample(gray, iw, ih, W, H, opt = {}) {
   return g.map(a => a.join(''));
 }
 function dims(t, cols, rows, tr) {
-  const nk = (t.key || '').split(/\n/).map(s => s.trim()).filter(Boolean).slice(0, 6).length, head = tr((t.title || '').trim()) ? 2 : 0, foot = nk ? nk + 1 : 0;
+  const nk = (t.key || '').split(/\n/).map(s => s.trim()).filter(Boolean).slice(0, 10).length, head = tr((t.title || '').trim()) ? 2 : 0, foot = nk ? nk + 1 : 0;
   return { W: cols, H: Math.max(1, rows - head - foot), head, foot };
+}
+
+// Cari teks bercetak dalam imej: komponen bersambung kecil yang berderet jadi kelompok. Pulang {mask, clusters:[{x0,y0,x1,y1,n}]}
+function findText(gray, iw, ih, opt = {}) {
+  const thr = opt.thr == null ? 160 : opt.thr, mx = Math.max(iw, ih), hMax = mx * 0.09, wMax = mx * 0.12, hMin = Math.max(5, mx * 0.008);
+  const dark = new Uint8Array(iw * ih); for (let i = 0; i < dark.length; i++) dark[i] = (gray[i] < thr) !== !!opt.invert ? 1 : 0;
+  const lab = new Int32Array(iw * ih), comps = []; const stack = [];
+  for (let y0 = 0; y0 < ih; y0++) for (let x0 = 0; x0 < iw; x0++) {
+    const i0 = y0 * iw + x0; if (!dark[i0] || lab[i0]) continue;
+    const id = comps.length + 1; let x1 = x0, y1 = y0, xa = x0, ya = y0, n = 0; lab[i0] = id; stack.push(i0);
+    while (stack.length) {
+      const i = stack.pop(), x = i % iw, y = (i / iw) | 0; n++; if (x < xa) xa = x; if (x > x1) x1 = x; if (y < ya) ya = y; if (y > y1) y1 = y;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= iw || ny >= ih) continue; const j = ny * iw + nx; if (dark[j] && !lab[j]) { lab[j] = id; stack.push(j); } }
+    }
+    comps.push({ id, x0: xa, y0: ya, x1, y1, w: x1 - xa + 1, h: y1 - ya + 1, n });
+  }
+  const cand = comps.filter(c => c.h <= hMax && c.w <= wMax && (c.h >= hMin || c.w >= hMin * 0.5) && !(Math.max(c.w, c.h) > mx * 0.04 && Math.max(c.w, c.h) / Math.max(1, Math.min(c.w, c.h)) > 6));
+  // kelompok: gabung bahagian yang sebaris dan bersebelahan, atau berselang-seli menegak (teks berbaris-baris)
+  const par = cand.map((_, i) => i); const find = i => { while (par[i] !== i) { par[i] = par[par[i]]; i = par[i]; } return i; };
+  for (let a = 0; a < cand.length; a++) for (let b = a + 1; b < cand.length; b++) {
+    const A = cand[a], B = cand[b], hm = Math.max(A.h, B.h), ov = Math.min(A.y1, B.y1) - Math.max(A.y0, B.y0) + 1, gx = Math.max(A.x0, B.x0) - Math.min(A.x1, B.x1) - 1;
+    const sameLine = ov >= 0.4 * Math.min(A.h, B.h) && gx <= 1.1 * hm;
+    const gy = Math.max(A.y0, B.y0) - Math.min(A.y1, B.y1) - 1, ox = Math.min(A.x1, B.x1) - Math.max(A.x0, B.x0) + 1;
+    const nextLine = gy >= -1 && gy <= 0.8 * hm && ox >= 0.3 * Math.min(A.w, B.w) && Math.abs(A.h - B.h) <= 0.6 * hm;
+    if (sameLine || nextLine) par[find(a)] = find(b);
+  }
+  const groups = {}; cand.forEach((c, i) => { (groups[find(i)] = groups[find(i)] || []).push(c); });
+  const clusters = []; const erase = new Uint8Array(comps.length + 1);
+  Object.values(groups).forEach(g => {
+    if (g.length < 3) return;
+    const x0 = Math.min(...g.map(c => c.x0)), x1 = Math.max(...g.map(c => c.x1)), y0 = Math.min(...g.map(c => c.y0)), y1 = Math.max(...g.map(c => c.y1));
+    clusters.push({ x0, y0, x1, y1, n: g.length }); g.forEach(c => { erase[c.id] = 1; });
+  });
+  const mask = new Uint8Array(iw * ih); for (let i = 0; i < mask.length; i++) if (lab[i] && erase[lab[i]]) mask[i] = 1;
+  clusters.sort((a, b) => (Math.abs(a.y0 - b.y0) < 0.03 * ih ? a.x0 - b.x0 : a.y0 - b.y0));
+  return { mask, clusters };
+}
+function mapXY(x, y, iw, ih, W, H) {
+  const wmm = (W - 1) * CP + DP, hmm = (H - 1) * LP + 2 * DP, sc = Math.min(wmm / iw, hmm / ih), ox = (wmm - iw * sc) / 2, oy = (hmm - ih * sc) / 2;
+  return [ox + x * sc, oy + y * sc];
+}
+// letak huruf (a, b, c ...) pada sel yang paling hampir dengan setiap kelompok teks yang dibuang; pulang {dots, letters}
+function placeLabels(dots, clusters, iw, ih, W, H, max = 12) {
+  const d = dots.slice(), used = new Set(), out = [];
+  const put = (r, c, ch) => { const b = bitsOf(ch); for (const [dy, dx, v] of BIT) { const y = r * 3 + dy, x = c * 2 + dx; d[y] = d[y].slice(0, x) + ((b & v) ? '1' : '0') + d[y].slice(x + 1); } };
+  clusters.slice(0, max).forEach((k, i) => {
+    const [mx, my] = mapXY((k.x0 + k.x1) / 2, (k.y0 + k.y1) / 2, iw, ih, W, H);
+    let r = Math.max(0, Math.min(H - 1, Math.round((my - DP) / LP))), c = Math.max(0, Math.min(W - 1, Math.floor(mx / CP)));
+    for (let t = 0; t < 12 && used.has(r + ',' + c); t++) c = Math.min(W - 1, c + 1);
+    used.add(r + ',' + c); const ch = 'abcdefghijkl'[i]; put(r, c, ch); out.push(ch);
+  });
+  return { dots: d, letters: out };
 }
 // halaman penuh: tajuk, grid, kunci. Pulangkan baris aksara tepat `rows` baris
 function pageLines(t, cols, rows, tr) {
-  const key = (t.key || '').split(/\n/).map(s => s.trim()).filter(Boolean).slice(0, 6).map(s => tr(s));
+  const key = (t.key || '').split(/\n/).map(s => s.trim()).filter(Boolean).slice(0, 10).map(s => tr(s));
   const title = tr((t.title || '').trim());
   const { H } = dims(t, cols, rows, tr);
   const d = fit(t.dots || blank(cols, H), cols, H);
@@ -1070,7 +1124,7 @@ function pageLines(t, cols, rows, tr) {
   while (lines.length < rows) lines.push('');
   return lines.slice(0, rows);
 }
-module.exports = { dims, DP, CP, LP, ASC, bitsOf, blank, cellBits, toLines, fit, sample, pageLines, BIT };
+module.exports = { findText, placeLabels, mapXY, dims, DP, CP, LP, ASC, bitsOf, blank, cellBits, toLines, fit, sample, pageLines, BIT };
 
 return module.exports})();
 __m['pipeline']=(function(){const module={exports:{}};const require=k=>__m[k.replace(/^\.\/|\.js$/g,'')];// Paip penuh: XML Word -> blok -> Braille -> atom -> muka surat -> BRF
@@ -1534,15 +1588,15 @@ async function tacGray(b,mx){const bm=await createImageBitmap(b);const sc=Math.m
   for(let i=0;i<w*h;i++)gr[i]=Math.round(.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2]);return{gr,w,h}}
 function tacUI(im,b){
   const no=im.imageNo,sec=document.createElement('div');sec.className='tac';
-  const T=()=>imgTac[no]||(imgTac[no]={on:false,thr:160,rad:13,frac:8,inv:false,edge:false,title:'',key:'',dots:null,edited:false});
+  const T=()=>imgTac[no]||(imgTac[no]={on:false,thr:160,rad:13,frac:8,inv:false,edge:false,rmText:false,title:'',key:'',dots:null,edited:false});
   const t0=T();
   sec.innerHTML='<label class="row"><input type="checkbox" class="tk"> <b>Rajah timbul</b> <span class="sm">(satu muka surat penuh dalam BRF, dengan muka belakang kosong untuk interpoint)</span></label>'+
-  '<div class="tb" hidden><div class="row sm">Ambang <input type="range" min="40" max="230" class="ta"> Ketebalan <input type="range" min="6" max="20" class="tr"> Kepekatan <input type="range" min="2" max="40" class="tf"> <label><input type="checkbox" class="ti"> Songsang</label> <label><input type="checkbox" class="te"> Garis tepi sahaja</label> <button class="g tg">Jana semula daripada gambar</button></div>'+
+  '<div class="tb" hidden><div class="row sm">Ambang <input type="range" min="40" max="230" class="ta"> Ketebalan <input type="range" min="6" max="20" class="tr"> Kepekatan <input type="range" min="2" max="40" class="tf"> <label><input type="checkbox" class="ti"> Songsang</label> <label><input type="checkbox" class="te"> Garis tepi sahaja</label> <label><input type="checkbox" class="tx"> Buang teks bercetak, letak huruf label</label> <button class="g tg">Jana semula daripada gambar</button></div>'+
   '<div class="row sm"><label>Tajuk muka surat <input class="tt" size="22" placeholder="cth Rajah 2.1"></label></div><canvas class="tc"></canvas>'+
   '<div class="row sm">Alat: <button class="g tm" data-m="d">Lukis</button><button class="g tm" data-m="e">Padam</button><button class="g tm" data-m="b">Padam kotak</button><button class="g tm" data-m="l">Label huruf</button> <input class="tl" maxlength="1" size="1" aria-label="Huruf label"> <label><input type="checkbox" class="tg2"> Panduan gambar asal</label> <button class="g tclr">Kosongkan</button> <button class="g tpiaf">PNG untuk PIAF</button> <span class="sm ts"></span></div>'+
   '<textarea class="tkey" style="min-height:50px" placeholder="Kunci rajah (pilihan). Satu baris satu ayat, contohnya: a = kuprum"></textarea></div>';
   const q=c=>sec.querySelector(c),tb=q('.tb'),cv=q('.tc'),ts=q('.ts');let mode='d',dn=null,gray=null,bs=null;
-  const sync=()=>{const t=T();q('.tk').checked=!!t.on;tb.hidden=!t.on;q('.ta').value=t.thr;q('.tr').value=t.rad;q('.tf').value=t.frac;q('.ti').checked=!!t.inv;q('.te').checked=!!t.edge;q('.tt').value=t.title||'';q('.tkey').value=t.key||''};
+  const sync=()=>{const t=T();q('.tk').checked=!!t.on;tb.hidden=!t.on;q('.ta').value=t.thr;q('.tr').value=t.rad;q('.tf').value=t.frac;q('.ti').checked=!!t.inv;q('.te').checked=!!t.edge;q('.tx').checked=!!t.rmText;q('.tt').value=t.title||'';q('.tkey').value=t.key||''};
   const SC=3,draw=()=>{const t=T(),d=tacDims(t);if(!t.dots||t.dots.length!==3*d.H||t.dots[0].length!==2*d.W)t.dots=K.fit(t.dots||K.blank(d.W,d.H),d.W,d.H);
     cv.width=Math.round(d.W*K.CP*SC);cv.height=Math.round(((d.H-1)*K.LP+2*K.DP+4)*SC);const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);if(q('.tg2').checked&&gray){const wm=(d.W-1)*K.CP+K.DP,hm=(d.H-1)*K.LP+2*K.DP,sc=Math.min(wm/gray.w,hm/gray.h),ox=(wm-gray.w*sc)/2,oy=(hm-gray.h*sc)/2;if(!gray.cv){const o=document.createElement('canvas');o.width=gray.w;o.height=gray.h;const og=o.getContext('2d'),id=og.createImageData(gray.w,gray.h);for(let i=0;i<gray.w*gray.h;i++){id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=gray.gr[i];id.data[i*4+3]=255}og.putImageData(id,0,0);gray.cv=o}g.globalAlpha=.3;g.drawImage(gray.cv,ox*SC+1.5,oy*SC+1.5,gray.w*sc*SC,gray.h*sc*SC);g.globalAlpha=1}
     g.strokeStyle='#e5e0d0';g.lineWidth=1;for(let r=0;r<d.H;r++)for(let c=0;c<d.W;c++)g.strokeRect(c*K.CP*SC+.5,r*K.LP*SC+.5,(K.DP+1)*SC,(2*K.DP+1)*SC);
@@ -1561,10 +1615,14 @@ function tacUI(im,b){
   cv.onpointerup=ev=>{if(down){down=false;if(mode==='b'&&bs){const e=mm(ev),x0=Math.min(bs[0],e[0]),x1=Math.max(bs[0],e[0]),y0=Math.min(bs[1],e[1]),y1=Math.max(bs[1],e[1]);bs=null;const t=T();for(let y=0;y<t.dots.length;y++)for(let x=0;x<t.dots[0].length;x++){const px=(x>>1)*K.CP+(x&1)*K.DP,py=((y/3)|0)*K.LP+(y%3)*K.DP;if(px>=x0&&px<=x1&&py>=y0&&py<=y1)setDot(y,x,0)}draw()}tacSave()}};
   sec.querySelectorAll('.tm').forEach(bn=>{bn.onclick=()=>{mode=bn.dataset.m;sec.querySelectorAll('.tm').forEach(x=>x.classList.toggle('on',x===bn))};if(bn.dataset.m==='d')bn.classList.add('on')});
   const gen=async()=>{const t=T();if(!b){ts.textContent='Gambar tidak tersedia untuk ditukar.';return}
-    try{if(!gray)gray=await tacGray(b,1200);const d=tacDims(t);t.dots=K.sample(gray.gr,gray.w,gray.h,d.W,d.H,{thr:t.thr,rad:t.rad/10,frac:t.frac/100,invert:t.inv,edge:t.edge});t.edited=false;draw();tacSave()}catch(e){ts.textContent='Gagal menukar gambar.'}};
+    try{if(!gray)gray=await tacGray(b,1200);const d=tacDims(t);let g=gray.gr,cl=[];if(t.rmText){const f=K.findText(gray.gr,gray.w,gray.h,{thr:t.thr,invert:t.inv});cl=f.clusters;g=gray.gr.slice();for(let i=0;i<g.length;i++)if(f.mask[i])g[i]=255}
+      let dots=K.sample(g,gray.w,gray.h,d.W,d.H,{thr:t.thr,rad:t.rad/10,frac:t.frac/100,invert:t.inv,edge:t.edge});let msg='';
+      if(t.rmText){if(cl.length){const r=K.placeLabels(dots,cl,gray.w,gray.h,d.W,d.H);dots=r.dots;if(!(t.key||'').trim()||/^([a-l] = ?\n?)+$/.test(t.key.trim()+'\n')){t.key=r.letters.map(x=>x+' = ').join('\n');q('.tkey').value=t.key}msg=cl.length+' label dikesan, huruf '+r.letters.join(', ')+' diletakkan. Isi kunci di bawah.'}else msg='Tiada kelompok teks dikesan.'}
+      t.dots=dots;t.edited=false;draw();if(msg)ts.textContent+=' · '+msg;tacSave()}catch(e){ts.textContent='Gagal menukar gambar.'}};
   q('.tk').onchange=async()=>{const t=T();t.on=q('.tk').checked;tb.hidden=!t.on;if(t.on&&!t.edited&&!(t.dots||[]).some(r=>r.includes('1'))){await gen()}else{draw();tacSave()}};
   [['.ta','thr'],['.tr','rad'],['.tf','frac']].forEach(([s2,k])=>{q(s2).oninput=()=>{T()[k]=+q(s2).value;clearTimeout(dn);dn=setTimeout(()=>{if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()},350)}});
   q('.ti').onchange=()=>{T().inv=q('.ti').checked;if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
+  q('.tx').onchange=()=>{T().rmText=q('.tx').checked;if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
   q('.te').onchange=()=>{T().edge=q('.te').checked;if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
   q('.tg').onclick=()=>{if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
   q('.tg2').onchange=async()=>{if(q('.tg2').checked&&!gray&&b){try{gray=await tacGray(b,1200)}catch(e){}}draw()};

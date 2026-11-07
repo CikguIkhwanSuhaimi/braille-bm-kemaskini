@@ -1,5 +1,5 @@
 {
-  "version": "1.4.4",
-  "sha256": "26a0db1cea820447e0b1256c690bfacc39de7e5742b1d06f0bba7e2ea4873e40",
-  "notes": "Baiki jadual susun atur tanpa bingkai (kertas sekolah biasa): soalan dibaca sebagai soalan, hanya sel bergaris jadi jadual"
+  "version": "1.4.5",
+  "sha256": "18d0948abe4e209bed2b8e34f9b1058c471610829679e13fad74357ad15a4818",
+  "notes": "Rajah berlabel: buang teks bercetak dan letak huruf label (a, b, c); bersihkan teks alt automatik Word"
 }
