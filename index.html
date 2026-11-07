@@ -100,7 +100,9 @@ canvas.sc{vertical-align:middle;display:inline-block}
 <p class="s"><span id="verd" class="sm" style="float:right"></span>Word (.docx) → Braille Grade 2 (Bahasa Melayu) untuk Index Basic-D. Semua diproses dalam pelayar anda; fail tidak dihantar ke mana-mana.</p>
 <p class="sm" style="margin:-6px 0 8px">Dibangunkan oleh <b>Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi)</b> · SMK Pendidikan Khas Setapak, Kuala Lumpur</p>
 <div class="card"><div id="drop" tabindex="0">Seret fail .docx (atau projek .titik) ke sini, atau klik untuk pilih<input id="file" type="file" accept=".docx,.titik" hidden></div><div id="fname" class="sm" style="margin-top:8px"></div></div>
-<div class="card"><h2>Tetapan</h2><div class="row">
+<div class="card"><h2>Tetapan</h2>
+<div class="row" style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bd)"><label><b>Templat</b> <select id="tpl" aria-label="Pilih templat"></select></label><button class="g" id="tpld">Padam</button><input id="tpn" type="text" placeholder="nama templat baharu" aria-label="Nama templat" style="width:190px"><button id="tps">Simpan tetapan sekarang sebagai templat</button><button class="g" id="tpx">Eksport</button><button class="g" id="tpi">Import</button><input id="tpf" type="file" accept=".json" hidden><span class="sm" id="tpm"></span></div>
+<div class="row">
 <label><input id="inter" type="checkbox" checked> Interpoint (genapkan muka surat setiap set)</label>
 <label>Sel/baris <input id="cols" type="number" min="20" max="42" value="36"></label>
 <label>Baris/muka <input id="rows" type="number" min="10" max="40" value="26"></label>
@@ -1813,6 +1815,28 @@ $('dgabf').onchange=async e=>{const fs=[...e.target.files];if(!fs.length)return;
 offStat();loadOff();
 try{if(/^https?:$/.test(location.protocol)&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 
+// ---- templat tetapan ----
+const TPK=['inter','cols','rows','pnpos','pnstart','pnfirst','pnprint','tpv','bnp','copies','pord'];
+const tget=()=>{try{return JSON.parse(LS.get('brl_templat')||'null')}catch(e){return null}};
+const tsnap=()=>{const o={};TPK.forEach(i=>{const e=$(i);if(e)o[i]=e.type==='checkbox'?e.checked:e.value});o.punct=JSON.parse(JSON.stringify(punct));o.tchars=JSON.parse(JSON.stringify(tchars));o.signs=JSON.parse(JSON.stringify(signs));return o};
+let TPL=tget();if(!TPL){const b=tsnap();TPL={'Bahasa Melayu Kertas 1':b,'Bahasa Melayu Kertas 2':JSON.parse(JSON.stringify(b))};LS.set('brl_templat',JSON.stringify(TPL))}
+function tdraw(sel){const a=LS.get('brl_templat_aktif')||'';$('tpl').innerHTML='<option value="">(tetapan semasa)</option>'+Object.keys(TPL).map(k=>'<option'+(k===(sel||a)?' selected':'')+'>'+esc(k)+'</option>').join('')}
+function tapply(n){const t=TPL[n];if(!t)return;
+  TPK.forEach(i=>{const e=$(i);if(!e||!(i in t))return;if(e.type==='checkbox')e.checked=!!t[i];else e.value=t[i];e.dispatchEvent(new Event('change',{bubbles:true}));e.dispatchEvent(new Event('input',{bubbles:true}))});
+  punct=JSON.parse(JSON.stringify(t.punct||{}));tchars=JSON.parse(JSON.stringify(t.tchars||{}));signs=JSON.parse(JSON.stringify(t.signs||{}));
+  LS.set('brl_punct',JSON.stringify(punct));LS.set('brl_tchars',JSON.stringify(tchars));LS.set('brl_signs',JSON.stringify(signs));E.B.setSigns(signs);
+  drawPunct();drawTC();drawSg();try{drawRef()}catch(e){}LS.set('brl_templat_aktif',n);later();if(typeof go==='function'&&xml)go()}
+$('tpl').onchange=()=>{const n=$('tpl').value;if(!n){LS.set('brl_templat_aktif','');$('tpm').textContent='';return}tapply(n);$('tpm').textContent='Templat "'+n+'" digunakan.'};
+$('tps').onclick=()=>{const n=$('tpn').value.trim()||$('tpl').value;if(!n){$('tpm').textContent='Taip nama templat dahulu.';return}
+  TPL[n]=tsnap();LS.set('brl_templat',JSON.stringify(TPL));LS.set('brl_templat_aktif',n);$('tpn').value='';tdraw(n);$('tpm').textContent='Templat "'+n+'" disimpan.'};
+$('tpld').onclick=()=>{const n=$('tpl').value;if(!n)return;if($('tpld').dataset.s!=='1'){$('tpld').dataset.s='1';$('tpld').textContent='Pasti padam?';setTimeout(()=>{$('tpld').dataset.s='';$('tpld').textContent='Padam'},3500);return}
+  $('tpld').dataset.s='';$('tpld').textContent='Padam';delete TPL[n];LS.set('brl_templat',JSON.stringify(TPL));LS.set('brl_templat_aktif','');tdraw('');$('tpm').textContent='Templat "'+n+'" dipadam.'};
+$('tpx').onclick=()=>dl('templat_titik.json',JSON.stringify({titikTemplat:1,templat:TPL},null,1));
+$('tpi').onclick=()=>$('tpf').click();
+$('tpf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const o=JSON.parse(await f.text());if(!o.templat)throw 0;let n=0;for(const k in o.templat){TPL[k]=o.templat[k];n++}LS.set('brl_templat',JSON.stringify(TPL));tdraw('');$('tpm').textContent=n+' templat diimport.'}catch(x){$('tpm').textContent='Fail templat tidak sah.'}};
+tdraw('');
+
+window.__bukaTitik=(b64,n)=>{const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return bukaTitik(new File([u],n||'projek.titik'))};
 // ---- skrin utama ----
 const showHome=!navigator.webdriver||location.hash==='#home';
 async function drawHome(){const m={};
