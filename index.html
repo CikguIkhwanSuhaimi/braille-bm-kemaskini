@@ -417,8 +417,8 @@ function word(w, dict, allowStack = true) {
 
 // ----- Teks penuh: huruf besar, nombor, tanda baca -----
 const PUNCT = { ',': '1', '.': '4', ':': '3', ';': '2', '?': '8', '!': '6', '–': '--', '—': '--', '-': '-', '/': '/',
-  '(': '7', ')': '7', '\u0002': '_7', '\u0003': "_'", '\u0004': '^7', '\u0005': "^'", '\u0007': '^1', '\u000e': '.7', '\u000f': ".'", '\u0010': '.1', '“': '8', '”': '0', '‘': '8', '’': '0', '"o': '8', '"c': '0' };
-const PUNCT_LABELS = [['(', 'Kurungan buka ('], [')', 'Kurungan tutup )'], ['"o', 'Petikan buka "'], ['"c', 'Petikan tutup "'], ['“', 'Petikan melengkung buka “'], ['”', 'Petikan melengkung tutup ”'], ['‘', 'Petikan tunggal buka ‘'], ['’', 'Petikan tunggal tutup ’'],
+  '(': '7', ')': '7', '\u0002': '_7', '\u0003': "_'", '\u0004': '^7', '\u0005': "^'", '\u0007': '^1', '\u000e': '.7', '\u000f': ".'", '\u0010': '.1', '“': '8', '”': '0', '‘': '8', '’': '0', '"o': '8', '"c': '0', '\u2022': '3' };
+const PUNCT_LABELS = [['\u2022', 'Bullet (poin)'], ['(', 'Kurungan buka ('], [')', 'Kurungan tutup )'], ['"o', 'Petikan buka "'], ['"c', 'Petikan tutup "'], ['“', 'Petikan melengkung buka “'], ['”', 'Petikan melengkung tutup ”'], ['‘', 'Petikan tunggal buka ‘'], ['’', 'Petikan tunggal tutup ’'],
   [',', 'Koma ,'], ['.', 'Noktah .'], [':', 'Titik bertindih :'], [';', 'Koma bertitik ;'], ['?', 'Tanda soal ?'], ['!', 'Tanda seru !'], ['-', 'Sengkang -'], ['–', 'Sengkang panjang –'], ['—', 'Tanda pisah —'], ['/', 'Garis condong /'],
   ['\u0002', 'Garis bawah (mula)'], ['\u0003', 'Garis bawah (tamat)'], ['\u0004', 'Tebal (mula)'], ['\u0005', 'Tebal (tamat)'], ['\u0007', 'Tebal satu perkataan'], ['\u000e', 'Condong (mula)'], ['\u000f', 'Condong (tamat)'], ['\u0010', 'Condong satu perkataan']];
 function text(src, dict, punct) {
@@ -1697,7 +1697,7 @@ function compose(blocks, dict, cfg = {}) {
       case 'question': lb = { t: 'item', num: numLabel(b.n), text: tr(b.text), src: b.text, srcNum: b.n + '.' }; break;
       case 'roman': lb = { t: 'item', num: EN ? tr(b.label + '.') : romanLabel(b.label), text: tr(b.text), indent: 3, src: b.text, srcNum: b.label.toLowerCase() + '.' }; break;
       case 'option': lb = { t: 'item', num: EN ? tr(b.label + '.') : optLabel(b.label), text: tr(b.text), src: b.text, srcNum: b.label + '.' }; break;
-      case 'bullet': lb = { t: 'item', num: '_4', indent: 2 * (b.lvl || 0), text: tr(b.text), src: b.text, srcNum: '\u2022' }; break;
+      case 'bullet': lb = { t: 'item', num: EN ? '_4' : ((cfg.punct && cfg.punct['\u2022']) || B.PUNCT['\u2022'] || '3'), indent: 2 * (b.lvl || 0), text: tr(b.text), src: b.text, srcNum: '\u2022' }; break;
       case 'list-bahagian': lb = { t: 'para', text: tr(b.text), indent: 4, src: b.text }; break;
       case 'image': if (!b.text) continue; lb = { t: 'para', text: tr(IMGD + b.text), src: IMGD + b.text }; break;
       default: lb = { t: 'para', text: tr(b.text), src: b.text };

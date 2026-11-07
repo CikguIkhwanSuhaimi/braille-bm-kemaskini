@@ -1,5 +1,5 @@
 {
-  "version": "1.12.3",
-  "sha256": "ef5bbeba82ae215e1157442558034c2acff60cdb1cdf0d34353b99551813f51f",
-  "notes": "Poin berpeluru (bullet, literal atau senarai Word) kini ada tanda bullet dan baris sambungan berinden seperti nombor soalan, untuk semua modul."
+  "version": "1.12.4",
+  "sha256": "7cb68dfd0217c4d1078748d07674f204aeba9c521415609c7e208790f60f1d76",
+  "notes": "Bullet BM guna titik 25 (boleh ubah dalam Tanda baca); UEB guna titik 456+256."
 }
