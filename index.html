@@ -71,6 +71,8 @@ canvas.sc{vertical-align:middle;display:inline-block}
 .hm{max-width:1100px;margin:0 auto}
 .hmh{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--bd);margin-bottom:28px}
 .hmh b{font-size:28px;line-height:1;letter-spacing:-.02em}.hmh small{display:block;color:var(--mut);font-size:13px}
+#stbar{display:none}body.studio #stbar{display:block}
+body.studio main>.card:not(#imgcard):not(#stbar),body.studio main>details,body.studio #wcard,body.studio main>p,body.studio #imgcard>p,body.studio .im textarea[id^="d"],body.studio .im .row:has([data-ai]){display:none!important}
 .lib{position:fixed;inset:0;background:var(--bg);color:var(--fg);overflow:auto;z-index:50;padding:16px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
 .libh{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;max-width:1400px;margin:0 auto 14px;position:sticky;top:-16px;background:var(--bg);padding:14px 0 10px;border-bottom:1px solid var(--bd);z-index:2}
 .libh>div:first-child{margin-right:auto}.libh b{font-size:22px}
@@ -147,6 +149,7 @@ dialog#libd select,dialog#libd input{padding:7px;border:1px solid var(--bd);bord
 <label><input id="bnp" type="checkbox"> Setiap Bahagian mula muka surat baharu</label>
 <label>Nombor biasa untuk guru (bawah kanan) <select id="pnprint"><option value="medium" selected>Sederhana, 2 baris</option><option value="big">Besar, 3 baris</option><option value="none">Tiada</option></select></label>
 </div></div>
+<div id="stbar" class="card"><h2 style="margin-top:0">Studio Rajah</h2><div class="row"><button id="stadd" type="button">+ Tambah gambar</button><input id="stfile" type="file" accept="image/*" multiple hidden><button class="g" id="stlib" type="button">Pustaka Rajah</button><label>Sel/baris <input id="stc" type="number" min="20" max="42" style="width:70px"></label><label>Baris/muka <input id="str" type="number" min="10" max="40" style="width:70px"></label><label><input id="sti" type="checkbox"> Interpoint</label></div><div class="sm" style="margin-top:8px">1. Setiap gambar jadi satu muka surat rajah. Laraskan ambang dan ketebalan, kemudian betulkan dengan alat Lukis atau Padam. 2. Tekan <b>Simpan ke Pustaka</b> untuk guna semula. 3. Muat turun BRF atau PNG untuk PIAF di bahagian Hasil, di bawah.</div></div>
 <div id="imgcard" class="card" hidden><h2>Gambar dan deskripsi</h2>
 <p class="sm" style="margin-top:0">Murid buta tak nampak gambar, jadi setiap gambar mesti ada deskripsi. Taip sendiri, atau minta Claude cadangkan, kemudian semak dan betulkan. Deskripsi akan masuk di tempat gambar.</p><div id="imgs"></div></div>
 <div class="card"><h2>Kamus sekolah</h2>
@@ -1517,6 +1520,7 @@ const idb=()=>new Promise((ok,no)=>{try{const r=indexedDB.open('titik',1);r.onup
 const idbTx=async(m,fn)=>{try{const d=await idb();return await new Promise((ok,no)=>{const t=d.transaction('docx',m),q=fn(t.objectStore('docx'));t.oncomplete=()=>ok(q&&q.result);t.onerror=()=>no(t.error)})}catch(e){return null}};
 const idbPut=(k,v)=>idbTx('readwrite',o=>o.put(v,k)),idbGet=k=>idbTx('readonly',o=>o.get(k)),idbDel=k=>idbTx('readwrite',o=>o.delete(k)),idbKeys=async()=>(await idbTx('readonly',o=>o.getAllKeys()))||[];
 async function load(f){
+  if(!(STUDIO&&f.name.replace(/\.docx$/i,'')===STUDIO.nm)){STUDIO=null;document.body.classList.remove('studio')}
   if(/\.titik$/i.test(f.name))return bukaTitik(f);
   name=f.name.replace(/\.docx$/i,'');$('fname').textContent=f.name;edits={};editing={};imgBlobs={};restored=0;
   try{
@@ -1682,7 +1686,7 @@ async function drawImages(){
   const key=MOD+name+ims.map(i=>i.imageNo+(i.text?'1':'0')).join('');
   const fromWord={};ims.forEach(i=>{if(i.text&&!imgDesc[i.imageNo])fromWord[i.imageNo]=1});
   if(key===imgKey)return;imgKey=key;
-  const host=$('imgs');host.innerHTML='';
+  const host=$('imgs');host.innerHTML='';{const h=$('imgcard').querySelector('h2');if(h)h.textContent=(STUDIO&&STUDIO.nm===name)?'Rajah timbul':'Gambar dan deskripsi'}
   let sampleOK=false;try{sampleOK=!!(await window.claude.use('sample'))}catch(e){}
   for(const im of ims){
     const row=document.createElement('div');row.className='im';
@@ -2168,10 +2172,11 @@ function openHome(){drawHome();$('hverd').textContent=$('verd').textContent?$('v
 const temaUpd=()=>{$('tema').textContent=document.documentElement.getAttribute('data-theme')==='dark'?'Mod cerah':'Mod gelap'};
 $('tema').onclick=()=>{const d=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',d);LS.set('brl_tema',d);temaUpd();try{if(typeof xml!=='undefined'&&xml)go2()}catch(e){}};temaUpd();
 $('hopen').onclick=()=>$('hfile').click();$('hfile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)bukaTitik(f)};
-$('hmbm').onclick=()=>{setMod('bm');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};
+$('hmbm').onclick=()=>{document.body.classList.remove('studio');setMod('bm');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};
 let STUDIO=null;
+let STUFILES=[];
 async function studioFiles(files,seeds){
-  files=[...files].filter(f=>/^image\//.test(f.type));if(!files.length)return;
+  files=[...files].filter(f=>/^image\//.test(f.type));if(!files.length)return;STUFILES=files;
   const z=new JSZip(),titles=[];let body='',rels='';
   for(let i=0;i<files.length;i++){
     const bm=await createImageBitmap(files[i]),sc=Math.min(1,2400/Math.max(bm.width,bm.height)),w=Math.max(1,Math.round(bm.width*sc)),h=Math.max(1,Math.round(bm.height*sc));
@@ -2187,8 +2192,13 @@ async function studioFiles(files,seeds){
   z.file('word/document.xml','<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>'+body+'</w:body></w:document>');
   const d=new Date(),p2=n=>String(n).padStart(2,'0'),nm='Rajah_'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'_'+p2(d.getHours())+p2(d.getMinutes())+p2(d.getSeconds())+Math.random().toString(36).slice(2,4);
   const blob=await z.generateAsync({type:'blob',compression:'DEFLATE'});
-  titles.seeds=seeds||null;titles.nm=nm;STUDIO=titles;setMod('sn');openApp();await load(new File([blob],nm+'.docx'));
+  titles.seeds=seeds||null;titles.nm=nm;STUDIO=titles;document.body.classList.add('studio');setMod('sn');openApp();stSync();await load(new File([blob],nm+'.docx'));
 }
+async function studioAdd(nf){nf=[...nf].filter(f=>/^image\//.test(f.type));if(!nf.length)return;const seeds=STUFILES.map((f,i)=>imgTac[i+1]?JSON.parse(JSON.stringify(imgTac[i+1])):null);await studioFiles([...STUFILES,...nf],[...seeds,...nf.map(()=>null)])}
+$('stadd').onclick=()=>$('stfile').click();$('stfile').onchange=e=>{studioAdd(e.target.files);e.target.value=''};$('stlib').onclick=()=>openLib();
+[['stc','cols'],['str','rows']].forEach(([a,b])=>{$(a).oninput=()=>{$(b).value=$(a).value;$(b).dispatchEvent(new Event('input',{bubbles:true}));$(b).dispatchEvent(new Event('change',{bubbles:true}));stRe()}});$('sti').onchange=()=>{$('inter').checked=$('sti').checked;$('inter').dispatchEvent(new Event('change',{bubbles:true}));stRe()};
+let stT=null;function stRe(){clearTimeout(stT);stT=setTimeout(()=>{imgKey='';drawImages().then(()=>go2())},500)}
+function stSync(){$('stc').value=$('cols').value;$('str').value=$('rows').value;$('sti').checked=$('inter').checked}
 $('hmst').onclick=()=>$('hstf').click();$('hstf').onchange=e=>{studioFiles(e.target.files);e.target.value=''};
 document.addEventListener('paste',e=>{const fs=[...(e.clipboardData&&e.clipboardData.files||[])].filter(f=>/^image\//.test(f.type));if(fs.length&&(!xml||!$('home').hidden)){e.preventDefault();studioFiles(fs)}});
 // ---- Pustaka Rajah (galeri) ----
@@ -2243,7 +2253,7 @@ $('libx').onclick=async()=>{const a=await libAll();if(!a.length){$('libsub').tex
 $('libi').onclick=()=>$('libif').click();
 $('libif').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const z=await JSZip.loadAsync(await f.arrayBuffer()),ix=z.file('index.json');if(!ix)throw 0;const arr=JSON.parse(await ix.async('string'));let n=0;for(const it of arr){if(!it||!it.id||!Array.isArray(it.dots))continue;const im=z.file('img/'+it.id+'.png');it.src=im?new Blob([await im.async('arraybuffer')],{type:'image/png'}):null;await libPut(it);n++}$('libsub').textContent='Diimport '+n+' rajah.';await libRender()}catch(x){$('libsub').textContent='Fail bukan pustaka Titik yang sah.'}};
 libCount();loadPus();
-$('hmsn').onclick=()=>{setMod('sn');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('gohome').onclick=openHome;setMod(MOD);
+$('hmsn').onclick=()=>{document.body.classList.remove('studio');setMod('sn');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('gohome').onclick=openHome;setMod(MOD);
 if(showHome)openHome();
 })();
 </script>

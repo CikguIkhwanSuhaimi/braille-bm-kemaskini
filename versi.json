@@ -1,5 +1,5 @@
 {
-  "version": "1.7.0",
-  "sha256": "658466b6296f36141a12e96f7e585af609b62eec608cde82e569bfb780977dce",
-  "notes": "Pustaka sekolah: rajah rasmi diterbitkan ke GitHub dan dimuat turun automatik, boleh disalin ke pustaka sendiri"
+  "version": "1.7.1",
+  "sha256": "f2471ae4c8c1cc13cb4c62e7afae618c1de4af9c6d661a290634a4607a553d74",
+  "notes": "Studio Rajah: skrin khusus (tanpa tetapan dokumen), tambah gambar, saiz muka surat"
 }
