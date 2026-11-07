@@ -112,7 +112,7 @@ dialog#libd select,dialog#libd input{padding:7px;border:1px solid var(--bd);bord
 <button class="hmk on" id="hmsn"><span class="hmt">Sedia digunakan</span><strong>Sains</strong><span class="sm">Kertas Sains dwibahasa dengan rajah timbul (grafik titik) selain deskripsi. Teks guna kod BM; simbol kimia dan unit khas masih dalam semakan, jadi semak pratonton.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
 <button class="hmk on" id="hmst"><span class="hmt">Baharu</span><strong>Studio Rajah</strong><span class="sm">Tukar gambar apa sahaja (imej, tangkap layar, tampal) kepada muka surat rajah timbul. Tak perlu fail Word. Boleh simpan sebagai projek untuk guna semula.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Pilih gambar →</span></button><input id="hstf" type="file" accept="image/*" multiple hidden>
 </div>
-<div class="row" style="margin-bottom:18px"><button class="g" id="hlib" type="button">Pustaka Rajah <span id="hlibn"></span></button><button class="g" id="hopen">Buka fail projek (.titik)</button><input id="hfile" type="file" accept=".titik" hidden><span class="sm">Fail projek daripada peranti lain atau rakan guru.</span></div>
+<div class="row" style="margin-bottom:18px"><button class="g" id="hsk" type="button">Lakaran baharu</button><button class="g" id="hlib" type="button">Pustaka Rajah <span id="hlibn"></span></button><button class="g" id="hopen">Buka fail projek (.titik)</button><input id="hfile" type="file" accept=".titik" hidden><span class="sm">Fail projek daripada peranti lain atau rakan guru.</span></div>
 <div id="hproj"></div>
 <div class="hmf"><b>Titik – Penterjemah Braille Kita</b><br>Dibangunkan oleh Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi) · SMK Pendidikan Khas Setapak, Kuala Lumpur</div>
 </div>
@@ -149,7 +149,7 @@ dialog#libd select,dialog#libd input{padding:7px;border:1px solid var(--bd);bord
 <label><input id="bnp" type="checkbox"> Setiap Bahagian mula muka surat baharu</label>
 <label>Nombor biasa untuk guru (bawah kanan) <select id="pnprint"><option value="medium" selected>Sederhana, 2 baris</option><option value="big">Besar, 3 baris</option><option value="none">Tiada</option></select></label>
 </div></div>
-<div id="stbar" class="card"><h2 style="margin-top:0">Studio Rajah</h2><div class="row"><button id="stadd" type="button">+ Tambah gambar</button><input id="stfile" type="file" accept="image/*" multiple hidden><button class="g" id="stlib" type="button">Pustaka Rajah</button><label>Sel/baris <input id="stc" type="number" min="20" max="42" style="width:70px"></label><label>Baris/muka <input id="str" type="number" min="10" max="40" style="width:70px"></label><label><input id="sti" type="checkbox"> Interpoint</label></div><div class="sm" style="margin-top:8px">1. Setiap gambar jadi satu muka surat rajah. Laraskan ambang dan ketebalan, kemudian betulkan dengan alat Lukis atau Padam. 2. Tekan <b>Simpan ke Pustaka</b> untuk guna semula. 3. Muat turun BRF atau PNG untuk PIAF di bahagian Hasil, di bawah.</div></div>
+<div id="stbar" class="card"><h2 style="margin-top:0">Studio Rajah</h2><div class="row"><button id="stadd" type="button">+ Tambah gambar</button><input id="stfile" type="file" accept="image/*" multiple hidden><button class="g" id="stblank" type="button">+ Lakaran kosong</button><button class="g" id="stlib" type="button">Pustaka Rajah</button><label>Sel/baris <input id="stc" type="number" min="20" max="42" style="width:70px"></label><label>Baris/muka <input id="str" type="number" min="10" max="40" style="width:70px"></label><label><input id="sti" type="checkbox"> Interpoint</label></div><div class="sm" style="margin-top:8px">1. Setiap gambar jadi satu muka surat rajah. Laraskan ambang dan ketebalan, kemudian betulkan dengan alat Lukis atau Padam. 2. Tekan <b>Simpan ke Pustaka</b> untuk guna semula. 3. Muat turun BRF atau PNG untuk PIAF di bahagian Hasil, di bawah.</div></div>
 <div id="imgcard" class="card" hidden><h2>Gambar dan deskripsi</h2>
 <p class="sm" style="margin-top:0">Murid buta tak nampak gambar, jadi setiap gambar mesti ada deskripsi. Taip sendiri, atau minta Claude cadangkan, kemudian semak dan betulkan. Deskripsi akan masuk di tempat gambar.</p><div id="imgs"></div></div>
 <div class="card"><h2>Kamus sekolah</h2>
@@ -1069,8 +1069,8 @@ function dotXY(r, c, dy, dx) { return [c * CP + dx * DP, r * LP + dy * DP]; }
 // gray: Uint8Array iw*ih (0 hitam .. 255 putih). opt: thr (0-255), rad (mm), frac (0-1), invert, edge
 function sample(gray, iw, ih, W, H, opt = {}) {
   const thr = opt.thr == null ? 160 : opt.thr, rad = opt.rad == null ? 1.3 : opt.rad, frac = opt.frac == null ? 0.08 : opt.frac;
-  const wmm = (W - 1) * CP + DP, hmm = (H - 1) * LP + 2 * DP, sc = Math.min(wmm / iw, hmm / ih);   // mm setiap piksel
-  const ox = (wmm - iw * sc) / 2, oy = (hmm - ih * sc) / 2, rp = Math.max(0.5, rad / sc);
+  const wmm = (W - 1) * CP + DP, hmm = (H - 1) * LP + 2 * DP, zm = opt.zoom == null ? 1 : opt.zoom, sc = Math.min(wmm / iw, hmm / ih) * zm;   // mm setiap piksel
+  const ox = (wmm - iw * sc) / 2 + (opt.dx || 0) * wmm, oy = (hmm - ih * sc) / 2 + (opt.dy || 0) * hmm, rp = Math.max(0.5, rad / sc);
   const dark = new Uint8Array(iw * ih); for (let i = 0; i < dark.length; i++) dark[i] = (gray[i] < thr) !== !!opt.invert ? 1 : 0;
   const rows = [];
   for (let y = 0; y < 3 * H; y++) {
@@ -1132,16 +1132,17 @@ function findText(gray, iw, ih, opt = {}) {
   clusters.sort((a, b) => (Math.abs(a.y0 - b.y0) < 0.03 * ih ? a.x0 - b.x0 : a.y0 - b.y0));
   return { mask, clusters };
 }
-function mapXY(x, y, iw, ih, W, H) {
-  const wmm = (W - 1) * CP + DP, hmm = (H - 1) * LP + 2 * DP, sc = Math.min(wmm / iw, hmm / ih), ox = (wmm - iw * sc) / 2, oy = (hmm - ih * sc) / 2;
+function mapXY(x, y, iw, ih, W, H, opt) {
+  opt = opt || {};
+  const wmm = (W - 1) * CP + DP, hmm = (H - 1) * LP + 2 * DP, sc = Math.min(wmm / iw, hmm / ih) * (opt.zoom == null ? 1 : opt.zoom), ox = (wmm - iw * sc) / 2 + (opt.dx || 0) * wmm, oy = (hmm - ih * sc) / 2 + (opt.dy || 0) * hmm;
   return [ox + x * sc, oy + y * sc];
 }
 // letak huruf (a, b, c ...) pada sel yang paling hampir dengan setiap kelompok teks yang dibuang; pulang {dots, letters}
-function placeLabels(dots, clusters, iw, ih, W, H, max = 12) {
+function placeLabels(dots, clusters, iw, ih, W, H, max = 12, vo) {
   const d = dots.slice(), used = new Set(), out = [], pos = [];
   const put = (r, c, ch) => { const b = bitsOf(ch); for (const [dy, dx, v] of BIT) { const y = r * 3 + dy, x = c * 2 + dx; d[y] = d[y].slice(0, x) + ((b & v) ? '1' : '0') + d[y].slice(x + 1); } };
   clusters.slice(0, max).forEach((k, i) => {
-    const [mx, my] = mapXY((k.x0 + k.x1) / 2, (k.y0 + k.y1) / 2, iw, ih, W, H);
+    const [mx, my] = mapXY((k.x0 + k.x1) / 2, (k.y0 + k.y1) / 2, iw, ih, W, H, vo);
     let r = Math.max(0, Math.min(H - 1, Math.round((my - DP) / LP))), c = Math.max(0, Math.min(W - 1, Math.floor(mx / CP)));
     for (let t = 0; t < 12 && used.has(r + ',' + c); t++) c = Math.min(W - 1, c + 1);
     used.add(r + ',' + c); const ch = 'abcdefghijkl'[i]; put(r, c, ch); out.push(ch); pos.push({ r, c, tx: ch });
@@ -1628,17 +1629,18 @@ async function tacGray(b,mx){const bm=await createImageBitmap(b);const sc=Math.m
   for(let i=0;i<w*h;i++)gr[i]=Math.round(.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2]);return{gr,w,h}}
 function tacUI(im,b){
   const no=im.imageNo,sec=document.createElement('div');sec.className='tac';
-  const T=()=>imgTac[no]||(imgTac[no]={on:false,thr:160,rad:13,frac:8,inv:false,edge:false,rmText:false,title:'',key:'',dots:null,edited:false});
+  const T=()=>imgTac[no]||(imgTac[no]={on:false,thr:160,rad:13,frac:8,inv:false,edge:false,rmText:false,zoom:100,dx:0,dy:0,title:'',key:'',dots:null,edited:false});
   const t0=T();
   sec.innerHTML='<label class="row"><input type="checkbox" class="tk"> <b>Rajah timbul</b> <span class="sm">(satu muka surat penuh dalam BRF, dengan muka belakang kosong untuk interpoint)</span></label> <button class="g tpick" type="button">Ambil dari Pustaka</button>'+
   '<div class="tb" hidden><div class="row sm">Ambang <input type="range" min="40" max="230" class="ta"> Ketebalan <input type="range" min="6" max="20" class="tr"> Kepekatan <input type="range" min="2" max="40" class="tf"> <label><input type="checkbox" class="ti"> Songsang</label> <label><input type="checkbox" class="te"> Garis tepi sahaja</label> <label><input type="checkbox" class="tx"> Buang teks bercetak, letak huruf label</label> <button class="g tg">Jana semula daripada gambar</button></div>'+
+  '<div class="row sm">Saiz gambar <input type="range" min="20" max="150" class="tz"> <span class="tzv"></span> Kiri-kanan <input type="range" min="-50" max="50" class="tdx"> Atas-bawah <input type="range" min="-50" max="50" class="tdy"> <button class="g tzr" type="button">Set semula saiz</button></div>'+
   '<div class="row sm"><label>Tajuk muka surat <input class="tt" size="22" placeholder="cth Rajah 2.1"></label></div><canvas class="tc"></canvas>'+
-  '<div class="row sm">Alat: <button class="g tm" data-m="d">Lukis</button><button class="g tm" data-m="e">Padam</button><button class="g tm" data-m="b">Padam kotak</button><button class="g tm" data-m="l">Label huruf</button> <input class="tl" maxlength="12" size="8" placeholder="cth P atau 30" aria-label="Teks label (huruf, nombor atau perkataan pendek)"> <label><input type="checkbox" class="tg2"> Panduan gambar asal</label> <button class="g tclr">Kosongkan</button> <button class="g tpiaf">PNG untuk PIAF</button> <button class="g tlib">Simpan ke Pustaka</button> <span class="sm ts"></span></div>'+
+  '<div class="row sm">Alat: <button class="g tm" data-m="d">Lukis</button><button class="g tm" data-m="e">Padam</button><button class="g tm" data-m="b">Padam kotak</button><button class="g tm" data-m="g">Garis</button><button class="g tm" data-m="k">Segi empat</button><button class="g tm" data-m="o">Bulatan</button><button class="g tun" type="button">Buat asal</button><button class="g tm" data-m="l">Label huruf</button> <input class="tl" maxlength="12" size="8" placeholder="cth P atau 30" aria-label="Teks label (huruf, nombor atau perkataan pendek)"> <label><input type="checkbox" class="tg2"> Panduan gambar asal</label> <button class="g tclr">Kosongkan</button> <button class="g tpiaf">PNG untuk PIAF</button> <button class="g tlib">Simpan ke Pustaka</button> <span class="sm ts"></span></div>'+
   '<textarea class="tkey" style="min-height:50px" placeholder="Kunci rajah (pilihan). Satu baris satu ayat, contohnya: a = kuprum"></textarea></div>';
   const q=c=>sec.querySelector(c),tb=q('.tb'),cv=q('.tc'),ts=q('.ts');let mode='d',dn=null,gray=null,bs=null;
-  const sync=()=>{const t=T();q('.tk').checked=!!t.on;tb.hidden=!t.on;q('.ta').value=t.thr;q('.tr').value=t.rad;q('.tf').value=t.frac;q('.ti').checked=!!t.inv;q('.te').checked=!!t.edge;q('.tx').checked=!!t.rmText;q('.tt').value=t.title||'';q('.tkey').value=t.key||''};
+  const sync=()=>{const t=T();q('.tk').checked=!!t.on;tb.hidden=!t.on;q('.ta').value=t.thr;q('.tr').value=t.rad;q('.tf').value=t.frac;q('.ti').checked=!!t.inv;q('.te').checked=!!t.edge;q('.tx').checked=!!t.rmText;q('.tt').value=t.title||'';q('.tkey').value=t.key||'';q('.tz').value=t.zoom==null?100:t.zoom;q('.tdx').value=t.dx||0;q('.tdy').value=t.dy||0;q('.tzv').textContent=(t.zoom==null?100:t.zoom)+'%'};
   const SC=3,draw=()=>{const t=T(),d=tacDims(t);if(!t.dots||t.dots.length!==3*d.H||t.dots[0].length!==2*d.W)t.dots=K.fit(t.dots||K.blank(d.W,d.H),d.W,d.H);
-    cv.width=Math.round(d.W*K.CP*SC);cv.height=Math.round(((d.H-1)*K.LP+2*K.DP+4)*SC);const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);if(q('.tg2').checked&&gray){const wm=(d.W-1)*K.CP+K.DP,hm=(d.H-1)*K.LP+2*K.DP,sc=Math.min(wm/gray.w,hm/gray.h),ox=(wm-gray.w*sc)/2,oy=(hm-gray.h*sc)/2;if(!gray.cv){const o=document.createElement('canvas');o.width=gray.w;o.height=gray.h;const og=o.getContext('2d'),id=og.createImageData(gray.w,gray.h);for(let i=0;i<gray.w*gray.h;i++){id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=gray.gr[i];id.data[i*4+3]=255}og.putImageData(id,0,0);gray.cv=o}g.globalAlpha=.3;g.drawImage(gray.cv,ox*SC+1.5,oy*SC+1.5,gray.w*sc*SC,gray.h*sc*SC);g.globalAlpha=1}
+    cv.width=Math.round(d.W*K.CP*SC);cv.height=Math.round(((d.H-1)*K.LP+2*K.DP+4)*SC);const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);if(q('.tg2').checked&&gray){const wm=(d.W-1)*K.CP+K.DP,hm=(d.H-1)*K.LP+2*K.DP,sc=Math.min(wm/gray.w,hm/gray.h)*((t.zoom==null?100:t.zoom)/100),ox=(wm-gray.w*sc)/2+(t.dx||0)/100*wm,oy=(hm-gray.h*sc)/2+(t.dy||0)/100*hm;if(!gray.cv){const o=document.createElement('canvas');o.width=gray.w;o.height=gray.h;const og=o.getContext('2d'),id=og.createImageData(gray.w,gray.h);for(let i=0;i<gray.w*gray.h;i++){id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=gray.gr[i];id.data[i*4+3]=255}og.putImageData(id,0,0);gray.cv=o}g.globalAlpha=.3;g.drawImage(gray.cv,ox*SC+1.5,oy*SC+1.5,gray.w*sc*SC,gray.h*sc*SC);g.globalAlpha=1}
     g.strokeStyle='#e5e0d0';g.lineWidth=1;for(let r=0;r<d.H;r++)for(let c=0;c<d.W;c++)g.strokeRect(c*K.CP*SC+.5,r*K.LP*SC+.5,(K.DP+1)*SC,(2*K.DP+1)*SC);
     g.fillStyle='#14213d';for(let y=0;y<3*d.H;y++)for(let x=0;x<2*d.W;x++)if(t.dots[y][x]==='1'){const c=x>>1,r=(y/3)|0,[px,py]=[c*K.CP+(x&1)*K.DP,r*K.LP+(y%3)*K.DP];g.beginPath();g.arc((px+.5)*SC+1,(py+.5)*SC+1,.8*SC,0,6.3);g.fill()}
     cv.style.width=cv.width/2+'px';ts.textContent=d.W+' sel × '+d.H+' baris'};
@@ -1647,21 +1649,31 @@ function tacUI(im,b){
     if(mode==='l'){const c=Math.max(0,Math.min(d.W-1,Math.floor(mx/K.CP))),r=Math.max(0,Math.min(d.H-1,Math.floor(my/K.LP)));return{cell:[r,c]}}
     let best=null,bd=1e9;const c0=Math.floor(mx/K.CP),r0=Math.floor(my/K.LP);for(let r=r0-1;r<=r0+1;r++)for(let c=c0-1;c<=c0+1;c++){if(r<0||c<0||r>=d.H||c>=d.W)continue;for(let dy=0;dy<3;dy++)for(let dx=0;dx<2;dx++){const px=c*K.CP+dx*K.DP,py=r*K.LP+dy*K.DP,dd=(px-mx)**2+(py-my)**2;if(dd<bd){bd=dd;best=[r*3+dy,c*2+dx]}}}
     return bd<=9?{dot:best}:{}};
-  let down=false;
+  let down=false,hist=[],base=null;
+  const pushH=()=>{const t=T();if(t.dots){hist.push(t.dots.slice());if(hist.length>30)hist.shift()}};
+  q('.tun').onclick=()=>{if(!hist.length){ts.textContent='Tiada langkah untuk dibuat asal.';return}const t=T();t.dots=hist.pop();t.edited=true;draw();tacSave()};
+  const plot=(t,x0,y0,x1,y1)=>{const d=tacDims(t),n=Math.max(1,Math.ceil(Math.hypot(x1-x0,y1-y0)/.8));for(let i=0;i<=n;i++){const x=x0+(x1-x0)*i/n,y=y0+(y1-y0)*i/n,c0=Math.floor(x/K.CP),r0=Math.floor(y/K.LP);let best=null,bd=1e9;
+    for(let r=r0-1;r<=r0+1;r++)for(let c=c0-1;c<=c0+1;c++){if(r<0||c<0||r>=d.H||c>=d.W)continue;for(let dy=0;dy<3;dy++)for(let dx=0;dx<2;dx++){const dd=(c*K.CP+dx*K.DP-x)**2+(r*K.LP+dy*K.DP-y)**2;if(dd<bd){bd=dd;best=[r*3+dy,c*2+dx]}}}
+    if(best&&bd<=3.3)setDot(best[0],best[1],1)}};
+  const shape=(m,a,b2)=>{const t=T();if(m==='g')plot(t,a[0],a[1],b2[0],b2[1]);else if(m==='k'){plot(t,a[0],a[1],b2[0],a[1]);plot(t,b2[0],a[1],b2[0],b2[1]);plot(t,b2[0],b2[1],a[0],b2[1]);plot(t,a[0],b2[1],a[0],a[1])}
+    else{const cx=(a[0]+b2[0])/2,cy=(a[1]+b2[1])/2,rx=Math.abs(b2[0]-a[0])/2,ry=Math.abs(b2[1]-a[1])/2;let px=cx+rx,py=cy;for(let i=1;i<=96;i++){const an=i/96*6.2832,nx=cx+rx*Math.cos(an),ny=cy+ry*Math.sin(an);plot(t,px,py,nx,ny);px=nx;py=ny}}};
   const act=ev=>{const h=hit(ev),t=T();if(mode==='l'){if(!h.cell)return;const tx=(q('.tl').value||'').trim();if(!tx)return;const seq=[];let num=false;for(const ch of tx){if(/[0-9]/.test(ch)){if(!num){seq.push(K.bitsOf('#'));num=true}seq.push(K.bitsOf('jabcdefghi'[+ch]))}else{num=false;if(/[A-Z]/.test(ch)){seq.push(K.bitsOf(','));seq.push(K.bitsOf(ch.toLowerCase()))}else seq.push(K.bitsOf(ch))}}
       (t.labels=t.labels||[]).push({r:h.cell[0],c:h.cell[1],tx});const dd=tacDims(t);seq.forEach((bits,k)=>{const c=h.cell[1]+k;if(c>=dd.W)return;for(const[dy,dx,v]of K.BIT)setDot(h.cell[0]*3+dy,c*2+dx,bits&v)})}else if(h.dot)setDot(h.dot[0],h.dot[1],mode==='d');draw()};
-  cv.onpointerdown=ev=>{down=true;cv.setPointerCapture(ev.pointerId);if(mode==='b'){bs=mm(ev)}else act(ev);ev.preventDefault()};
+  cv.onpointerdown=ev=>{down=true;cv.setPointerCapture(ev.pointerId);pushH();if(mode==='b'){bs=mm(ev)}else if('gko'.includes(mode)){bs=mm(ev);base=T().dots.slice()}else act(ev);ev.preventDefault()};
   const mm=ev=>{const R=cv.getBoundingClientRect(),k=cv.width/R.width;return[(ev.clientX-R.left)*k/SC,(ev.clientY-R.top)*k/SC]};
-  cv.onpointermove=ev=>{if(down&&mode!=='l'&&mode!=='b')act(ev)};
-  cv.onpointerup=ev=>{if(down){down=false;if(mode==='b'&&bs){const e=mm(ev),x0=Math.min(bs[0],e[0]),x1=Math.max(bs[0],e[0]),y0=Math.min(bs[1],e[1]),y1=Math.max(bs[1],e[1]);bs=null;const t=T();for(let y=0;y<t.dots.length;y++)for(let x=0;x<t.dots[0].length;x++){const px=(x>>1)*K.CP+(x&1)*K.DP,py=((y/3)|0)*K.LP+(y%3)*K.DP;if(px>=x0&&px<=x1&&py>=y0&&py<=y1)setDot(y,x,0)}draw()}tacSave()}};
-  sec.querySelectorAll('.tm').forEach(bn=>{bn.onclick=()=>{mode=bn.dataset.m;sec.querySelectorAll('.tm').forEach(x=>x.classList.toggle('on',x===bn))};if(bn.dataset.m==='d')bn.classList.add('on')});
+  cv.onpointermove=ev=>{if(!down)return;if('gko'.includes(mode)){if(bs){T().dots=base.slice();shape(mode,bs,mm(ev));draw()}}else if(mode!=='l'&&mode!=='b')act(ev)};
+  cv.onpointerup=ev=>{if(down){down=false;if('gko'.includes(mode)&&bs){T().dots=base.slice();shape(mode,bs,mm(ev));bs=null;base=null;draw()}if(mode==='b'&&bs){const e=mm(ev),x0=Math.min(bs[0],e[0]),x1=Math.max(bs[0],e[0]),y0=Math.min(bs[1],e[1]),y1=Math.max(bs[1],e[1]);bs=null;const t=T();for(let y=0;y<t.dots.length;y++)for(let x=0;x<t.dots[0].length;x++){const px=(x>>1)*K.CP+(x&1)*K.DP,py=((y/3)|0)*K.LP+(y%3)*K.DP;if(px>=x0&&px<=x1&&py>=y0&&py<=y1)setDot(y,x,0)}draw()}tacSave()}};
+  sec.querySelectorAll('.tm').forEach(bn=>{bn.onclick=()=>{mode=bn.dataset.m;cv.style.touchAction=mode==='l'?'manipulation':'none';sec.querySelectorAll('.tm').forEach(x=>x.classList.toggle('on',x===bn))};if(bn.dataset.m==='d'){bn.classList.add('on');cv.style.touchAction='none'}});
   const gen=async()=>{const t=T();if(!b){ts.textContent='Gambar tidak tersedia untuk ditukar.';return}
     try{if(!gray)gray=await tacGray(b,1200);const d=tacDims(t);let g=gray.gr,cl=[];if(t.rmText){const f=K.findText(gray.gr,gray.w,gray.h,{thr:t.thr,invert:t.inv});cl=f.clusters;g=gray.gr.slice();for(let i=0;i<g.length;i++)if(f.mask[i])g[i]=255}
-      let dots=K.sample(g,gray.w,gray.h,d.W,d.H,{thr:t.thr,rad:t.rad/10,frac:t.frac/100,invert:t.inv,edge:t.edge});let msg='';
-      if(t.rmText){if(cl.length){const r=K.placeLabels(dots,cl,gray.w,gray.h,d.W,d.H);dots=r.dots;t.labels=r.pos;if(!(t.key||'').trim()||/^([a-l] = ?\n?)+$/.test(t.key.trim()+'\n')){t.key=r.letters.map(x=>x+' = ').join('\n');q('.tkey').value=t.key}msg=cl.length+' label dikesan, huruf '+r.letters.join(', ')+' diletakkan. Isi kunci di bawah.'}else msg='Tiada kelompok teks dikesan.'}
+      const vo={zoom:(t.zoom==null?100:t.zoom)/100,dx:(t.dx||0)/100,dy:(t.dy||0)/100};let dots=K.sample(g,gray.w,gray.h,d.W,d.H,Object.assign({thr:t.thr,rad:t.rad/10,frac:t.frac/100,invert:t.inv,edge:t.edge},vo));let msg='';
+      if(t.rmText){if(cl.length){const r=K.placeLabels(dots,cl,gray.w,gray.h,d.W,d.H,12,vo);dots=r.dots;t.labels=r.pos;if(!(t.key||'').trim()||/^([a-l] = ?\n?)+$/.test(t.key.trim()+'\n')){t.key=r.letters.map(x=>x+' = ').join('\n');q('.tkey').value=t.key}msg=cl.length+' label dikesan, huruf '+r.letters.join(', ')+' diletakkan. Isi kunci di bawah.'}else msg='Tiada kelompok teks dikesan.'}
       t.dots=dots;t.edited=false;t.labels=[];draw();if(msg)ts.textContent+=' · '+msg;tacSave()}catch(e){ts.textContent='Gagal menukar gambar.'}};
   q('.tk').onchange=async()=>{const t=T();t.on=q('.tk').checked;tb.hidden=!t.on;if(t.on&&!t.edited&&!(t.dots||[]).some(r=>r.includes('1'))){await gen()}else{draw();tacSave()}};
   [['.ta','thr'],['.tr','rad'],['.tf','frac']].forEach(([s2,k])=>{q(s2).oninput=()=>{T()[k]=+q(s2).value;clearTimeout(dn);dn=setTimeout(()=>{if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()},350)}});
+  const sv=()=>{const t=T();t.zoom=+q('.tz').value;t.dx=+q('.tdx').value;t.dy=+q('.tdy').value;q('.tzv').textContent=t.zoom+'%';clearTimeout(dn);dn=setTimeout(()=>{if(!t.edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()},350)};
+  ['.tz','.tdx','.tdy'].forEach(s2=>{q(s2).oninput=sv});
+  q('.tzr').onclick=()=>{const t=T();t.zoom=100;t.dx=0;t.dy=0;sync();if(!t.edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
   q('.ti').onchange=()=>{T().inv=q('.ti').checked;if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
   q('.tx').onchange=()=>{T().rmText=q('.tx').checked;if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
   q('.te').onchange=()=>{T().edge=q('.te').checked;if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
@@ -1670,7 +1682,7 @@ function tacUI(im,b){
   q('.tclr').onclick=()=>{const t=T(),d=tacDims(t);t.dots=K.blank(d.W,d.H);t.labels=[];t.edited=true;draw();tacSave()};
   q('.tt').oninput=()=>{T().title=q('.tt').value;draw();tacSave()};
   q('.tkey').oninput=()=>{T().key=q('.tkey').value;draw();tacSave()};
-  q('.tpiaf').onclick=async()=>{if(!b){ts.textContent='Gambar tidak tersedia.';return}const t=T();try{const G=await tacGray(b,2400),cv2=document.createElement('canvas');cv2.width=G.w;cv2.height=G.h;const g=cv2.getContext('2d'),id=g.createImageData(G.w,G.h);
+  q('.tpiaf').onclick=async()=>{const t=T();if(t.edited||!b){if(!(t.dots||[]).some(r=>r.includes('1'))){ts.textContent='Rajah kosong.';return}const d=tacDims(t),c2=document.createElement('canvas');libThumb(c2,{W:d.W,H:d.H,dots:t.dots},4,'#000');const c3=document.createElement('canvas');c3.width=c2.width;c3.height=c2.height;const g3=c3.getContext('2d');g3.fillStyle='#fff';g3.fillRect(0,0,c3.width,c3.height);g3.drawImage(c2,0,0);dl(name+'_rajah'+no+'_piaf.png',await new Promise(ok=>c3.toBlob(ok,'image/png')));return}try{const G=await tacGray(b,2400),cv2=document.createElement('canvas');cv2.width=G.w;cv2.height=G.h;const g=cv2.getContext('2d'),id=g.createImageData(G.w,G.h);
     for(let i=0;i<G.w*G.h;i++){const dk=(G.gr[i]<t.thr)!==!!t.inv,v=dk?0:255;id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v;id.data[i*4+3]=255}g.putImageData(id,0,0);
     const bl=await new Promise(ok=>cv2.toBlob(ok,'image/png'));dl(name+'_rajah'+no+'_piaf.png',bl)}catch(e){ts.textContent='Gagal menjana PNG.'}};
   q('.tlib').onclick=()=>{const t=T();if(!(t.dots||[]).some(r=>r.includes('1'))){ts.textContent='Rajah masih kosong. Hidupkan rajah timbul dan jana dahulu.';return}libSave(t,b,m=>{const lb=q('.tlib'),o=lb.textContent;lb.textContent=m;setTimeout(()=>{lb.textContent=o},3000)})};
@@ -2178,6 +2190,7 @@ $('hopen').onclick=()=>$('hfile').click();$('hfile').onchange=e=>{const f=e.targ
 $('hmbm').onclick=()=>{document.body.classList.remove('studio');setMod('bm');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};
 let STUDIO=null;
 let STUFILES=[];
+async function blankFile(){const c=document.createElement('canvas');c.width=1000;c.height=700;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,1000,700);return new File([await new Promise(ok=>c.toBlob(ok,'image/png'))],'Lakaran.png',{type:'image/png'})}
 async function studioFiles(files,seeds){
   files=[...files].filter(f=>/^image\//.test(f.type));if(!files.length)return;STUFILES=files;
   const z=new JSZip(),titles=[];let body='',rels='';
@@ -2198,7 +2211,7 @@ async function studioFiles(files,seeds){
   titles.seeds=seeds||null;titles.nm=nm;STUDIO=titles;document.body.classList.add('studio');setMod('sn');openApp();stSync();await load(new File([blob],nm+'.docx'));
 }
 async function studioAdd(nf){nf=[...nf].filter(f=>/^image\//.test(f.type));if(!nf.length)return;const seeds=STUFILES.map((f,i)=>imgTac[i+1]?JSON.parse(JSON.stringify(imgTac[i+1])):null);await studioFiles([...STUFILES,...nf],[...seeds,...nf.map(()=>null)])}
-$('stadd').onclick=()=>$('stfile').click();$('stfile').onchange=e=>{studioAdd(e.target.files);e.target.value=''};$('stlib').onclick=()=>openLib();
+$('stadd').onclick=()=>$('stfile').click();$('stfile').onchange=e=>{studioAdd(e.target.files);e.target.value=''};$('stlib').onclick=()=>openLib();$('stblank').onclick=async()=>studioAdd([await blankFile()]);
 [['stc','cols'],['str','rows']].forEach(([a,b])=>{$(a).oninput=()=>{$(b).value=$(a).value;$(b).dispatchEvent(new Event('input',{bubbles:true}));$(b).dispatchEvent(new Event('change',{bubbles:true}));stRe()}});$('sti').onchange=()=>{$('inter').checked=$('sti').checked;$('inter').dispatchEvent(new Event('change',{bubbles:true}));stRe()};
 let stT=null;function stRe(){clearTimeout(stT);stT=setTimeout(()=>{imgKey='';drawImages().then(()=>go2())},500)}
 function stSync(){$('stc').value=$('cols').value;$('str').value=$('rows').value;$('sti').checked=$('inter').checked}
@@ -2223,14 +2236,14 @@ function libSave(t,b,say2){
     const it={id,title,subjek:$('ld_s').value,topik:$('ld_p').value.trim(),tags:$('ld_g').value.split(',').map(s=>s.trim()).filter(Boolean),dots:t.dots.slice(),labels:(t.labels||[]).slice(),W:d.W,H:d.H,key:t.key||'',opt:{thr:t.thr,rad:t.rad,frac:t.frac,inv:!!t.inv,edge:!!t.edge,rmText:!!t.rmText,edited:!!t.edited},src:await srcPng(b),at:Date.now()};
     try{await libPut(it);t.libId=id;t.title=t.title||title;say2('Disimpan ke Pustaka: '+title);libCount()}catch(e){say2('Gagal simpan ke Pustaka.')}};
   dlg.showModal();$('ld_t').focus()}
-function libThumb(cv,it,SC){const W=it.W,H=it.H;cv.width=Math.round(W*K.CP*SC);cv.height=Math.round(((H-1)*K.LP+2*K.DP+4)*SC);const g=cv.getContext('2d');g.fillStyle=getComputedStyle(document.body).color;const r=Math.max(.9,.8*SC);
+function libThumb(cv,it,SC,col){const W=it.W,H=it.H;cv.width=Math.round(W*K.CP*SC);cv.height=Math.round(((H-1)*K.LP+2*K.DP+4)*SC);const g=cv.getContext('2d');g.fillStyle=col||getComputedStyle(document.body).color;const r=Math.max(.9,.8*SC);
   for(let y=0;y<it.dots.length;y++){const row=it.dots[y];for(let x=0;x<row.length;x++)if(row[x]==='1'){const px=(x>>1)*K.CP+(x&1)*K.DP,py=((y/3)|0)*K.LP+(y%3)*K.DP;g.beginPath();g.arc((px+.5)*SC+1,(py+.5)*SC+1,r,0,6.3);g.fill()}}}
 function libZoom(it){let d=document.getElementById('libz');if(!d){d=document.createElement('dialog');d.id='libz';d.style.cssText='border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--fg);padding:14px;max-width:96vw;max-height:94vh;overflow:auto';document.body.append(d)}
   d.innerHTML='<div class="row" style="justify-content:space-between"><b></b><button type="button" class="g">Tutup</button></div><canvas style="max-width:100%;display:block;margin-top:8px"></canvas>';d.querySelector('b').textContent=it.title;d.querySelector('button').onclick=()=>d.close();libThumb(d.querySelector('canvas'),it,3);d.showModal()}
 function libBrf(it){const c=cfg(),lines=K.pageLines({dots:it.dots,title:it.title,key:it.key},c.cols,c.rows,trb);dl((it.title||'rajah').replace(/[^\w\-]+/g,'_')+'.brf',new Blob([lines.join('\r\n')+'\r\n\f']))}
 async function libPiaf(it){const nm=(it.title||'rajah').replace(/[^\w\-]+/g,'_')+'_piaf.png';const sb=await psrc(it);
   if(sb){const G=await tacGray(sb,2400),cv=document.createElement('canvas');cv.width=G.w;cv.height=G.h;const g=cv.getContext('2d'),id=g.createImageData(G.w,G.h);for(let i=0;i<G.w*G.h;i++){const v=((G.gr[i]<it.opt.thr)!==!!it.opt.inv)?0:255;id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v;id.data[i*4+3]=255}g.putImageData(id,0,0);dl(nm,await new Promise(ok=>cv.toBlob(ok,'image/png')))}
-  else{const cv=document.createElement('canvas');libThumb(cv,it,4);dl(nm,await new Promise(ok=>cv.toBlob(ok,'image/png')))}}
+  else{const cv=document.createElement('canvas');libThumb(cv,it,4,'#000');dl(nm,await new Promise(ok=>cv.toBlob(ok,'image/png')))}}
 function libUse(it,no){const d=tacDims(it);imgTac[no]={on:true,thr:it.opt.thr,rad:it.opt.rad,frac:it.opt.frac,inv:it.opt.inv,edge:it.opt.edge,rmText:it.opt.rmText,title:it.title,key:it.key,dots:K.fit(it.dots,d.W,d.H),labels:(it.labels||[]).slice(),edited:true,libId:it.id};LS.set('brl_tac_'+name,JSON.stringify(imgTac));libClose();imgKey='';drawImages().then(()=>go2())}
 function libEdit(it){libClose();const seed={on:true,thr:it.opt.thr,rad:it.opt.rad,frac:it.opt.frac,inv:it.opt.inv,edge:it.opt.edge,rmText:it.opt.rmText,title:it.title,key:it.key,dots:it.dots.slice(),labels:(it.labels||[]).slice(),edited:true,libId:it.id,topik:it.topik,tags:it.tags,subjek:it.subjek};studioFiles([new File([it.src],(it.title||'rajah')+'.png',{type:'image/png'})],[seed])}
 async function libRender(){
@@ -2250,7 +2263,7 @@ async function libRender(){
     lb.append(la);c.append(lb);g.append(c)})}
 function libClose(){$('lib').hidden=true;document.body.style.overflow=''}
 function openLib(o){LPICK=o&&o.pick||null;const p=$('libp');p.hidden=!LPICK;p.textContent=LPICK?'Pilih rajah untuk Gambar '+LPICK+'. Titik dan tajuk akan disalin ke kertas ini; rajah dalam Pustaka tak berubah.':'';$('lib').hidden=false;document.body.style.overflow='hidden';libRender();$('libq').focus()}
-$('hlib').onclick=()=>openLib();$('libc').onclick=libClose;$('libq').oninput=e=>{LQ=e.target.value;libRender()};$('libs').onchange=e=>{LSORT=e.target.value;libRender()};
+$('hlib').onclick=()=>openLib();$('hsk').onclick=async()=>studioFiles([await blankFile()]);$('libc').onclick=libClose;$('libq').oninput=e=>{LQ=e.target.value;libRender()};$('libs').onchange=e=>{LSORT=e.target.value;libRender()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('lib').hidden&&!document.querySelector('dialog[open]'))libClose()});
 $('libx').onclick=async()=>{const a=await libAll();if(!a.length){$('libsub').textContent='Tiada rajah untuk dieksport.';return}const z=new JSZip();z.file('index.json',JSON.stringify(a.map(({src,...r})=>r)));for(const it of a)if(it.src)z.file('img/'+it.id+'.png',await it.src.arrayBuffer());const d=new Date();dl('Pustaka_Rajah_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.zip',await z.generateAsync({type:'blob'}))};
 $('libi').onclick=()=>$('libif').click();
