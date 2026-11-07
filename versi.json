@@ -1,5 +1,5 @@
 {
-  "version": "1.10.1",
-  "sha256": "7fd1ad2ca77896c61256779d14551f13e796b197670de26c4ae7034dc611d26d",
-  "notes": "Skrin utama dikemaskan: Lakaran dan Pustaka dalam kad Studio Rajah, Embosser di pengepala"
+  "version": "1.10.2",
+  "sha256": "2b17aa680ec46f7b6e3d6a67b1fffbd0581ed28eb3177799743a45206f2ad89b",
+  "notes": "Label rajah: panjang sampai 60 aksara, dialih atau dipecah supaya muat pada muka surat"
 }
