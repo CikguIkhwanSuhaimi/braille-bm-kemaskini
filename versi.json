@@ -1,5 +1,5 @@
 {
-  "version": "1.3.1",
-  "sha256": "50aff6e9b1d85fed174a6104c0b1b7850fd87f73276d9021ad4a3935a29dc2ff",
-  "notes": "Mula = mulakan kosong; sambung projek melalui Projek tersimpan"
+  "version": "1.3.2",
+  "sha256": "906974a794056dbb9ca147ebbe2c5485c316b8e7cb9f64ec17a78af9b3f39bcd",
+  "notes": "Sokongan APK telefon (cetak terus dan kongsi fail)"
 }

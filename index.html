@@ -1215,6 +1215,9 @@ let xml=null,last=null,name='kertas',imgDesc={},imgBlobs={},edits={},editing={};
 // ---- muat turun ----
 let DL=null;
 (async()=>{try{DL=await window.claude.use('downloads')}catch(e){}if(!DL){$('sm2').hidden=false}})();
+const NATIVE=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
+const plug=n=>(Capacitor.Plugins&&Capacitor.Plugins[n])||Capacitor.registerPlugin(n);
+if(NATIVE&&!window.embosser){window.embosser={apk:true,version:async()=>'',print:async(ip,u)=>{try{let b='';for(let i=0;i<u.length;i+=8192)b+=String.fromCharCode.apply(null,u.subarray(i,i+8192));const r=await plug('TitikPrint').print({ip,data:btoa(b)});return{ok:true,bytes:r.bytes}}catch(e){return{ok:false,error:(e&&e.message)||'Cetak gagal.'}}}}}
 let SRV=false,SBASE='';const DESK=!!window.embosser;
 if(DESK){SRV=true;document.addEventListener('DOMContentLoaded',()=>{})}
 async function findSrv(){for(const b of ['','http://127.0.0.1:8080','http://localhost:8080']){try{const r=await fetch(b+'/ping',{cache:'no-store'});const j=r.ok?await r.json():null;if(j&&j.pantau){SRV=true;SBASE=b;$('phint').hidden=true;$('sm2').hidden=true;if(j.ip)$('eip').value=j.ip;return true}}catch(e){}}return false}
@@ -1222,6 +1225,8 @@ findSrv();
 function anchorSave(n,t){const b=t instanceof Blob?t:new Blob([t],{type:'application/octet-stream'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=n;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
 function say(m){$('fbm').textContent=m;$('sm2').hidden=false;$('sm2').textContent=m}
 async function dl(n,t){
+  if(NATIVE){try{const bl=t instanceof Blob?t:new Blob([t]);const b64=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]||'');r.onerror=no;r.readAsDataURL(bl)});
+    const w=await plug('Filesystem').writeFile({path:n,data:b64,directory:'CACHE'});await plug('Share').share({title:n,url:w.uri,dialogTitle:'Simpan atau kongsi '+n});say('Fail '+n+' sedia. Pilih Simpan atau aplikasi untuk berkongsi.')}catch(e){if(!(e&&/cancel/i.test(e.message||'')))say('Simpan gagal: '+((e&&e.message)||'ralat'))}return}
   if(!DL&&SRV){anchorSave(n,t);say('Fail dihantar ke pelayar: '+n+'. Semak folder Muat turun.');return}
   if(!DL){try{anchorSave(n,t)}catch(e){}const m='Muat turun terus tidak tersedia dalam paparan ini (cuba Sign in ke Claude di bahagian atas halaman). Saya cuba simpan juga melalui pelayar; jika tiada fail, salin teks BRF di bawah.';if(last&&/brf|zip/.test(n)){showBrf();$('fbm').textContent=m}else say(m);return}
   say('Menyimpan '+n+' ...');
@@ -1795,7 +1800,7 @@ $('pcopy').onclick=()=>{if(!last)return;const ip=$('eip').value.trim();
   const b64=btoa(brf());
   toClip("$b=[Convert]::FromBase64String('"+b64+"');$c=New-Object Net.Sockets.TcpClient('"+ip+"',9100);$s=$c.GetStream();$s.Write($b,0,$b.Length);$s.Flush();$s.Close();$c.Close()",'Perintah PowerShell (tampal dalam tetingkap PowerShell dan tekan Enter)')};
 
-if(DESK){try{window.embosser.version().then(v=>{$('verd').textContent='Aplikasi desktop, versi '+v;$('hverd').textContent='Versi '+v})}catch(e){}$('pcopy').hidden=true;$('pcopy').before($('pdirect'));$('pdirect').className='';$('pnote').hidden=true;const dt=$('phint').closest('details');if(dt)dt.hidden=true;$('pdirect').textContent='Cetak ke embosser'}
+if(DESK){try{window.embosser.version().then(v=>{$('verd').textContent=window.embosser.apk?'Aplikasi telefon':'Aplikasi desktop, versi '+v;$('hverd').textContent=window.embosser.apk?'Telefon':'Versi '+v})}catch(e){}$('pcopy').hidden=true;$('pcopy').before($('pdirect'));$('pdirect').className='';$('pnote').hidden=true;const dt=$('phint').closest('details');if(dt)dt.hidden=true;$('pdirect').textContent='Cetak ke embosser'}
 // ---- nombor muka surat ----
 {const g=k=>LS.get(k);if(g('brl_pnpos'))$('pnpos').value=g('brl_pnpos');if(g('brl_pnstart'))$('pnstart').value=g('brl_pnstart');if(g('brl_pnfirst')!==null)$('pnfirst').checked=g('brl_pnfirst')==='1';if(['medium','big','none'].includes(g('brl_pnprint')))$('pnprint').value=g('brl_pnprint');
  ['pnpos','pnstart','pnfirst','pnprint'].forEach(i=>$(i).addEventListener('change',()=>{LS.set('brl_pnprint',$('pnprint').value);LS.set('brl_pnpos',$('pnpos').value);LS.set('brl_pnstart',$('pnstart').value);LS.set('brl_pnfirst',$('pnfirst').checked?'1':'0')}))}

@@ -1,0 +1,10 @@
+{
+  "appId": "my.edu.smkpks.titik",
+  "appName": "Titik",
+  "webDir": "www",
+  "server": {
+    "url": "https://cikguikhwansuhaimi.github.io/braille-bm-kemaskini/",
+    "androidScheme": "https",
+    "allowNavigation": ["cikguikhwansuhaimi.github.io"]
+  }
+}
