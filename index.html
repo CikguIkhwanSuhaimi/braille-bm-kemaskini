@@ -64,6 +64,9 @@ canvas.sc{vertical-align:middle;display:inline-block}
 .im{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--bd)}
 .im img{max-width:100%;border:1px solid var(--bd);border-radius:4px;background:#fff}
 .im textarea{min-height:70px}
+.tac{grid-column:1/-1;border-top:1px dashed var(--bd);padding-top:8px;margin-top:4px}
+.tac canvas{display:block;max-width:100%;border:1px solid var(--bd);border-radius:4px;background:#fff;touch-action:none;cursor:crosshair;margin:6px 0}
+.tac .row{gap:8px;flex-wrap:wrap;align-items:center}.tac input[type=range]{width:90px}.tac .tm.on{outline:2px solid var(--ac)}
 @media(max-width:560px){.im{grid-template-columns:1fr}}
 .hm{max-width:1100px;margin:0 auto}
 .hmh{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--bd);margin-bottom:28px}
@@ -515,13 +518,16 @@ function paginateAtoms(atoms, cfg = {}) {
   const cur = () => pages[pages.length - 1], curS = () => srcs[srcs.length - 1];
   const np = () => { pages.push([]); srcs.push([]); };
   const E0 = () => ({ t: '', w: [], ap: true });
+  let tacPrev = false;
   for (const a of atoms) {
     const lm = [].concat(...a.blocks.map(b => blockLinesSrc(b, c)));
     const ls = lm.map(x => x.l);
     const gap = a.gap || 0;
     const room = c.rows - cur().length;
     const first = cur().length === 0;
-    if (!first && a.newPage) np();
+    if (a.tac) { if (!first) np(); if (c.interpoint && (pages.length - 1) % 2 === 1) np(); tacPrev = true; }
+    else if (tacPrev) { tacPrev = false; if (c.interpoint) { np(); np(); } else if (!first) np(); }
+    else if (!first && a.newPage) np();
     else if (!first && gap + ls.length > room && ls.length <= c.rows) np();
     const atTop = cur().length === 0;
     if (!atTop) for (let k = 0; k < gap; k++) { if (cur().length < c.rows) { cur().push(''); const e = E0(); e.ak = a.key; curS().push(e); } }
@@ -929,9 +935,84 @@ function toChunks(tbl, tr, cfg, firstMax) {
 module.exports = { render, toChunks, CHARS, CHAR_LABELS };
 
 return module.exports})();
+__m['tactile']=(function(){const module={exports:{}};const require=k=>__m[k.replace(/^\.\/|\.js$/g,'')];// Rajah timbul: imej -> titik braille (jarak fizikal sebenar) -> aksara BRF.
+'use strict';
+// Jarak fizikal (mm): titik dalam sel 2.5, antara sel 6.0, antara baris 10.0
+const DP = 2.5, CP = 6.0, LP = 10.0;
+// ASCII braille (indeks = dot1=1,dot2=2,dot3=4,dot4=8,dot5=16,dot6=32), huruf kecil seperti keluaran Duxbury
+const ASC = " a1b'k2l@cif/msp\"e3h9o6r^djg>ntq,*5<-u8v.%[$+x!&;:4\\0z7(_?w]#y)=";
+const bitsOf = ch => { const i = ASC.indexOf(String(ch).toLowerCase()); return i < 0 ? 0 : i; };
+// dots: tatasusunan rentetan '0'/'1', 3H baris x 2W lajur. Titik (dy,dx) dalam sel (r,c): baris r*3+dy, lajur c*2+dx
+// dot1=(0,0) dot2=(1,0) dot3=(2,0) dot4=(0,1) dot5=(1,1) dot6=(2,1)
+const BIT = [[0, 0, 1], [1, 0, 2], [2, 0, 4], [0, 1, 8], [1, 1, 16], [2, 1, 32]];
+function blank(W, H) { return Array.from({ length: 3 * H }, () => '0'.repeat(2 * W)); }
+function cellBits(dots, r, c) { let b = 0; for (const [dy, dx, v] of BIT) if (dots[r * 3 + dy] && dots[r * 3 + dy][c * 2 + dx] === '1') b |= v; return b; }
+function toLines(dots, W, H) {                           // H baris aksara, setiap satu W sel (tanpa ruang hujung)
+  const out = [];
+  for (let r = 0; r < H; r++) { let s = ''; for (let c = 0; c < W; c++) s += ASC[cellBits(dots, r, c)]; out.push(s.replace(/ +$/, '')); }
+  return out;
+}
+function fit(dots, W, H) {                               // potong / lapik ke W x H sel (tengah)
+  const w0 = dots.length ? dots[0].length / 2 : 0, h0 = dots.length / 3;
+  if (w0 === W && h0 === H) return dots.slice();
+  const out = blank(W, H), ox = 0, oy = 0;
+  for (let y = 0; y < 3 * h0; y++) for (let x = 0; x < 2 * w0; x++) {
+    if (dots[y][x] !== '1') continue;
+    const ty = y + oy * 3, tx = x + ox * 2; if (ty < 0 || ty >= 3 * H || tx < 0 || tx >= 2 * W) continue;
+    out[ty] = out[ty].slice(0, tx) + '1' + out[ty].slice(tx + 1);
+  }
+  return out;
+}
+function dotXY(r, c, dy, dx) { return [c * CP + dx * DP, r * LP + dy * DP]; }
+// gray: Uint8Array iw*ih (0 hitam .. 255 putih). opt: thr (0-255), rad (mm), frac (0-1), invert, edge
+function sample(gray, iw, ih, W, H, opt = {}) {
+  const thr = opt.thr == null ? 160 : opt.thr, rad = opt.rad == null ? 1.3 : opt.rad, frac = opt.frac == null ? 0.08 : opt.frac;
+  const wmm = (W - 1) * CP + DP, hmm = (H - 1) * LP + 2 * DP, sc = Math.min(wmm / iw, hmm / ih);   // mm setiap piksel
+  const ox = (wmm - iw * sc) / 2, oy = (hmm - ih * sc) / 2, rp = Math.max(0.5, rad / sc);
+  const dark = new Uint8Array(iw * ih); for (let i = 0; i < dark.length; i++) dark[i] = (gray[i] < thr) !== !!opt.invert ? 1 : 0;
+  const rows = [];
+  for (let y = 0; y < 3 * H; y++) {
+    const r = Math.floor(y / 3), dy = y % 3; const arr = [];
+    for (let x = 0; x < 2 * W; x++) {
+      const c = Math.floor(x / 2), dx = x % 2; const [px, py] = dotXY(r, c, dy, dx);
+      const cx = (px - ox) / sc, cy = (py - oy) / sc; let n = 0, tot = 0;
+      for (let yy = Math.floor(cy - rp); yy <= Math.ceil(cy + rp); yy++) for (let xx = Math.floor(cx - rp); xx <= Math.ceil(cx + rp); xx++) {
+        const d2 = (xx - cx) * (xx - cx) + (yy - cy) * (yy - cy); if (d2 > rp * rp) continue; tot++;
+        if (xx >= 0 && yy >= 0 && xx < iw && yy < ih && dark[yy * iw + xx]) n++;
+      }
+      arr.push(tot && n / tot >= frac ? 1 : 0);
+    }
+    rows.push(arr);
+  }
+  let g = rows;
+  if (opt.edge) {                                        // garis tepi sahaja: titik dengan sekurang-kurangnya satu jiran kosong
+    g = rows.map((a, y) => a.map((v, x) => v && ((y === 0 || !rows[y - 1][x]) || (y === rows.length - 1 || !rows[y + 1][x]) || (x === 0 || !a[x - 1]) || (x === a.length - 1 || !a[x + 1])) ? 1 : 0));
+  }
+  return g.map(a => a.join(''));
+}
+function dims(t, cols, rows, tr) {
+  const nk = (t.key || '').split(/\n/).map(s => s.trim()).filter(Boolean).slice(0, 6).length, head = tr((t.title || '').trim()) ? 2 : 0, foot = nk ? nk + 1 : 0;
+  return { W: cols, H: Math.max(1, rows - head - foot), head, foot };
+}
+// halaman penuh: tajuk, grid, kunci. Pulangkan baris aksara tepat `rows` baris
+function pageLines(t, cols, rows, tr) {
+  const key = (t.key || '').split(/\n/).map(s => s.trim()).filter(Boolean).slice(0, 6).map(s => tr(s));
+  const title = tr((t.title || '').trim());
+  const { H } = dims(t, cols, rows, tr);
+  const d = fit(t.dots || blank(cols, H), cols, H);
+  const lines = [];
+  if (title) { lines.push(title, ''); }
+  lines.push(...toLines(d, cols, H));
+  if (key.length) lines.push('', ...key);
+  while (lines.length < rows) lines.push('');
+  return lines.slice(0, rows);
+}
+module.exports = { dims, DP, CP, LP, ASC, bitsOf, blank, cellBits, toLines, fit, sample, pageLines, BIT };
+
+return module.exports})();
 __m['pipeline']=(function(){const module={exports:{}};const require=k=>__m[k.replace(/^\.\/|\.js$/g,'')];// Paip penuh: XML Word -> blok -> Braille -> atom -> muka surat -> BRF
 'use strict';
-const R = require('./docx-reader.js'), B = require('./braille-bm.js'), L = require('./layout.js'), T = require('./table.js');
+const R = require('./docx-reader.js'), B = require('./braille-bm.js'), L = require('./layout.js'), T = require('./table.js'), TAC = require('./tactile.js');
 
 const numLabel = n => '#' + [...String(n)].map(d => 'jabcdefghi'[+d]).join('') + '4';
 const romanLabel = r => (r === 'I' ? ';,i4' : ',,' + r.toLowerCase() + '4');
@@ -965,6 +1046,14 @@ function compose(blocks, dict, cfg = {}) {
     if (b.role === 'bahagian') { inArahan = false; bahagianSeen = true; }
     const gap = gapFor(b, prev);
     if (b.role === 'table') { const chs = T.toChunks(b.table, tr, cfg); chs.forEach((c, i) => flat.push({ role: 'table', pb: i === 0 && !!b.pageBreak, tbl: i === 0 ? b.table : null, nch: i === 0 ? chs.length : 0, gap: i ? 1 : gap, lb: c.map((l, k) => ({ t: 'raw', text: l, src: c.src ? c.src[k] : '', sw: c.sw ? c.sw[k] : null })) })); prev = b; continue; }
+    if (b.role === 'image' && b.tactile) {              // muka surat rajah timbul: satu muka penuh, bersendirian
+      const rows = cfg.rows || L.DEFAULT.rows, cols = cfg.cols || L.DEFAULT.cols;
+      const pl = TAC.pageLines(b.tactile, cols, rows, tr);
+      const lbs = pl.map((l, k) => ({ t: 'raw', text: l, src: k === 0 ? 'Rajah timbul (gambar ' + b.imageNo + ')' : '' }));
+      if (b.text) flat.push({ role: 'image', gap: gapFor(b, prev), lb: { t: 'para', text: tr('Deskripsi gambar: ' + b.text), src: 'Deskripsi gambar: ' + b.text }, pb: !!b.pageBreak });
+      flat.push({ role: 'tac', gap: 0, lb: lbs, pb: true });
+      prev = b; continue;
+    }
     let lb;
     switch (b.role) {
       case 'question': lb = { t: 'item', num: numLabel(b.n), text: tr(b.text), src: b.text, srcNum: b.n + '.' }; break;
@@ -1009,7 +1098,7 @@ function compose(blocks, dict, cfg = {}) {
         atoms.push({ gap: u.gap, newPage: u.pb, role: u.role, blocks: [].concat(...head.map((g, m) => (m ? Array(g.gap).fill({ t: 'blank' }) : []).concat(g.blocks))) });
         i = k - 1;
       }
-    } else atoms.push({ gap: u.gap, blocks: u.blocks, tbl: u.tbl, nch: u.nch, newPage: u.pb, role: u.role });
+    } else atoms.push({ gap: u.gap, blocks: u.blocks, tbl: u.tbl, nch: u.nch, newPage: u.pb, role: u.role, tac: u.role === 'tac' });
   }
   // Kekal bersama: perenggan yang menghala ke blok seterusnya ("di bawah", "berikut", titik dua) tidak ditinggalkan di hujung muka surat
   const TRIG = /(\b(di\s+bawah|berikut|seterusnya|yang\s+berikut|di\s+atas)\s*[.:;]?|:)\s*$/i;
@@ -1019,7 +1108,7 @@ function compose(blocks, dict, cfg = {}) {
     let a = atoms[i];
     while (i + 1 < atoms.length) {
       const last = a.blocks[a.blocks.length - 1], s = (last && last.src) || '';
-      if (atoms[i + 1].newPage) break;
+      if (atoms[i + 1].newPage || a.tac || atoms[i + 1].tac) break;
       const nx = atoms[i + 1], f0 = nx.blocks[0] || {}, fs0 = (f0.src || '').trim();
       const nextBahan = f0.t === 'raw' || LABEL.test(fs0) || /^(bahan|petikan|rajah|gambar|teks|carta|jadual|puisi|sajak|iklan|poster|grafik|peta)\b/i.test(fs0) || /^soalan\s+\d/i.test(fs0);
       const refers = /\bdi\s+(bawah|atas)\b|\bberikut\b/i.test(s) && nextBahan;
@@ -1152,7 +1241,10 @@ function run(xml, dict, cfg = {}) {
   const desc = cfg.imageDesc || {};
   cls.blocks.forEach(b => { if (b.drawing && !b.text && desc[b.imageNo] && desc[b.imageNo].trim()) b.text = desc[b.imageNo].trim(); });
   cls.warnings = cls.warnings.filter(w => w.type !== 'gambar' || !cls.blocks.some(b => b.drawing && b.imageNo === w.imageNo && b.text));
-  const images = cls.blocks.filter(b => b.drawing).map(b => ({ imageNo: b.imageNo, embed: b.embed, text: b.text }));
+  const tacCfg = cfg.imageTactile || {};
+  cls.blocks.forEach(b => { const t = b.drawing && tacCfg[b.imageNo]; if (t && t.on && t.dots && t.dots.length) b.tactile = t; });
+  cls.warnings = cls.warnings.filter(w => w.type !== 'gambar' || !cls.blocks.some(b => b.drawing && b.imageNo === w.imageNo && b.tactile));
+  const images = cls.blocks.filter(b => b.drawing).map(b => ({ imageNo: b.imageNo, embed: b.embed, text: b.text, tactile: !!b.tactile }));
   // nombor muka surat. Braille: satu baris (atas atau bawah). Biasa (untuk guru): digit matriks titik 2 baris di bawah kanan.
   const pn = cfg.pageNum && ((cfg.pageNum.pos && cfg.pageNum.pos !== 'none') || cfg.pageNum.print) ? cfg.pageNum : null;
   const bpos = pn && pn.pos && pn.pos !== 'none' ? pn.pos : null, print = pn && pn.print ? (pn.print === 'small' ? 'small' : pn.print === 'medium' ? 'medium' : 'big') : null;
@@ -1190,7 +1282,7 @@ function run(xml, dict, cfg = {}) {
 module.exports = { run, compose, numLabel, furn };
 
 return module.exports})();
-window.BrailleEngine={B:__m['braille-bm'],L:__m['layout'],P:__m['pipeline'],T:__m['table']};
+window.BrailleEngine={B:__m['braille-bm'],L:__m['layout'],P:__m['pipeline'],T:__m['table'],K:__m['tactile']};
 const DATA_WHOLE="{\"atau\":\"a\",\"bahawa\":\"b\",\"contoh\":\"c\",\"dengan\":\"d\",\"erti\":\"e\",\"faedah\":\"f\",\"guru\":\"g\",\"hendak\":\"h\",\"ini\":\"i\",\"jangan\":\"j\",\"kerana\":\"k\",\"lagi\":\"l\",\"mereka\":\"m\",\"nampak\":\"n\",\"orang\":\"o\",\"pun\":\"p\",\"ramai\":\"r\",\"supaya\":\"s\",\"tetapi\":\"t\",\"untuk\":\"u\",\"virus\":\"v\",\"waktu\":\"w\",\"itu\":\"x\",\"yang\":\"y\",\"seperti\":\"z\",\"cakap\":\"\\\"c\",\"dapat\":\"\\\"d\",\"emas\":\"\\\"e\",\"faham\":\"\\\"f\",\"ganti\":\"\\\"g\",\"hanya\":\"\\\"h\",\"imbang\":\"\\\"i\",\"jadi\":\"\\\"j\",\"kaki\":\"\\\"k\",\"lain\":\"\\\"l\",\"masuk\":\"\\\"m\",\"negara\":\"\\\"n\",\"oleh\":\"\\\"o\",\"pagi\":\"\\\"p\",\"rakyat\":\"\\\"r\",\"sangat\":\"\\\"s\",\"tiada\":\"\\\"t\",\"ulang\":\"\\\"u\",\"wakil\":\"\\\"w\",\"yakin\":\"\\\"y\",\"zaman\":\"\\\"z\",\"kami\":\"\\\"=\",\"khabar\":\"\\\"*\",\"nyanyi\":\"\\\"[\",\"syarah\":\"\\\"%\",\"sedang\":\"\\\"?\",\"ambang\":\"\\\"!\",\"cari\":\"^c\",\"dari\":\"^d\",\"fikir\":\"^f\",\"hari\":\"^h\",\"ingat\":\"^i\",\"jika\":\"^j\",\"kalau\":\"^k\",\"lalu\":\"^l\",\"minta\":\"^m\",\"negeri\":\"^n\",\"ombak\":\"^o\",\"perempuan\":\"^p\",\"rancang\":\"^r\",\"suatu\":\"^s\",\"tidak\":\"^t\",\"umpama\":\"^u\",\"wang\":\"^w\",\"khidmat\":\"^*\",\"syarat\":\"^%\",\"semua\":\"^?\",\"ambil\":\"^!\",\"banyak\":\"_b\",\"cuba\":\"_c\",\"datang\":\"_d\",\"erat\":\"_e\",\"guna\":\"_g\",\"hingga\":\"_h\",\"juga\":\"_j\",\"kali\":\"_k\",\"lebih\":\"_l\",\"mula\":\"_m\",\"nombor\":\"_n\",\"otak\":\"_o\",\"petang\":\"_p\",\"rupa\":\"_r\",\"sungguh\":\"_s\",\"tunjuk\":\"_t\",\"usaha\":\"_u\",\"wanita\":\"_w\",\"khusus\":\"_*\",\"syukur\":\"_%\",\"sentiasa\":\"_?\",\"ampai\":\"_!\",\"bagaimana\":\"bmn\",\"begini\":\"bi\",\"begitu\":\"bx\",\"berhad\":\"bhd\",\"braille\":\"brl\",\"dalam\":\"dlm\",\"daripada\":\"dpd\",\"demikian\":\"dmk\",\"jalan\":\"jln\",\"jawatankuasa\":\"jks\",\"kampung\":\"kg\",\"kemudian\":\"kmd\",\"kepada\":\"kpd\",\"lorong\":\"lrg\",\"malam\":\"mlm\",\"masyarakat\":\"m%kt\",\"organisasi\":\"org\",\"pejabat\":\"\\\\j\",\"saudara\":\"sdr\",\"saudari\":\"sdri\",\"sebagai\":\"sbg\",\"sekarang\":\"sk+\",\"sendirian\":\"sdn\",\"sungai\":\"s+\",\"syarikat\":\"%kt\",\"taman\":\"tmn\",\"tanggungjawab\":\"tjb\",\"tanjung\":\"tg\",\"vitamin\":\"vit\",\"khas\":\"*\",\"nyaris\":\"[\",\"syor\":\"%\",\"dan\":\"&\",\"ada\":\"(\",\"apa\":\")\",\"ahli\":\"$\",\"am\":\"!\",\"anda\":\"]\",\"kita\":\"=\",\"di\":\"4\",\"ke\":\"6\",\"beberapa\":\"2\",\"pula\":\"0\"}";const DATA_SCH="{\"iaitu\":\"ia3x\",\"apabila\":\")bila\",\"frasa\":\"frasa\",\"badan\":\"ba&\",\"perumahan\":\"\\\\rum$]\",\"keperluan\":\"60lu]\",\"bekerjasama\":\"be6rjasm\",\"kerjasama\":\"6rjasm\",\"condong\":\"condong\",\"beriadah\":\"beriad$\",\"dikehendaki\":\"463h3i\",\"peranan\":\"\\\\r]]\",\"bertanggungjawab\":\"2ta+gu+jawab\",\"setiausaha\":\"?tia_u\",\"peranti\":\"\\\\r]ti\",\"padi\":\"padi\",\"petikan\":\"\\\\tik]\",\"boleh\":\"b\\\"o\",\"membolehkan\":\"/mb\\\"o>\",\"memperolehi\":\"/m0\\\"oi\",\"keusahawanan\":\"6_uw]]\",\"melalui\":\"/^li\",\"kecemasan\":\"6c\\\"e]\",\"juruwang\":\"juru^w\",\"bagaimanapun\":\"bmn3p\",\"mendepani\":\"/ndep]i\",\"kesibukan\":\"6sibuk]\",\"metabolisme\":\"/tabolisme\",\"dititikberatkan\":\"4titikb_e>\",\"peringkat\":\"\\\\ri+kat\"}";
 (function(){
 const $=id=>document.getElementById(id);
@@ -1211,7 +1303,7 @@ const KAMUS_URLS=[...(/^https?:$/.test(location.protocol)?['kamus.txt']:[]),'htt
 const loc=()=>{const t=fromText($('dict').value),o={};for(const k in t){if(k in OFF&&SCH[k]===t[k])continue;o[k]=t[k]}return o};
 const dict=()=>E.B.withOverrides(E.B.withOverrides(BASE,OFF),loc());
 let punct={};try{punct=JSON.parse(LS.get('brl_punct')||'{}')||{}}catch(e){punct={}}
-let xml=null,last=null,name='kertas',imgDesc={},imgBlobs={},edits={},editing={};
+let xml=null,last=null,name='kertas',imgDesc={},imgTac={},imgBlobs={},edits={},editing={};
 // ---- muat turun ----
 let DL=null;
 (async()=>{try{DL=await window.claude.use('downloads')}catch(e){}if(!DL){$('sm2').hidden=false}})();
@@ -1282,12 +1374,13 @@ async function load(f){
     window.__rel=map;window.__zip=z;
     try{const sv=LS.get('brl_proj_'+name);if(sv){const o=JSON.parse(sv);edits=o.edits||{};restored=Object.keys(edits).length}}catch(e){}
     try{imgDesc=JSON.parse(LS.get('brl_img_'+name)||'{}')||{}}catch(e){imgDesc={}}
+    try{imgTac=JSON.parse(LS.get('brl_tac_'+name)||'{}')||{}}catch(e){imgTac={}}
     try{brks=new Set(JSON.parse(LS.get('brl_brk_'+name)||'[]'))}catch(e){brks=new Set()}
     go();idbPut(name,{buf:ab,fname:f.name,t:Date.now()});
   }catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">'+esc(e.message)+'</div>'}
 }
 let brks=new Set(),restored=0,sTm=null,curBuf=null;
-function cfg(){return{cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
+function cfg(){return{cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:imgTac,tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
 function go(){
   let r;try{r=E.P.run(xml,dict(),cfg())}catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">Ralat: '+esc(e.message)+'</div>';return}
   last=r;buildPool();$('out').hidden=false;
@@ -1365,6 +1458,59 @@ function applyTxt(i,val){
 function srcsFor(i,lines){if(!edits[i])return last.srcs[i]||null;return(lines||eff()[i]||[]).map(l=>(l.trim()&&pool.get(l))||NOSRC)}
 const eff=()=>{const mx=Math.max(last.pages.length-1,...Object.keys(edits).map(Number)),o=[];for(let i=0;i<=mx;i++)o.push(edits[i]?edits[i].text.replace(/\r/g,'').split('\n'):(last.pages[i]||['']));return o};
 // ---- gambar ----
+
+// ---- rajah timbul ----
+const K=E.K,trb=t=>E.B.text(t,dict(),punct);
+let tSave=null;function tacSave(){clearTimeout(tSave);tSave=setTimeout(()=>{LS.set('brl_tac_'+name,JSON.stringify(imgTac));go2()},400)}
+function tacDims(t){const c=cfg(),pn=c.pageNum,pos=pn&&pn.pos&&pn.pos!=='none',pr=pn&&pn.print;const rows=c.rows-(pos?1:0)-(pr?(pn.print==='big'?3:2):0);return K.dims(t,c.cols,rows,trb)}
+async function tacGray(b,mx){const bm=await createImageBitmap(b);const sc=Math.min(1,(mx||1200)/Math.max(bm.width,bm.height));const w=Math.max(1,Math.round(bm.width*sc)),h=Math.max(1,Math.round(bm.height*sc));
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(bm,0,0,w,h);const d=g.getImageData(0,0,w,h).data,gr=new Uint8Array(w*h);
+  for(let i=0;i<w*h;i++)gr[i]=Math.round(.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2]);return{gr,w,h}}
+function tacUI(im,b){
+  const no=im.imageNo,sec=document.createElement('div');sec.className='tac';
+  const T=()=>imgTac[no]||(imgTac[no]={on:false,thr:160,rad:13,frac:8,inv:false,edge:false,title:'',key:'',dots:null,edited:false});
+  const t0=T();
+  sec.innerHTML='<label class="row"><input type="checkbox" class="tk"> <b>Rajah timbul</b> <span class="sm">(satu muka surat penuh dalam BRF, dengan muka belakang kosong untuk interpoint)</span></label>'+
+  '<div class="tb" hidden><div class="row sm">Ambang <input type="range" min="40" max="230" class="ta"> Ketebalan <input type="range" min="6" max="20" class="tr"> Kepekatan <input type="range" min="2" max="40" class="tf"> <label><input type="checkbox" class="ti"> Songsang</label> <label><input type="checkbox" class="te"> Garis tepi sahaja</label> <button class="g tg">Jana semula daripada gambar</button></div>'+
+  '<div class="row sm"><label>Tajuk muka surat <input class="tt" size="22" placeholder="cth Rajah 2.1"></label></div><canvas class="tc"></canvas>'+
+  '<div class="row sm">Alat: <button class="g tm" data-m="d">Lukis</button><button class="g tm" data-m="e">Padam</button><button class="g tm" data-m="b">Padam kotak</button><button class="g tm" data-m="l">Label huruf</button> <input class="tl" maxlength="1" size="1" aria-label="Huruf label"> <label><input type="checkbox" class="tg2"> Panduan gambar asal</label> <button class="g tclr">Kosongkan</button> <button class="g tpiaf">PNG untuk PIAF</button> <span class="sm ts"></span></div>'+
+  '<textarea class="tkey" style="min-height:50px" placeholder="Kunci rajah (pilihan). Satu baris satu ayat, contohnya: a = kuprum"></textarea></div>';
+  const q=c=>sec.querySelector(c),tb=q('.tb'),cv=q('.tc'),ts=q('.ts');let mode='d',dn=null,gray=null,bs=null;
+  const sync=()=>{const t=T();q('.tk').checked=!!t.on;tb.hidden=!t.on;q('.ta').value=t.thr;q('.tr').value=t.rad;q('.tf').value=t.frac;q('.ti').checked=!!t.inv;q('.te').checked=!!t.edge;q('.tt').value=t.title||'';q('.tkey').value=t.key||''};
+  const SC=3,draw=()=>{const t=T(),d=tacDims(t);if(!t.dots||t.dots.length!==3*d.H||t.dots[0].length!==2*d.W)t.dots=K.fit(t.dots||K.blank(d.W,d.H),d.W,d.H);
+    cv.width=Math.round(d.W*K.CP*SC);cv.height=Math.round(((d.H-1)*K.LP+2*K.DP+4)*SC);const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);if(q('.tg2').checked&&gray){const wm=(d.W-1)*K.CP+K.DP,hm=(d.H-1)*K.LP+2*K.DP,sc=Math.min(wm/gray.w,hm/gray.h),ox=(wm-gray.w*sc)/2,oy=(hm-gray.h*sc)/2;if(!gray.cv){const o=document.createElement('canvas');o.width=gray.w;o.height=gray.h;const og=o.getContext('2d'),id=og.createImageData(gray.w,gray.h);for(let i=0;i<gray.w*gray.h;i++){id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=gray.gr[i];id.data[i*4+3]=255}og.putImageData(id,0,0);gray.cv=o}g.globalAlpha=.3;g.drawImage(gray.cv,ox*SC+1.5,oy*SC+1.5,gray.w*sc*SC,gray.h*sc*SC);g.globalAlpha=1}
+    g.strokeStyle='#e5e0d0';g.lineWidth=1;for(let r=0;r<d.H;r++)for(let c=0;c<d.W;c++)g.strokeRect(c*K.CP*SC+.5,r*K.LP*SC+.5,(K.DP+1)*SC,(2*K.DP+1)*SC);
+    g.fillStyle='#14213d';for(let y=0;y<3*d.H;y++)for(let x=0;x<2*d.W;x++)if(t.dots[y][x]==='1'){const c=x>>1,r=(y/3)|0,[px,py]=[c*K.CP+(x&1)*K.DP,r*K.LP+(y%3)*K.DP];g.beginPath();g.arc((px+.5)*SC+1,(py+.5)*SC+1,.8*SC,0,6.3);g.fill()}
+    cv.style.width=cv.width/2+'px';ts.textContent=d.W+' sel × '+d.H+' baris'};
+  const setDot=(y,x,v)=>{const t=T();if(y<0||x<0||y>=t.dots.length||x>=t.dots[0].length)return;const r=t.dots[y];if(r[x]===(v?'1':'0'))return;t.dots[y]=r.slice(0,x)+(v?'1':'0')+r.slice(x+1);t.edited=true};
+  const hit=ev=>{const t=T(),d=tacDims(t),R=cv.getBoundingClientRect(),k=cv.width/R.width,mx=(ev.clientX-R.left)*k/SC,my=(ev.clientY-R.top)*k/SC;
+    if(mode==='l'){const c=Math.max(0,Math.min(d.W-1,Math.floor(mx/K.CP))),r=Math.max(0,Math.min(d.H-1,Math.floor(my/K.LP)));return{cell:[r,c]}}
+    let best=null,bd=1e9;const c0=Math.floor(mx/K.CP),r0=Math.floor(my/K.LP);for(let r=r0-1;r<=r0+1;r++)for(let c=c0-1;c<=c0+1;c++){if(r<0||c<0||r>=d.H||c>=d.W)continue;for(let dy=0;dy<3;dy++)for(let dx=0;dx<2;dx++){const px=c*K.CP+dx*K.DP,py=r*K.LP+dy*K.DP,dd=(px-mx)**2+(py-my)**2;if(dd<bd){bd=dd;best=[r*3+dy,c*2+dx]}}}
+    return bd<=9?{dot:best}:{}};
+  let down=false;
+  const act=ev=>{const h=hit(ev),t=T();if(mode==='l'){if(!h.cell)return;const ch=q('.tl').value||'';if(!ch)return;const bits=K.bitsOf(ch);for(const[dy,dx,v]of K.BIT)setDot(h.cell[0]*3+dy,h.cell[1]*2+dx,bits&v)}else if(h.dot)setDot(h.dot[0],h.dot[1],mode==='d');draw()};
+  cv.onpointerdown=ev=>{down=true;cv.setPointerCapture(ev.pointerId);if(mode==='b'){bs=mm(ev)}else act(ev);ev.preventDefault()};
+  const mm=ev=>{const R=cv.getBoundingClientRect(),k=cv.width/R.width;return[(ev.clientX-R.left)*k/SC,(ev.clientY-R.top)*k/SC]};
+  cv.onpointermove=ev=>{if(down&&mode!=='l'&&mode!=='b')act(ev)};
+  cv.onpointerup=ev=>{if(down){down=false;if(mode==='b'&&bs){const e=mm(ev),x0=Math.min(bs[0],e[0]),x1=Math.max(bs[0],e[0]),y0=Math.min(bs[1],e[1]),y1=Math.max(bs[1],e[1]);bs=null;const t=T();for(let y=0;y<t.dots.length;y++)for(let x=0;x<t.dots[0].length;x++){const px=(x>>1)*K.CP+(x&1)*K.DP,py=((y/3)|0)*K.LP+(y%3)*K.DP;if(px>=x0&&px<=x1&&py>=y0&&py<=y1)setDot(y,x,0)}draw()}tacSave()}};
+  sec.querySelectorAll('.tm').forEach(bn=>{bn.onclick=()=>{mode=bn.dataset.m;sec.querySelectorAll('.tm').forEach(x=>x.classList.toggle('on',x===bn))};if(bn.dataset.m==='d')bn.classList.add('on')});
+  const gen=async()=>{const t=T();if(!b){ts.textContent='Gambar tidak tersedia untuk ditukar.';return}
+    try{if(!gray)gray=await tacGray(b,1200);const d=tacDims(t);t.dots=K.sample(gray.gr,gray.w,gray.h,d.W,d.H,{thr:t.thr,rad:t.rad/10,frac:t.frac/100,invert:t.inv,edge:t.edge});t.edited=false;draw();tacSave()}catch(e){ts.textContent='Gagal menukar gambar.'}};
+  q('.tk').onchange=async()=>{const t=T();t.on=q('.tk').checked;tb.hidden=!t.on;if(t.on&&!t.edited&&!(t.dots||[]).some(r=>r.includes('1'))){await gen()}else{draw();tacSave()}};
+  [['.ta','thr'],['.tr','rad'],['.tf','frac']].forEach(([s2,k])=>{q(s2).oninput=()=>{T()[k]=+q(s2).value;clearTimeout(dn);dn=setTimeout(()=>{if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()},350)}});
+  q('.ti').onchange=()=>{T().inv=q('.ti').checked;if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
+  q('.te').onchange=()=>{T().edge=q('.te').checked;if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
+  q('.tg').onclick=()=>{if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
+  q('.tg2').onchange=async()=>{if(q('.tg2').checked&&!gray&&b){try{gray=await tacGray(b,1200)}catch(e){}}draw()};
+  q('.tclr').onclick=()=>{const t=T(),d=tacDims(t);t.dots=K.blank(d.W,d.H);t.edited=true;draw();tacSave()};
+  q('.tt').oninput=()=>{T().title=q('.tt').value;draw();tacSave()};
+  q('.tkey').oninput=()=>{T().key=q('.tkey').value;draw();tacSave()};
+  q('.tpiaf').onclick=async()=>{if(!b){ts.textContent='Gambar tidak tersedia.';return}const t=T();try{const G=await tacGray(b,2400),cv2=document.createElement('canvas');cv2.width=G.w;cv2.height=G.h;const g=cv2.getContext('2d'),id=g.createImageData(G.w,G.h);
+    for(let i=0;i<G.w*G.h;i++){const dk=(G.gr[i]<t.thr)!==!!t.inv,v=dk?0:255;id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v;id.data[i*4+3]=255}g.putImageData(id,0,0);
+    const bl=await new Promise(ok=>cv2.toBlob(ok,'image/png'));dl(name+'_rajah'+no+'_piaf.png',bl)}catch(e){ts.textContent='Gagal menjana PNG.'}};
+  sync();if(t0.on)draw();else draw();
+  return sec}
+
 let imgKey='';
 async function blobFor(im){
   if(imgBlobs[im.embed]!==undefined)return imgBlobs[im.embed];
@@ -1396,6 +1542,7 @@ async function drawImages(){
         ta.value=r.text.trim();ta.oninput();st.textContent='Semak dan betulkan sebelum guna.'}
       catch(e){st.textContent=(e&&e.code==='not_granted')?'Kebenaran tidak diberi.':'Gagal menjana.'}
       btn.disabled=false};
+    right.appendChild(tacUI(im,b));
     row.append(left,right);host.append(row);
   }
 }
@@ -1408,7 +1555,7 @@ function projKey(){return 'brl_proj_'+name}
 function saveProj(){clearTimeout(sTm);sTm=setTimeout(()=>{if(!last||!name)return;const n=Object.keys(edits).length;
   LS.set(projKey(),n?JSON.stringify({v:1,name,edits,at:Date.now()}):'');
   $('psave').textContent=n?'Disimpan automatik dalam pelayar ini ('+n+' muka disunting).':'Tiada suntingan.';$('pjd').hidden=!n},400)}
-const projObj=()=>({v:2,name,fname:name+'.docx',edits,brks:[...brks],imgDesc,at:Date.now()});
+const projObj=()=>({v:2,name,fname:name+'.docx',edits,brks:[...brks],imgDesc,tac:imgTac,at:Date.now()});
 $('pjxj').onclick=()=>{if(!last)return;dl(name+'.projek.json',JSON.stringify(projObj()))};
 $('pjx').onclick=async()=>{if(!last||!curBuf)return;const z=new JSZip();z.file('dokumen.docx',curBuf);z.file('projek.json',JSON.stringify(projObj()));dl(name+'.titik',await z.generateAsync({type:'blob',compression:'DEFLATE'}))};
 async function bukaTitik(f){try{const z=await JSZip.loadAsync(await f.arrayBuffer());const dj=z.file('projek.json'),dd=z.file('dokumen.docx');if(!dj||!dd)throw new Error('Bukan fail projek Titik yang sah.');
@@ -1416,13 +1563,13 @@ async function bukaTitik(f){try{const z=await JSZip.loadAsync(await f.arrayBuffe
   const loc=(()=>{try{return JSON.parse(LS.get('brl_proj_'+o.name)||'null')}catch(e){return null}})();
   if(loc&&loc.edits&&Object.keys(loc.edits).length&&(loc.at||0)>(o.at||0)&&!confirm('Peranti ini ada suntingan lebih baharu bagi "'+o.name+'" daripada fail projek. Guna suntingan daripada fail juga?'))return;
   LS.set('brl_proj_'+o.name,JSON.stringify({v:1,name:o.name,edits:o.edits||{},at:o.at||Date.now()}));
-  LS.set('brl_img_'+o.name,JSON.stringify(o.imgDesc||{}));LS.set('brl_brk_'+o.name,JSON.stringify(o.brks||[]));
+  LS.set('brl_img_'+o.name,JSON.stringify(o.imgDesc||{}));LS.set('brl_tac_'+o.name,JSON.stringify(o.tac||{}));LS.set('brl_brk_'+o.name,JSON.stringify(o.brks||[]));
   const buf=await dd.async('arraybuffer');openApp();await load(new File([buf],(o.fname||o.name+'.docx')))}
   catch(e){openApp();$('out').hidden=false;$('warns').innerHTML='<div class="w e">'+esc(e.message||'Fail projek tidak sah.')+'</div>'}}
 $('pji').onclick=()=>$('pjf').click();
 $('pjf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f||!last)return;try{const o=JSON.parse(await f.text());if(!o||!o.edits)throw 0;
   if(o.name&&o.name!==name&&!confirm('Projek ini untuk "'+o.name+'", bukan "'+name+'". Teruskan?'))return;
-  edits=o.edits;editing={};if(Array.isArray(o.brks)){brks=new Set(o.brks);saveBrks()}if(o.imgDesc){imgDesc=o.imgDesc;LS.set('brl_img_'+name,JSON.stringify(imgDesc))}
+  edits=o.edits;editing={};if(Array.isArray(o.brks)){brks=new Set(o.brks);saveBrks()}if(o.imgDesc){imgDesc=o.imgDesc;LS.set('brl_img_'+name,JSON.stringify(imgDesc))}if(o.tac){imgTac=o.tac;LS.set('brl_tac_'+name,JSON.stringify(imgTac));imgKey=''}
   restored=Object.keys(edits).length;go()}catch(x){$('psave').textContent='Fail projek tidak sah.'}};
 $('pjd').onclick=()=>{if(!confirm('Padam suntingan yang disimpan untuk fail ini?'))return;edits={};editing={};render()};
 // ---- paparan ----
@@ -1852,7 +1999,7 @@ async function drawHome(){const m={};
 $('hproj').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.o){const k=decodeURIComponent(b.dataset.o),v=await idbGet(k);if(!v)return;openApp();load(new File([v.buf],v.fname||k+'.docx'))}
   else if(b.dataset.x){if(b.dataset.s!=='1'){b.dataset.s='1';b.textContent='Pasti buang?';setTimeout(()=>{if(b.isConnected){b.dataset.s='';b.textContent='Buang'}},3500);return}
-    const k=decodeURIComponent(b.dataset.x);await idbDel(k);['brl_proj_','brl_img_','brl_brk_'].forEach(p=>{try{localStorage.removeItem(p+k)}catch(e){}});drawHome()}};
+    const k=decodeURIComponent(b.dataset.x);await idbDel(k);['brl_proj_','brl_img_','brl_brk_','brl_tac_'].forEach(p=>{try{localStorage.removeItem(p+k)}catch(e){}});drawHome()}};
 function openApp(){$('home').hidden=true;$('app').hidden=false;scrollTo(0,0)}
 function openHome(){drawHome();$('hverd').textContent=$('verd').textContent?$('verd').textContent.replace('Aplikasi desktop, ',''):'';$('home').hidden=false;$('app').hidden=true;scrollTo(0,0)}
 const temaUpd=()=>{$('tema').textContent=document.documentElement.getAttribute('data-theme')==='dark'?'Mod cerah':'Mod gelap'};
