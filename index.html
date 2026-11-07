@@ -96,6 +96,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 .hmk strong{font-size:19px;color:var(--fg)}
 .hmk.on{border:2px solid var(--fg);background:var(--card);color:var(--fg);cursor:pointer}
 .hmk.on:hover{box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.en .bmonly{display:none!important}
 .hmt{align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px;background:var(--bd);color:var(--mut)}
 .hmk.on .hmt{background:var(--ac);color:var(--acf)}
 .hm h1{font-size:30px}
@@ -109,7 +110,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 <p class="s" style="max-width:640px">Pilih jenis dokumen. Muat naik fail Word, semak titik braille bersebelahan paparan biasa, kemudian cetak terus ke embosser.</p>
 <div class="hmc">
 <button class="hmk on" id="hmbm"><span class="hmt">Sedia digunakan</span><strong>Bahasa Melayu</strong><span class="sm">Braille Grade 2. Kod Braille BM Pindaan 2020, kamus sekolah, singkatan dan jadual. Rajah dengan deskripsi.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
-<div class="hmk"><span class="hmt">Akan datang</span><strong>English (UEB)</strong><span class="sm">Unified English Braille Grade 2 untuk kertas Bahasa Inggeris.</span></div>
+<button class="hmk on" id="hmen"><span class="hmt">Sedia digunakan</span><strong>English (UEB)</strong><span class="sm">Unified English Braille Grade 2 untuk kertas Bahasa Inggeris. Susun atur dan cetakan sama seperti Bahasa Melayu. Semak pratonton, terutama singkatan dan nama khas.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
 <div class="hmk"><span class="hmt">Akan datang</span><strong>Matematik</strong><span class="sm">Persamaan dan simbol matematik dengan paparan titik pada setiap simbol.</span></div>
 <button class="hmk on" id="hmsn"><span class="hmt">Sedia digunakan</span><strong>Sains</strong><span class="sm">Kertas Sains dwibahasa dengan rajah timbul (grafik titik) selain deskripsi. Teks guna kod BM; simbol kimia dan unit khas masih dalam semakan, jadi semak pratonton.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
 <div class="hmk on" id="hmstc" style="cursor:default"><span class="hmt">Baharu</span><strong>Studio Rajah</strong><span class="sm">Tukar gambar (imej, tangkap layar, tampal) atau lakaran sendiri kepada muka surat rajah timbul. Tak perlu fail Word. Simpan dalam Pustaka untuk guna semula.</span>
@@ -149,7 +150,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 <main id="app">
 <div style="margin-bottom:8px"><button class="g" id="gohome">← Skrin utama</button> <span class="sm" id="modl"></span></div>
 <h1>Titik <span style="font-weight:400;font-size:.6em;opacity:.7">Penterjemah Braille Kita</span></h1>
-<p class="s"><span id="verd" class="sm" style="float:right"></span>Word (.docx) → Braille Grade 2 (Bahasa Melayu) untuk Index Basic-D. Semua diproses dalam pelayar anda; fail tidak dihantar ke mana-mana.</p>
+<p class="s"><span id="verd" class="sm" style="float:right"></span>Word (.docx) → Braille Grade 2 (<span id="langn">Bahasa Melayu</span>) untuk Index Basic-D. Semua diproses dalam pelayar anda; fail tidak dihantar ke mana-mana.</p>
 <p class="sm" style="margin:-6px 0 8px">Dibangunkan oleh <b>Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi)</b> · SMK Pendidikan Khas Setapak, Kuala Lumpur</p>
 <div class="card"><div id="drop" tabindex="0">Seret fail .docx (atau projek .titik) ke sini, atau klik untuk pilih<input id="file" type="file" accept=".docx,.titik" hidden></div><div id="fname" class="sm" style="margin-top:8px"></div></div>
 <div class="card"><h2>Tetapan</h2>
@@ -167,7 +168,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 <div id="stbar" class="card"><h2 style="margin-top:0">Studio Rajah</h2><div class="row"><button id="stadd" type="button">+ Tambah gambar</button><input id="stfile" type="file" accept="image/*" multiple hidden><button class="g" id="stblank" type="button">+ Lakaran kosong</button><button class="g" id="stlib" type="button">Pustaka Rajah</button><label>Sel/baris <input id="stc" type="number" min="20" max="42" style="width:70px"></label><label>Baris/muka <input id="str" type="number" min="10" max="40" style="width:70px"></label><label><input id="sti" type="checkbox"> Interpoint</label></div><div class="sm" style="margin-top:8px">1. Setiap gambar jadi satu muka surat rajah. Laraskan ambang dan ketebalan, kemudian betulkan dengan alat Lukis atau Padam. 2. Tekan <b>Simpan ke Pustaka</b> untuk guna semula. 3. Muat turun BRF atau PNG untuk PIAF di bahagian Hasil, di bawah.</div></div>
 <div id="imgcard" class="card" hidden><h2>Gambar dan deskripsi</h2>
 <p class="sm" style="margin-top:0">Murid buta tak nampak gambar, jadi setiap gambar mesti ada deskripsi. Taip sendiri, atau minta Claude cadangkan, kemudian semak dan betulkan. Deskripsi akan masuk di tempat gambar.</p><div id="imgs"></div></div>
-<div class="card"><h2>Kamus sekolah</h2>
+<div class="card bmonly"><h2>Kamus sekolah</h2>
 <p class="sm" style="margin-top:0">Perkataan yang braille-nya mengikut kehendak sekolah dan bukan terjemahan automatik. Cari, tambah atau betulkan. Braille ditunjuk sebagai titik, jadi tidak perlu tahu kod huruf. Disimpan dalam pelayar ini; guna Eksport untuk kongsi dengan guru lain.</p>
 <div class="row" style="margin-bottom:8px"><span class="sm" id="dof"></span></div>
 <div class="row" style="margin-bottom:8px"><input id="df" type="text" placeholder="cari perkataan" aria-label="Cari dalam kamus" style="width:180px"><label><input id="dbase" type="checkbox"> Cari juga dalam kamus asas</label><span class="sm" id="dc"></span><button id="dnew" style="margin-left:auto">Tambah perkataan</button></div>
@@ -179,7 +180,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 <textarea id="dict" spellcheck="false"></textarea>
 <div class="row" style="margin-top:8px"><button class="g" id="dgab">Penyelia: gabung fail cadangan</button><input id="dgabf" type="file" accept=".txt" multiple hidden><span class="sm" id="dgabs"></span></div>
 <div class="row" style="margin-top:8px"><button class="g" id="dexp">Eksport</button><button class="g" id="dimp">Import</button><input id="dfile" type="file" accept=".txt" hidden></div></details></div>
-<div class="card"><h2>Betulkan atau tambah perkataan</h2>
+<div class="card bmonly"><h2>Betulkan atau tambah perkataan</h2>
 <p class="sm" style="margin-top:0">Pilih perkataan daripada dokumen (senarai di bawah) atau taip perkataan baru. Masukkan kod braille dengan 6 kekunci, atau klik titik. Tidak perlu ingat kod teks.</p>
 <div class="row"><input id="ew" type="text" placeholder="perkataan" aria-label="Perkataan" style="width:200px"><span class="sm" id="eauto"></span></div>
 <div class="cells" id="ecells" aria-live="polite"></div>
@@ -191,16 +192,16 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 </div>
 <div class="row" style="margin-top:10px"><button id="esave">Simpan dalam kamus</button><button class="g" id="eauto2">Mula daripada terjemahan automatik</button><button class="g" id="erm">Buang entri</button><span class="sm" id="emsg"></span></div>
 <details style="margin-top:10px"><summary class="sm">Peta kekunci</summary><div class="row kk" style="margin-top:6px"><span class="sm">Titik 1 hingga 6:</span><input id="k1" maxlength="1"><input id="k2" maxlength="1"><input id="k3" maxlength="1"><input id="k4" maxlength="1"><input id="k5" maxlength="1"><input id="k6" maxlength="1"><span class="sm">lalai: F D S J K L</span></div></details>
-<div id="wcard" hidden class="ed"><h2>Perkataan dalam dokumen</h2><div class="row" style="margin-bottom:8px"><input id="wf" type="text" placeholder="tapis" aria-label="Tapis" style="width:160px"><label><input id="wo" type="checkbox"> Hanya yang belum ada dalam kamus sekolah</label><span class="sm" id="wc"></span></div><div class="wl"><table><thead><tr><th>Perkataan</th><th>Braille semasa</th><th></th></tr></thead><tbody id="wb"></tbody></table></div></div>
+<div id="wcard" hidden class="ed bmonly"><h2>Perkataan dalam dokumen</h2><div class="row" style="margin-bottom:8px"><input id="wf" type="text" placeholder="tapis" aria-label="Tapis" style="width:160px"><label><input id="wo" type="checkbox"> Hanya yang belum ada dalam kamus sekolah</label><span class="sm" id="wc"></span></div><div class="wl"><table><thead><tr><th>Perkataan</th><th>Braille semasa</th><th></th></tr></thead><tbody id="wb"></tbody></table></div></div>
 </div>
-<div class="card"><h2>Rujukan: Kod Braille Bahasa Melayu (Pindaan 2020)</h2>
+<div class="card bmonly"><h2>Rujukan: Kod Braille Bahasa Melayu (Pindaan 2020)</h2>
 <p class="sm" style="margin-top:0">Singkatan rasmi yang digunakan sistem. Braille di sini ialah yang sistem hasilkan sekarang (termasuk pindaan kamus sekolah, ditanda <span class="tag">sekolah</span>). Klik satu entri untuk membetulkannya.</p>
 <div class="row" style="margin-bottom:8px"><input id="rf" type="text" placeholder="cari dalam rujukan" aria-label="Cari dalam rujukan" style="width:200px"><span class="sm" id="rc"></span></div>
 <div class="wl" style="max-height:380px;padding:4px 12px 10px"><div id="ref"></div></div></div>
-<div class="card"><h2>Singkatan huruf dan imbuhan</h2>
+<div class="card bmonly"><h2>Singkatan huruf dan imbuhan</h2>
 <p class="sm" style="margin-top:0">Tanda bagi kh, ng, ny, sy, awalan, akhiran dan vokal+konsonan. Klik titik untuk mengubah. Ini kod am: perkataan dalam kamus sekolah dan kamus asas menyimpan kodnya sendiri dan tidak berubah.</p>
 <div id="sg" class="pt"></div><div class="row" style="margin-top:10px"><button class="g" id="sgreset">Pulihkan lalai</button></div></div>
-<div class="card"><h2>Tanda baca</h2>
+<div class="card bmonly"><h2>Tanda baca</h2>
 <p class="sm" style="margin-top:0">Klik titik untuk hidup/matikan (bulatan penuh = titik timbul). Guna + dan − untuk tambah atau buang sel. Perubahan terus digunakan dan dipratonton.</p>
 <div id="pt" class="pt"></div><div class="row" style="margin-top:10px"><button class="g" id="ptreset">Pulihkan lalai</button><button class="g" id="ptexp">Eksport</button><button class="g" id="ptimp">Import</button><input id="ptfile" type="file" accept=".json,.txt" hidden></div></div>
 <div class="card"><h2>Jadual</h2>
@@ -725,7 +726,7 @@ function handleTable(t, ctx, nested, PRINT_ONLY) {
 // ---------- 1. Baca perenggan mentah ----------
 function readParagraphs(xml) {
   const warnings = [];
-  const PRINT_ONLY = /Untuk Kegunaan Pemeriksa|\bNama\b|No\.?\s*Kad|Disemak|Verifikasi|Markah Penuh|Markah Diperoleh/i;
+  const PRINT_ONLY = /Untuk Kegunaan Pemeriksa|\bNama\b|No\.?\s*Kad|Disemak|Verifikasi|Markah Penuh|Markah Diperoleh|For Examiner|Examiner'?s Use|Index Number|Candidate'?s? Name|Marks Awarded/i;
   const ctx = { tabs: [], flattened: 0, layout: 0 }, tabs = ctx.tabs;
   const body = convertXml(xml, ctx, false, PRINT_ONLY);
   const flattened = ctx.flattened;
@@ -777,11 +778,13 @@ function sfx(t, n) {                           // hujung teks t dengan n aksara 
   while (i > 0 && /[\u0002\u0004\u000e]/.test(t[i - 1])) i--;
   return t.slice(i);
 }
-const romanRe = /^(I{1,3}|IV|V)\.?\s+(\S.*)$/;
-const optRe = /^([A-D])\.?\s+(\S.*)$/;
+const ROMAN_BM = /^(I{1,3}|IV|V)\.?\s+(\S.*)$/;
+const OPT_BM = /^([A-D])\.?\s+(\S.*)$/;
 const underlineOnly = t => /^[_\s.…]{6,}$/.test(t.replace(/[\u0002\u0003]/g, ''));
 
 function classify(paras, opts = {}) {
+  const EN = opts.lang === 'en';
+  const romanRe = EN ? /^(I{1,3}|IV|V|i{1,3}|iv|v)[.)]\s+(\S.*)$/ : ROMAN_BM, optRe = EN ? /^([A-D])[.)]\s+(\S.*)$/ : OPT_BM;
   const blocks = []; const warnings = [];
   let skip = false, qn = 0, imageNo = 0, underlineRuns = 0;
   let afterGroupHeading = false, inPassage = false, inFront = true, bahagianListMode = false;
@@ -806,11 +809,11 @@ function classify(paras, opts = {}) {
     if (plain === '\u0007JADUAL\u0007') { continue; }          // jadual: cetak sahaja (dilangkau)
 
     // --- Kawasan dilangkau (cetak sahaja) ---
-    if (/^Nama\b|^No\.?\s*Kad Pengenalan|^Kelas$/i.test(plain) && inFront) continue;
-    if (/^Untuk Kegunaan Pemeriksa/i.test(plain)) { skip = true; continue; }
+    if (/^Nama\b|^No\.?\s*Kad Pengenalan|^Kelas$|^Name\s*:|^Index (No|Number)|^Class\s*:?$|^I\.?C\.? ?(No|Number)/i.test(plain) && inFront) continue;
+    if (/^Untuk Kegunaan Pemeriksa|^For Examiner/i.test(plain)) { skip = true; continue; }
     if (skip) {
       const nxt = (paras[i + 1] && paras[i + 1].text || '').trim();
-      if (/^Arahan\s*:/i.test(plain) || (/^Bahagian\s+[A-Z]$/i.test(plain) && /^\d+\s*markah$/i.test(nxt))) { skip = false; inFront = false; } else continue;
+      if (/^(Arahan|Instructions?)\s*:/i.test(plain) || (/^(Bahagian|Section|Part)\s+[A-Z]$/i.test(plain) && /^\d+\s*(markah|marks?)$/i.test(nxt))) { skip = false; inFront = false; } else continue;
     }
     if (/^Verifikasi Braille/i.test(plain)) continue;
     if (p.table) { push({ role: 'table', table: p.table }); continue; }
@@ -828,23 +831,23 @@ function classify(paras, opts = {}) {
     }
 
     // --- Tajuk kertas (4 baris pertama) ---
-    if (inFront && !blocks.some(b => b.role === 'arahan-head') && !/^ARAHAN\s*:?$/i.test(plain)) {
+    if (inFront && !blocks.some(b => b.role === 'arahan-head') && !/^(ARAHAN|INSTRUCTIONS?|DIRECTIONS?)\s*:?$/i.test(plain)) {
       push({ role: 'title', text: plain }); continue;
     }
-    if (/^ARAHAN\s*:?$/i.test(plain)) { push({ role: 'arahan-head', text: 'ARAHAN:' }); inFront = true; bahagianListMode = true; continue; }
+    if (/^(ARAHAN|INSTRUCTIONS?|DIRECTIONS?)\s*:?$/i.test(plain)) { push({ role: 'arahan-head', text: /^ARAHAN/i.test(plain) ? 'ARAHAN:' : plain.toUpperCase().replace(/\s*:?$/, ':') }); inFront = true; bahagianListMode = true; continue; }
 
     // --- Bahagian ---
-    const bah = plain.match(/^Bahagian\s+([A-Z])$/i);
+    const bah = plain.match(/^(?:Bahagian|Section|Part)\s+([A-Z])$/i);
     if (bah) {
       const next = (paras[i + 1] && paras[i + 1].text || '').trim();
-      const nextMarks = /^\d+\s*markah$/i.test(next);
+      const nextMarks = /^\d+\s*(markah|marks?)$/i.test(next);
       if (nextMarks || !bahagianListMode) { push({ role: 'bahagian', text: plain }); qn = 0; inPassage = false; bahagianListMode = false; inFront = false; continue; }
       push({ role: 'list-bahagian', text: plain }); continue;     // senarai dalam Arahan (inden)
     }
-    if (/^\d+\s*markah$/i.test(plain)) { push({ role: p.num ? 'markah' : 'markah', text: plain }); continue; }
+    if (/^\d+\s*(markah|marks?)$/i.test(plain)) { push({ role: p.num ? 'markah' : 'markah', text: plain }); continue; }
 
     // --- Kumpulan soalan ---
-    if (/^Soalan\s+\d+(\s*-\s*\d+)?\s*$/i.test(plain)) { push({ role: 'group-head', text: plain }); afterGroupHeading = true; inPassage = false; continue; }
+    if (/^(Soalan|Questions?)\s+\d+(\s*(-|\u2013|to)\s*\d+)?\s*$/i.test(plain)) { push({ role: 'group-head', text: plain }); afterGroupHeading = true; inPassage = false; continue; }
 
     // --- Garis jawapan ---
     if (underlineOnly(plain)) { blocks.push({ role: 'answer-line' }); continue; }
@@ -860,7 +863,7 @@ function classify(paras, opts = {}) {
     } else {
       const r = plain.match(romanRe);
       if (r && underlineOnly(r[2])) { blocks.push({ role: 'answer-line' }); continue; }
-      if (r && r[1] === 'I') {                      // perenggan bernombor automatik yang bermula dengan pernyataan I: nombor soalan + pernyataan I (tiada ayat soalan)
+      if (r && (r[1] === 'I' || r[1] === 'i')) {                      // perenggan bernombor automatik yang bermula dengan pernyataan I: nombor soalan + pernyataan I (tiada ayat soalan)
         qn++; inPassage = false; afterGroupHeading = false;
         push({ role: 'question', n: qn, text: '' });
         push({ role: 'roman', label: r[1], text: sfx(t, r[2].length), raw: t }); continue;
@@ -879,8 +882,8 @@ function classify(paras, opts = {}) {
     const role = inFront && blocks.some(b => b.role === 'arahan-head') && qn === 0 && !blocks.some(b => b.role === 'bahagian') ? 'para' : (afterGroupHeading ? 'instruction' : 'passage');
     push({ role, text: t, blankBefore: pendingBlank });
     pendingBlank = false;
-    if (/^Baca\b|^Bahan\s*\d|^\(?Dipetik/i.test(plain)) inPassage = true;
-    if (afterGroupHeading && !/^Soalan\b/.test(plain)) afterGroupHeading = false;
+    if (/^Baca\b|^Bahan\s*\d|^\(?Dipetik|^Read\b|^Text\s*\d|^Passage\b|^\(?Adapted/i.test(plain)) inPassage = true;
+    if (afterGroupHeading && !/^(Soalan|Questions?)\b/.test(plain)) afterGroupHeading = false;
   }
   // deskripsi yang ditulis di bawah gambar (style Brl Deskripsi) digabung ke blok gambar
   for (let i = 0; i < blocks.length - 1; i++) {
@@ -1180,9 +1183,416 @@ function pageLines(t, cols, rows, tr) {
 module.exports = { findText, placeLabels, mapXY, dims, DP, CP, LP, ASC, bitsOf, blank, cellBits, toLines, fit, sample, pageLines, BIT };
 
 return module.exports})();
+__m['ueb']=(function(){const module={exports:{}};const require=k=>__m[k.replace(/^\.\/|\.js$/g,'')];// Enjin terjemah UEB Gred 2 (Unified English Braille) — ditulis sendiri mengikut "Rules of Unified English Braille".
+// Output: Braille ASCII (BRF / North American Braille ASCII), sama seperti enjin BM supaya layout dikongsi.
+'use strict';
+
+// Penanda gaya teks (sama seperti pipeline BM): \u0002/\u0003 garis bawah, \u0004/\u0005 tebal, \u000e/\u000f condong,
+// \u0007 satu perkataan tebal, \u0010 satu perkataan condong.
+
+// ---------- Jadual tanda ----------
+const ALPHA_WS = { but: 'b', can: 'c', do: 'd', every: 'e', from: 'f', go: 'g', have: 'h', just: 'j', knowledge: 'k', like: 'l', more: 'm', not: 'n', people: 'p', quite: 'q', rather: 'r', so: 's', that: 't', us: 'u', very: 'v', will: 'w', it: 'x', you: 'y', as: 'z' };
+const STRONG_WS = { child: '*', shall: '%', this: '?', which: ':', out: '\\', still: '/', and: '&', for: '=', of: '(', the: '!', with: ')' };
+const LOWER_WS = { be: '2', enough: '5', were: '7', his: '8', in: '9', was: '0' };
+const INIT_WS = {   // contraction huruf pertama (titik 45 = ^, 456 = _, 5 = ")
+  upon: '^u', these: '^!', those: '^?', whose: '^:', word: '^w',
+  cannot: '_c', had: '_h', many: '_m', spirit: '_s', their: '_!', world: '_w',
+  day: '"d', ever: '"e', father: '"f', here: '"h', know: '"k', lord: '"l', mother: '"m', name: '"n', one: '"o', part: '"p', question: '"q', right: '"r', some: '"s', time: '"t', under: '"u', young: '"y', there: '"!', character: '"*', through: '"?', where: '":', ought: '"\\', work: '"w',
+};
+const SHORT = {
+  about: 'ab', above: 'abv', according: 'ac', across: 'acr', after: 'af', afternoon: 'afn', afterward: 'afw', again: 'ag', against: 'ag/', almost: 'alm', already: 'alr', also: 'al', although: 'al?', altogether: 'alt', always: 'alw',
+  because: '2c', before: '2f', behind: '2h', below: '2l', beneath: '2n', beside: '2s', between: '2t', beyond: '2y', blind: 'bl', braille: 'brl', children: '*n', conceive: '3cv', conceiving: '3cvg', could: 'cd',
+  deceive: 'dcv', deceiving: 'dcvg', declare: 'dcl', declaring: 'dclg', either: 'ei', first: 'f/', friend: 'fr', good: 'gd', great: 'grt', herself: 'h]f', him: 'hm', himself: 'hmf', immediate: 'imm', its: 'xs', itself: 'xf',
+  letter: 'lr', little: 'll', much: 'm*', must: 'm/', myself: 'myf', necessary: 'nec', neither: 'nei', oneself: '"of', ourselves: '\\rvs', paid: 'pd', perceive: 'p]cv', perceiving: 'p]cvg', perhaps: 'p]h', quick: 'qk',
+  receive: 'rcv', receiving: 'rcvg', rejoice: 'rjc', rejoicing: 'rjcg', said: 'sd', should: '%d', such: 's*', themselves: '!mvs', thyself: '?yf', today: 'td', together: 'tgr', tomorrow: 'tm', tonight: 'tn', would: 'wd',
+  your: 'yr', yourself: 'yrf', yourselves: 'yrvs',
+};
+// groupsign: [huruf, tanda, jenis]  s=kuat, g=ing, m=bawah (tengah sahaja), l=bawah, p=awalan perkataan, f=huruf-akhir (bukan di permulaan), i=huruf-awal
+const GS = [
+  ['ch', '*', 's'], ['gh', '<', 's'], ['sh', '%', 's'], ['th', '?', 's'], ['wh', ':', 's'], ['ed', '$', 's'], ['er', ']', 's'], ['ou', '\\', 's'], ['ow', '[', 's'], ['st', '/', 's'], ['ing', '+', 'g'], ['ar', '>', 's'],
+  ['and', '&', 's'], ['for', '=', 's'], ['of', '(', 's'], ['the', '!', 's'], ['with', ')', 's'],
+  ['ea', '1', 'm'], ['bb', '2', 'm'], ['cc', '3', 'm'], ['ff', '6', 'm'], ['gg', '7', 'm'],
+  ['en', '5', 'l'], ['in', '9', 'l'],
+  ['be', '2', 'p'], ['con', '3', 'p'], ['dis', '4', 'p'],
+  ['ound', '.d', 'f'], ['ance', '.e', 'f'], ['sion', '.n', 'f'], ['less', '.s', 'f'], ['ount', '.t', 'f'],
+  ['ence', ';e', 'f'], ['ong', ';g', 'f'], ['ful', ';l', 'f'], ['tion', ';n', 'f'], ['ness', ';s', 'f'], ['ment', ';t', 'f'], ['ity', ';y', 'f'],
+];
+Object.keys(INIT_WS).forEach(k => GS.push([k, INIT_WS[k], 'i']));
+const GSBY = {}; GS.forEach(g => { (GSBY[g[0][0]] = GSBY[g[0][0]] || []).push(g); });
+Object.keys(GSBY).forEach(c => GSBY[c].sort((a, b) => b[0].length - a[0].length));
+
+const isV = c => 'aeiouy'.includes(c);
+
+// ---------- Pengecualian (sempadan perkataan majmuk / awalan / bunyi) ----------
+// CUTS: kumpulan tidak boleh melintasi sempadan selepas kumpulan 1
+const CUTS = [
+  /^(mis)h/, /^(re)(?=name|nam)/, /^(pre)amb/, /^(re)agent/, /^(there|here|where)(?=after)/,
+  /^(re|de)(?=a(?:ct|ssu|ssi|ppe|ppl|ppo|ffi|rran|lign|nim|sser|scend|djust|llocat|ctiv|nalys|ssembl|ssess|ttach|ddress|cqui|dmi|ccep))/,
+  /^(over|under|un)re(?=a(?:ct|ssu|ssi|ppe|ppl|ffi))/,
+  /^(pine)apple/, /^(give|take|hide|get|break|cast|run|walk|tea|fly)away/, /^(south|north)(?:east|end|west)/,
+  /^(no)where/, /^(some|any|every)(?:where|thing|one|body|how|time)/,
+  /^(sweet|flat|mast|shit|light|big|bone|egg|pot|bull|dead|hot|red|white|fat|block|arrow|bed)(?:head)/,
+  /^(.{3,}?)(?:hood|house|hole|hill|hopper|horse|haven|hound)(?:s|d|ed)?$/,
+  /^(.{2,}?[^s])(?:hold)(?:s|er|ers|ing)?$/, /^(sweet|light|big|soft|kind|faint|half|stout|brave|open|cold|warm)(?:heart)/,
+  /^(fore|over|up)(?=hand|head)/, /^(foot|out|up|short|hand)(?=hill|hand|house|hold|hop|hole)/,
+];
+// FORB: [regex pada perkataan penuh, kumpulan yang dilarang]
+const FORB = [
+  [/colonel|indones|micrones|pioneer|lionel|rooney|clooney|mooney|looney|cooney|boone|noone|hermione|erroneous|nonexist|bayonet|donetsk|salmonella|cantonese|monet|donegal|baronet|oneida|abalone|persephone|anemone|peritoneal|antigone|friendzone|shoshone|marionette|phoneme|phonemic|phonetic|krone|soonest|coronet|ionel/, 'one'],
+  [/(?:sever(?=[ei])|rever(?=[a-z])|(?:li|th|ach|retri)ev(?=e)|persever|guinev|^evert|reverb)/, 'ever'],
+  [/^heres|^heret|^hereford|^heredit/, 'here'], [/theresa|therese|ether|smither/, 'there'], [/theses/, 'these'], [/vietnam/, 'name'],
+  [/somer|blossom|isomet|isomer/, 'some'], [/(?:cen|mul|mor|la)time/, 'time'], [/aunder/, 'under'],
+  [/coupon|dupont|^(?:.+(?:cou|du)pon)/, 'upon'],
+];
+const BE_NO = /^be(?:ne|nin|nz|nad|ned|v[aeiy]|r[eiy]|d[rlobi]|d$|lafonte)/;
+const NOCON = new Set(['conch', 'conk', 'conks', 'conchs', 'cone', 'cones', 'coney', 'conn']);
+const NODIS = /^(?:disc|discs|disk|disks)$|^dish/;
+
+function prefixOK(s, p, full) {
+  const r = s.slice(p.length);
+  if (p === 'be') {
+    if (BE_NO.test(full)) return false;
+    if (r.length < 2) return false;
+    if (/^ing(?:s|ly)?$/.test(r)) return true;
+    if (isV(r[0])) return false;
+    if (isV(r[1])) return true;
+    if (r[0] === 's' && 'tpck'.includes(r[1]) && r.length >= 4) return true;
+    if ('lr'.includes(r[1]) && r[2] && isV(r[2]) && 'bcdfgpt'.includes(r[0])) return true;
+    return false;
+  }
+  if (p === 'con') {
+    if (NOCON.has(full) || r.length < 2) return false;
+    if (!isV(r[0])) return true;
+    return r[0] === 'i' && r.length >= 3;
+  }
+  if (p === 'dis') return r.length >= 2 && !NODIS.test(full) && !/^(c|k|h|s)$/.test(r);
+  return false;
+}
+
+// ---------- Pecahan huruf (DP, kos = bilangan sel) ----------
+function segment(s, first = true, last = true, off = 0, full) {
+  full = full || s;
+  const n = s.length, best = new Array(n + 1).fill(null);
+  best[n] = { c: 0, o: '' };
+  const cuts = [];
+  CUTS.forEach(re => { const m = re.exec(full); if (m) cuts.push(m[1] ? m[1].length : (m[0].length)); });
+  const forb = new Set(); FORB.forEach(([re, g]) => { if (re.test(full)) forb.add(g); });
+  for (let i = n - 1; i >= 0; i--) {
+    let bc = Infinity, bo = null;
+    const tryC = (len, sign, pen) => {
+      const nx = best[i + len]; if (!nx) return;
+      const c = sign.length + nx.c + (pen || 0);
+      if (c < bc) { bc = c; bo = sign + nx.o; }
+    };
+    const abs = i + off;
+    const cs = GSBY[s[i]];
+    if (cs) for (const [l, sg, k] of cs) {
+      const len = l.length; if (i + len > n || s.substr(i, len) !== l) continue;
+      const atStart = abs === 0 && first, atEnd = i + len === n && last;
+      if (i === 0 && len === n && first && last) continue;
+      if (k === 'g' && atStart) continue;
+      if (k === 'm' && (atStart || atEnd)) continue;
+      if (k === 'f' && atStart) continue;
+      if (k === 'p' && (!atStart || !prefixOK(s, l, full))) continue;
+      if (k === 'i' && forb.has(l)) continue;
+      if (k === 'i' && l === 'upon' && abs !== 0 && !/(where|there|here)upon$/.test(full)) continue;
+      if (cuts.some(c => c > abs && c < abs + len)) continue;
+      tryC(len, sg, k === 'm' ? 0.02 : k === 'i' ? 0.01 : 0);
+    }
+    tryC(1, s[i], 0);
+    best[i] = { c: bc, o: bo };
+  }
+  return best[0].o;
+}
+
+// ---------- Bentuk pendek dan terbitannya ----------
+const PLURAL = /^(beside|afternoon|friend|letter|blind|good|great|today|tomorrow|tonight|braille|children|your)$/;
+const SUF_LY = /^(friend|great|good|quick|first|blind|immediate|little)$/;
+const SUF_NESS = /^(good|great|little|blind|quick|first|friend)$/;
+const SUF_ER = /^(great|quick|letter)$/;
+const SUF_ED = /^(letter)$/;
+const E_VERB = /^(receive|conceive|deceive|perceive|declare|rejoice)$/;
+const PRE_SF = /^(paid|said|necessary|friend|friendly|receive|conceive|deceive|perceive|declare)$/;
+const PRE = /^(un|re|pre|over|under|mis|non|in|dis)$/;
+const COMP_START = /^(after|good|blind|first|quick|friend|before)$/;
+const COMP_END = /^(friend|letter|about|after)$/;
+function shortform(w) {
+  if (SHORT[w]) return SHORT[w];
+  for (const sf in SHORT) {
+    if (!w.startsWith(sf) || w.length === sf.length) continue;
+    const r = w.slice(sf.length), b = SHORT[sf];
+    if (r === 's' && PLURAL.test(sf)) return b + 's';
+    if (r === 'ly' && SUF_LY.test(sf)) return b + 'ly';
+    if (r === 'ness' && SUF_NESS.test(sf)) return b + ';s';
+    if (/^(er|est)$/.test(r) && SUF_ER.test(sf)) return b + segment(r, false, true, sf.length, w);
+    if (r === 'ed' && SUF_ED.test(sf)) return b + '$';
+    if (r === 'ing' && sf === 'letter') return b + '+';
+    if (E_VERB.test(sf) && /^(d|s|r|rs)$/.test(r)) return b + r;
+    if (r === 'ward' || r === 'wards') { if (sf === 'after') return b + 'w' + (r === 'wards' ? 's' : ''); }
+  }
+  // awalan + bentuk pendek (unpaid, unnecessary, prepaid)
+  for (const sf in SHORT) {
+    if (!w.endsWith(sf) || w.length === sf.length || !PRE_SF.test(sf)) continue;
+    const p = w.slice(0, w.length - sf.length);
+    if (PRE.test(p)) return segment(p, true, false, 0, w) + SHORT[sf];
+  }
+  // majmuk: after-/good-/blind-/first-/friend- dan -friend/-letter/-about
+  for (const sf in SHORT) {
+    if (COMP_START.test(sf) && w.startsWith(sf) && w.length >= sf.length + 3 && /^[a-z]+$/.test(w)) {
+      if (sf === 'first' && !/^first(hand|class|aid|born)/.test(w)) continue;
+      if (sf === 'friend' && !/^friend(ship|s)/.test(w)) continue;
+      if (sf === 'before' && !/^before(hand)/.test(w)) continue;
+      if (sf === 'quick' && !/^quick(er|est|ly|ness|sand|silver|step)/.test(w)) continue;
+      if (sf === 'blind' && !/^blind(fold|side|ly|ness|man|spot)/.test(w)) continue;
+      if (sf === 'after' && !/^after(math|life|market|noon|thought|taste|shock|burn|glow|care|effect|ward|word|school)/.test(w)) continue;
+      return SHORT[sf] + segment(w.slice(sf.length), false, true, sf.length, w);
+    }
+    if (COMP_END.test(sf) && w.endsWith(sf) && w.length >= sf.length + 3) {
+      if (sf === 'about' && !/(round|whereabout|walkabout|knockabout)s?$/.test(w)) continue;
+      if (sf === 'after' && !/(there|here|where)after$/.test(w)) continue;
+      if (sf === 'letter' && !/(news|love|chain|cover|form)letter$/.test(w)) continue;
+      if (sf === 'friend' && !/(girl|boy|best|school|pen|ex)friend$/.test(w)) continue;
+      return segment(w.slice(0, w.length - sf.length), true, false, 0, w) + SHORT[sf];
+    }
+  }
+  return null;
+}
+const SHORTCODES = new Set(Object.values(SHORT).filter(x => /^[a-z]+$/.test(x)));
+const ENDINGS = new Set(['s', 'd', 'll', 've', 're', 'm']);
+const LOWERP = new Set([',', ';', ':', '.', '!', '?', '“', '”', '‘', '’', '"', "'"]);
+
+// terjemah satu perkataan huruf kecil (tanpa apostrof)
+function word(w, alone, blockLower) {
+  if (alone) {
+    if (ALPHA_WS[w]) return ALPHA_WS[w];
+    if (STRONG_WS[w]) return STRONG_WS[w];
+    if (LOWER_WS[w] && !blockLower) return LOWER_WS[w];
+    if (INIT_WS[w]) return INIT_WS[w];
+  }
+  const sf = (alone || /^[a-z]+$/.test(w)) ? shortform(w) : null;
+  if (sf && (alone || w.length > 5)) return sf;
+  return segment(w, true, true, 0, w);
+}
+
+// ---------- Tanda baca ----------
+const P = {
+  '.': '4', ',': '1', ';': '2', ':': '3', '!': '6', '?': '8', '-': '-', '–': ',-', '—': ',-', '‐': '-', '‑': '-', '…': '444',
+  '(': '"<', ')': '">', '[': '.<', ']': '.>', '{': '_<', '}': '_>', '/': '_/', '\\': '_*', '*': '"9', '@': '@a', '&': '@&', '%': '.0', '+': '"6', '=': '"7', '#': '.#', '°': '^j',
+  '$': '@s', '£': '@l', '€': '@e', '¢': '@c', '¥': '@y', '<': '@<', '>': '@>', '~': '@~', '^': '@^', '_': '_', '|': '_|', '×': '"8', '÷': '"/', '±': '"6-', '−': '"-', '•': '"9', '©': '@c', '®': '@r',
+};
+const DIG = 'jabcdefghi';
+const LETTER = /[A-Za-zÀ-ɏ]/;
+const isLet = c => !!c && LETTER.test(c);
+const isDig = c => !!c && c >= '0' && c <= '9';
+const SYMADJ = /^[@#$%&+=<>^~|°]$/;
+const FORMS = { u: '_', b: '^', i: '.' };
+const fInd = (f, k) => FORMS[f] + (k === 'sym' ? '2' : k === 'word' ? '1' : k === 'pass' ? '7' : "'");
+
+// ---------- Token ----------
+function tokenize(src) {
+  const toks = []; const forms = { u: false, b: false, i: false }; let pend = null;
+  const snap = () => { const a = []; if (forms.b || pend === 'b') a.push('b'); if (forms.i || pend === 'i') a.push('i'); if (forms.u) a.push('u'); return a; };
+  let i = 0; const n = src.length;
+  const push = (t, x) => { toks.push({ t, x, f: snap() }); if (pend && (t === 'w' || t === 'n')) pend = null; };
+  while (i < n) {
+    const ch = src[i];
+    if (ch === '\u0002') { forms.u = true; i++; continue; }
+    if (ch === '\u0003') { forms.u = false; i++; continue; }
+    if (ch === '\u0004') { forms.b = true; i++; continue; }
+    if (ch === '\u0005') { forms.b = false; i++; continue; }
+    if (ch === '\u000e') { forms.i = true; i++; continue; }
+    if (ch === '\u000f') { forms.i = false; i++; continue; }
+    if (ch === '\u0007') { pend = 'b'; i++; continue; }
+    if (ch === '\u0010') { pend = 'i'; i++; continue; }
+    if (ch === '\u0001' || ch === '\u0006' || ch === '­' || ch === '​') { i++; continue; }
+    if (/\s/.test(ch)) { let j = i; while (j < n && /\s/.test(src[j])) j++; toks.push({ t: 's', x: ' ', f: [] }); i = j; continue; }
+    if (isLet(ch)) {
+      let j = i;
+      while (j < n && (isLet(src[j]) || ((src[j] === "'" || src[j] === '’') && isLet(src[j + 1]) && isLet(src[j - 1])))) j++;
+      push('w', src.slice(i, j).replace(/’/g, "'")); i = j; continue;
+    }
+    if (isDig(ch)) {
+      let j = i;
+      while (j < n && (isDig(src[j]) || ((src[j] === '.' || src[j] === ',') && isDig(src[j + 1])))) j++;
+      push('n', src.slice(i, j)); i = j; continue;
+    }
+    push('p', ch); i++;
+  }
+  return toks;
+}
+
+// ---------- Huruf besar ----------
+function capInfo(w) {
+  const l = w.replace(/[^A-Za-z\u00c0-\u024f]/g, '');
+  if (!l) return 0;
+  if (l.length >= 2 && l === l.toUpperCase()) return 2;
+  return l[0] !== l[0].toLowerCase() ? 1 : 0;
+}
+// pecah perkataan kepada keping: [A-Z]+[a-z]* atau [a-z]+
+function pieces(w) { return w.match(/[A-Z\u00c0-\u00de]+[^A-Z\u00c0-\u00de]*|[^A-Z\u00c0-\u00de]+/g) || [w]; }
+const capPre = (w, passage) => { if (passage) return ''; const c = capInfo(w); return c === 2 ? ',,' : c === 1 ? ',' : ''; };
+// satu keping: huruf besar (1+) diikuti huruf kecil
+function pieceOut(p, alone, blockLower, passage) {
+  const m = /^([A-Z\u00c0-\u00de]*)(.*)$/.exec(p), U = m[1], l = m[2];
+  const lw = p.toLowerCase();
+  if (U.length === 0) return word(lw, alone, blockLower);
+  if (U.length === 1) return (passage ? '' : ',') + word(lw, alone, blockLower);
+  if (!l) return (passage ? '' : ',,') + word(lw, alone, blockLower);
+  return (passage ? '' : ',,') + segment(U.toLowerCase(), true, false, 0, lw) + (passage ? '' : ",'") + segment(l, false, true, U.length, lw);
+}
+
+// satu token perkataan (mungkin dengan apostrof)
+function transWord(raw, ctx) {
+  const parts = raw.split("'");
+  const p0 = parts[0], low0 = p0.toLowerCase();
+  const sfN = /^(could|should|would|must)n$/.test(low0) && parts.length === 2 && parts[1].toLowerCase() === 't';
+  if (parts.length === 1 || (parts.length === 2 && (ENDINGS.has(parts[1].toLowerCase()) || (low0 === 'can' && parts[1].toLowerCase() === 't') || sfN))) {
+    const ps = pieces(p0);
+    let out;
+    if (ps.length === 1) {
+      const alone = ctx.alone && !ctx.afterDigit;
+      const c = capInfo(p0);
+      if (ctx.afterDigit) out = capPre(p0, ctx.passage) + low0;
+      else if (low0.length === 1 && alone) out = ('aio'.includes(low0) || ctx.noG1 ? '' : ';') + capPre(p0, ctx.passage) + low0;
+      else if (sfN) out = capPre(p0, ctx.passage) + SHORT[low0.slice(0, -1)] + 'n';
+      else out = pieceOut(p0, alone, ctx.blockLower, ctx.passage);
+    } else out = ps.map(p => pieceOut(p, false, false, ctx.passage)).join('');
+    if (parts.length === 2) out += "'" + parts[1].toLowerCase();
+    return out;
+  }
+  let out = '';
+  parts.forEach((p, k) => {
+    if (k) out += "'";
+    if (!p) return;
+    out += pieces(p).map(q => { const m = /^([A-Z\u00c0-\u00de]*)/.exec(q)[1]; return (ctx.passage ? '' : m.length === 1 ? ',' : m.length > 1 ? ',,' : '') + segment(q.toLowerCase(), k === 0, k === parts.length - 1, 0, q.toLowerCase()); }).join('');
+  });
+  return out;
+}
+
+// ---------- Berdiri sendiri (2.6): hanya tanda pembuka/penutup boleh terletak antara perkataan dan sempadan ----------
+const OPENP = /^[(\[{"'\u201c\u2018]$/, CLOSEP = /^[)\]}"'\u201d\u2019.,;:!?]$/, JOINP = /^[-\/\u2013\u2014]$/;
+function standsAlone(ts, k) {
+  let j = k - 1;
+  while (j >= 0 && ts[j].t === 'p' && OPENP.test(ts[j].x)) j--;
+  if (j >= 0 && !(ts[j].t === 'p' && JOINP.test(ts[j].x))) return false;
+  j = k + 1;
+  while (j < ts.length && ts[j].t === 'p' && CLOSEP.test(ts[j].x)) j++;
+  if (j < ts.length && !(ts[j].t === 'p' && JOINP.test(ts[j].x))) return false;
+  return true;
+}
+
+// ---------- Pemprosesan kelompok (tanpa ruang) ----------
+function chunk(ts, g0, ind, st, passage, pstart) {
+  let out = ''; let pdone = !pstart;
+  const n = ts.length;
+  for (let k = 0; k < n; k++) {
+    const t = ts[k], prev = ts[k - 1], next = ts[k + 1];
+    const I = ind[g0 + k]; if (I && I.pre) out += I.pre;
+    if (t.t === 'w') {
+      const lowerAdj = x => x && x.t === 'p' && LOWERP.has(x.x);
+      const ctx = { alone: standsAlone(ts, k), blockLower: lowerAdj(prev) || lowerAdj(next), afterDigit: !!(prev && prev.t === 'n'), passage };
+      if (t.x.length === 1 && next && next.t === 'p' && next.x === '.' && ts[k + 2] && ts[k + 2].t === 'w' && ts[k + 2].x.length === 1) ctx.noG1 = true;
+      if (t.x.length === 1 && prev && prev.t === 'p' && prev.x === '.' && ts[k - 2] && ts[k - 2].t === 'w' && ts[k - 2].x.length === 1) ctx.noG1 = true;
+      let s = transWord(t.x, ctx);
+      if (!pdone) { s = ',,,' + s; pdone = true; }
+      if (prev && prev.t === 'n' && /^[a-j]/i.test(t.x)) s = ';' + s;
+      if (ctx.alone && t.x.length >= 2 && /^[A-Za-z]+$/.test(t.x)) {   // jujukan huruf = singkatan bentuk pendek (CD, AB): penunjuk perkataan Gred 1
+        const lw = t.x.toLowerCase();
+        if (SHORTCODES.has(lw) && !SHORT[lw] && !ALPHA_WS[lw] && s.replace(/^,+/, '') === lw) { const cp = capPre(t.x, passage); s = ';' + cp + s.slice(cp.length); }
+      }
+      out += s;
+    } else if (t.t === 'n') {
+      out += '#' + [...t.x].map(c => c === '.' ? '4' : c === ',' ? '1' : DIG[+c]).join('');
+    } else {
+      const c = t.x;
+      if (c === '"' || c === '“' || c === '”') {
+        let open;
+        if (c === '“') open = true; else if (c === '”') open = false;
+        else if (!prev || (prev.t === 'p' && /^[(\[{—–-]$/.test(prev.x))) open = true;
+        else if (!next || (next.t === 'p' && /^[.,;:!?)\]}]$/.test(next.x))) open = false;
+        else open = !st.dq;
+        out += open ? '8' : '0'; st.dq = open;
+      } else if (c === '‘') { out += ',8'; st.sq = true; }
+      else if (c === '’' || c === "'") {
+        const aL = prev && (prev.t === 'w' || prev.t === 'n'), bL = next && (next.t === 'w' || next.t === 'n');
+        if (c === "'" && !aL && bL) { out += ',8'; st.sq = true; }
+        else if (aL && bL) out += "'";
+        else if (st.sq && c === '’') { out += ',0'; st.sq = false; }
+        else if (st.sq && !aL) { out += ',0'; st.sq = false; }
+        else out += "'";
+      } else if (c === '.' && next && next.t === 'p' && next.x === '.' && ts[k + 2] && ts[k + 2].x === '.') { out += '444'; k += 2; }
+      else if (c === '-' && next && next.t === 'p' && next.x === '-') { out += '--'; k += 1; }
+      else out += (P[c] !== undefined ? P[c] : c);
+    }
+    if (I && I.post) out += I.post;
+  }
+  return out;
+}
+
+// ---------- Penunjuk gaya teks ----------
+function formIndicators(toks) {
+  const ind = {};
+  const add = (i, k, v) => { (ind[i] = ind[i] || { pre: '', post: '' })[k] += v; };
+  ['b', 'i', 'u'].forEach(F => {
+    let i = 0;
+    while (i < toks.length) {
+      if (!toks[i].f.includes(F)) { i++; continue; }
+      let j = i; while (j < toks.length && (toks[j].f.includes(F) || (toks[j].t === 's' && j + 1 < toks.length && toks[j + 1].f.includes(F) && toks[j - 1].f.includes(F)))) j++;
+      const wi = []; for (let k = i; k < j; k++) if (toks[k].t === 'w' || toks[k].t === 'n') wi.push(k);
+      if (wi.length >= 3) { add(wi[0], 'pre', fInd(F, 'pass')); add(wi[wi.length - 1], 'post', fInd(F, 'term')); }
+      else wi.forEach(k => add(k, 'pre', toks[k].t === 'w' && toks[k].x.length === 1 ? fInd(F, 'sym') : fInd(F, 'word')));
+      i = j;
+    }
+  });
+  return ind;
+}
+
+// ---------- Teks penuh ----------
+function text(src, dict, punct) {
+  src = String(src == null ? '' : src);
+  const toks = tokenize(src);
+  const ind = formIndicators(toks);
+  // kelompok
+  const chunks = []; let a = 0;
+  while (a < toks.length) {
+    if (toks[a].t === 's') { chunks.push({ sp: true }); a++; continue; }
+    let b = a; while (b < toks.length && toks[b].t !== 's') b++;
+    const ws = toks.slice(a, b).filter(t => t.t === 'w');
+    const caps = ws.length > 0 && !toks.slice(a, b).some(t => t.t === 'n') && ws.every(t => /^[A-ZÀ-Þ]+$/.test(t.x.replace(/'/g, '')));
+    chunks.push({ a, b, caps });
+    a = b;
+  }
+  // senarai kelompok huruf besar berturutan >= 3 → petikan huruf besar
+  const passage = new Array(chunks.length).fill(false), pStart = {}, pEnd = {};
+  for (let i = 0; i < chunks.length;) {
+    if (chunks[i].sp || !chunks[i].caps) { i++; continue; }
+    let j = i, last = i;
+    while (j < chunks.length) {
+      if (chunks[j].sp) { j++; continue; }
+      if (!chunks[j].caps) break;
+      last = j; j++;
+    }
+    const cnt = chunks.slice(i, last + 1).filter(c => !c.sp).length;
+    if (cnt >= 3) { for (let k = i; k <= last; k++) passage[k] = true; pStart[i] = true; pEnd[last] = true; }
+    i = last + 1;
+  }
+  const st = { dq: false, sq: false };
+  let out = '';
+  chunks.forEach((c, ci) => {
+    if (c.sp) { out += ' '; return; }
+    let s = chunk(toks.slice(c.a, c.b), c.a, ind, st, passage[ci], !!pStart[ci]);
+    if (pEnd[ci]) s += ",'";
+    out += s;
+  });
+  return out;
+}
+
+module.exports = { text, word, segment, shortform, SHORT, tokenize, P };
+
+return module.exports})();
 __m['pipeline']=(function(){const module={exports:{}};const require=k=>__m[k.replace(/^\.\/|\.js$/g,'')];// Paip penuh: XML Word -> blok -> Braille -> atom -> muka surat -> BRF
 'use strict';
-const R = require('./docx-reader.js'), B = require('./braille-bm.js'), L = require('./layout.js'), T = require('./table.js'), TAC = require('./tactile.js');
+const R = require('./docx-reader.js'), B = require('./braille-bm.js'), L = require('./layout.js'), T = require('./table.js'), TAC = require('./tactile.js'), U = require('./ueb.js');
 
 const numLabel = n => '#' + [...String(n)].map(d => 'jabcdefghi'[+d]).join('') + '4';
 const romanLabel = r => (r === 'I' ? ';,i4' : ',,' + r.toLowerCase() + '4');
@@ -1191,7 +1601,9 @@ const optLabel = l => ';,' + l.toLowerCase() + '4';
 function compose(blocks, dict, cfg = {}) {
   const warnings = []; const flat = [];                 // {role, blocks:[layoutBlock], gap, unit}
   let prev = null, inArahan = false, answerLines = 0, bahagianSeen = false;
-  const tr = t => B.text(t, dict, cfg.punct);
+  const EN = cfg.lang === 'en';
+  const tr = EN ? (t => U.text(t)) : (t => B.text(t, dict, cfg.punct));
+  const IMGD = EN ? 'Image description: ' : 'Deskripsi gambar: ';
   const gapFor = (b, p) => {
     if (!p) return 0;
     switch (b.role) {
@@ -1229,17 +1641,17 @@ function compose(blocks, dict, cfg = {}) {
         if (labm[k]) src += (src ? '  ' : '') + 'Label ' + labm[k].join(', ');
         return { t: 'raw', text: l, src };
       });
-      if (b.text) flat.push({ role: 'image', gap: gapFor(b, prev), lb: { t: 'para', text: tr('Deskripsi gambar: ' + b.text), src: 'Deskripsi gambar: ' + b.text }, pb: !!b.pageBreak });
+      if (b.text) flat.push({ role: 'image', gap: gapFor(b, prev), lb: { t: 'para', text: tr(IMGD + b.text), src: IMGD + b.text }, pb: !!b.pageBreak });
       flat.push({ role: 'tac', gap: 0, lb: lbs, pb: true });
       prev = b; continue;
     }
     let lb;
     switch (b.role) {
       case 'question': lb = { t: 'item', num: numLabel(b.n), text: tr(b.text), src: b.text, srcNum: b.n + '.' }; break;
-      case 'roman': lb = { t: 'item', num: romanLabel(b.label), text: tr(b.text), indent: 3, src: b.text, srcNum: b.label.toLowerCase() + '.' }; break;
-      case 'option': lb = { t: 'item', num: optLabel(b.label), text: tr(b.text), src: b.text, srcNum: b.label + '.' }; break;
+      case 'roman': lb = { t: 'item', num: EN ? tr(b.label + '.') : romanLabel(b.label), text: tr(b.text), indent: 3, src: b.text, srcNum: b.label.toLowerCase() + '.' }; break;
+      case 'option': lb = { t: 'item', num: EN ? tr(b.label + '.') : optLabel(b.label), text: tr(b.text), src: b.text, srcNum: b.label + '.' }; break;
       case 'list-bahagian': lb = { t: 'para', text: tr(b.text), indent: 4, src: b.text }; break;
-      case 'image': if (!b.text) continue; lb = { t: 'para', text: tr('Deskripsi gambar: ' + b.text), src: 'Deskripsi gambar: ' + b.text }; break;
+      case 'image': if (!b.text) continue; lb = { t: 'para', text: tr(IMGD + b.text), src: IMGD + b.text }; break;
       default: lb = { t: 'para', text: tr(b.text), src: b.text };
     }
     if (b.keepNext) (Array.isArray(lb) ? lb : [lb]).forEach(x => { x.kn = true; });
@@ -1280,8 +1692,8 @@ function compose(blocks, dict, cfg = {}) {
     } else atoms.push({ gap: u.gap, blocks: u.blocks, tbl: u.tbl, nch: u.nch, newPage: u.pb, role: u.role, tac: u.role === 'tac' });
   }
   // Kekal bersama: perenggan yang menghala ke blok seterusnya ("di bawah", "berikut", titik dua) tidak ditinggalkan di hujung muka surat
-  const TRIG = /(\b(di\s+bawah|berikut|seterusnya|yang\s+berikut|di\s+atas)\s*[.:;]?|:)\s*$/i;
-  const LABEL = /^(bahan|petikan|rajah|gambar|teks|carta|jadual|puisi|sajak|iklan|poster|grafik|peta)\s*\d*\s*[:.]?\s*$/i;
+  const TRIG = /(\b(di\s+bawah|berikut|seterusnya|yang\s+berikut|di\s+atas|below|following|as\s+follows|above)\s*[.:;]?|:)\s*$/i;
+  const LABEL = /^(bahan|petikan|rajah|gambar|teks|carta|jadual|puisi|sajak|iklan|poster|grafik|peta|text|passage|source|figure|table|diagram|chart|poem|advertisement|map|graph|picture)\s*\d*\s*[:.]?\s*$/i;
   const rows = cfg.rows || L.DEFAULT.rows, merged = [];
   for (let i = 0; i < atoms.length; i++) {
     let a = atoms[i];
@@ -1289,8 +1701,8 @@ function compose(blocks, dict, cfg = {}) {
       const last = a.blocks[a.blocks.length - 1], s = (last && last.src) || '';
       if (atoms[i + 1].newPage || a.tac || atoms[i + 1].tac) break;
       const nx = atoms[i + 1], f0 = nx.blocks[0] || {}, fs0 = (f0.src || '').trim();
-      const nextBahan = f0.t === 'raw' || LABEL.test(fs0) || /^(bahan|petikan|rajah|gambar|teks|carta|jadual|puisi|sajak|iklan|poster|grafik|peta)\b/i.test(fs0) || /^soalan\s+\d/i.test(fs0);
-      const refers = /\bdi\s+(bawah|atas)\b|\bberikut\b/i.test(s) && nextBahan;
+      const nextBahan = f0.t === 'raw' || LABEL.test(fs0) || /^(bahan|petikan|rajah|gambar|teks|carta|jadual|puisi|sajak|iklan|poster|grafik|peta|text|passage|source|figure|table|diagram|chart|poem|advertisement|map|graph|picture)\b/i.test(fs0) || /^soalan\s+\d/i.test(fs0);
+      const refers = /\bdi\s+(bawah|atas)\b|\bberikut\b|\b(below|above|following|as\s+follows)\b/i.test(s) && nextBahan;
       const st = s.trim(), titleLike = !/^[\u2500-\u257f]/.test(st) && st.length > 0 && st.length <= 70 && !/[.!?:;,]$/.test(st) && (f0.t === 'raw' || (st === st.toUpperCase() && /[A-Z]/.test(st)) || (st.length <= 40 && /^(baca|lihat|perhatikan|amati|dengar|rujuk)\b/i.test(fs0)));   // tajuk pendek (tanpa noktah) sebelum jadual/petikan kekal bersamanya
       if (!(last && last.kn) && !(s && (TRIG.test(st) || LABEL.test(st) || refers || titleLike))) break;
       const cand = { gap: a.gap, newPage: a.newPage, role: a.role, blocks: a.blocks.concat(Array(nx.gap || 0).fill({ t: 'blank' }), nx.blocks) };
@@ -1416,7 +1828,7 @@ function furn(cfg = {}) {
 
 function run(xml, dict, cfg = {}) {
   const raw = R.readParagraphs(xml);
-  const cls = R.classify(raw.paras);
+  const cls = R.classify(raw.paras, { lang: cfg.lang });
   const desc = cfg.imageDesc || {};
   cls.blocks.forEach(b => { if (b.drawing && !b.text && desc[b.imageNo] && desc[b.imageNo].trim()) b.text = desc[b.imageNo].trim(); });
   cls.warnings = cls.warnings.filter(w => w.type !== 'gambar' || !cls.blocks.some(b => b.drawing && b.imageNo === w.imageNo && b.text));
@@ -1461,7 +1873,7 @@ function run(xml, dict, cfg = {}) {
 module.exports = { run, compose, numLabel, furn };
 
 return module.exports})();
-window.BrailleEngine={B:__m['braille-bm'],L:__m['layout'],P:__m['pipeline'],T:__m['table'],K:__m['tactile']};
+window.BrailleEngine={B:__m['braille-bm'],L:__m['layout'],P:__m['pipeline'],T:__m['table'],K:__m['tactile'],U:__m['ueb']};(function(){const E=window.BrailleEngine,B=E.B,U=E.U,t0=B.text,w0=B.word;E.LANG='bm';E.setLang=function(l){E.LANG=l==='en'?'en':'bm'};B.text=function(s,d,p){return E.LANG==='en'?U.text(s):t0(s,d,p)};B.word=function(w,d){return E.LANG==='en'?U.word(String(w).toLowerCase(),true,false):w0(w,d)}})();
 const DATA_WHOLE="{\"atau\":\"a\",\"bahawa\":\"b\",\"contoh\":\"c\",\"dengan\":\"d\",\"erti\":\"e\",\"faedah\":\"f\",\"guru\":\"g\",\"hendak\":\"h\",\"ini\":\"i\",\"jangan\":\"j\",\"kerana\":\"k\",\"lagi\":\"l\",\"mereka\":\"m\",\"nampak\":\"n\",\"orang\":\"o\",\"pun\":\"p\",\"ramai\":\"r\",\"supaya\":\"s\",\"tetapi\":\"t\",\"untuk\":\"u\",\"virus\":\"v\",\"waktu\":\"w\",\"itu\":\"x\",\"yang\":\"y\",\"seperti\":\"z\",\"cakap\":\"\\\"c\",\"dapat\":\"\\\"d\",\"emas\":\"\\\"e\",\"faham\":\"\\\"f\",\"ganti\":\"\\\"g\",\"hanya\":\"\\\"h\",\"imbang\":\"\\\"i\",\"jadi\":\"\\\"j\",\"kaki\":\"\\\"k\",\"lain\":\"\\\"l\",\"masuk\":\"\\\"m\",\"negara\":\"\\\"n\",\"oleh\":\"\\\"o\",\"pagi\":\"\\\"p\",\"rakyat\":\"\\\"r\",\"sangat\":\"\\\"s\",\"tiada\":\"\\\"t\",\"ulang\":\"\\\"u\",\"wakil\":\"\\\"w\",\"yakin\":\"\\\"y\",\"zaman\":\"\\\"z\",\"kami\":\"\\\"=\",\"khabar\":\"\\\"*\",\"nyanyi\":\"\\\"[\",\"syarah\":\"\\\"%\",\"sedang\":\"\\\"?\",\"ambang\":\"\\\"!\",\"cari\":\"^c\",\"dari\":\"^d\",\"fikir\":\"^f\",\"hari\":\"^h\",\"ingat\":\"^i\",\"jika\":\"^j\",\"kalau\":\"^k\",\"lalu\":\"^l\",\"minta\":\"^m\",\"negeri\":\"^n\",\"ombak\":\"^o\",\"perempuan\":\"^p\",\"rancang\":\"^r\",\"suatu\":\"^s\",\"tidak\":\"^t\",\"umpama\":\"^u\",\"wang\":\"^w\",\"khidmat\":\"^*\",\"syarat\":\"^%\",\"semua\":\"^?\",\"ambil\":\"^!\",\"banyak\":\"_b\",\"cuba\":\"_c\",\"datang\":\"_d\",\"erat\":\"_e\",\"guna\":\"_g\",\"hingga\":\"_h\",\"juga\":\"_j\",\"kali\":\"_k\",\"lebih\":\"_l\",\"mula\":\"_m\",\"nombor\":\"_n\",\"otak\":\"_o\",\"petang\":\"_p\",\"rupa\":\"_r\",\"sungguh\":\"_s\",\"tunjuk\":\"_t\",\"usaha\":\"_u\",\"wanita\":\"_w\",\"khusus\":\"_*\",\"syukur\":\"_%\",\"sentiasa\":\"_?\",\"ampai\":\"_!\",\"bagaimana\":\"bmn\",\"begini\":\"bi\",\"begitu\":\"bx\",\"berhad\":\"bhd\",\"braille\":\"brl\",\"dalam\":\"dlm\",\"daripada\":\"dpd\",\"demikian\":\"dmk\",\"jalan\":\"jln\",\"jawatankuasa\":\"jks\",\"kampung\":\"kg\",\"kemudian\":\"kmd\",\"kepada\":\"kpd\",\"lorong\":\"lrg\",\"malam\":\"mlm\",\"masyarakat\":\"m%kt\",\"organisasi\":\"org\",\"pejabat\":\"\\\\j\",\"saudara\":\"sdr\",\"saudari\":\"sdri\",\"sebagai\":\"sbg\",\"sekarang\":\"sk+\",\"sendirian\":\"sdn\",\"sungai\":\"s+\",\"syarikat\":\"%kt\",\"taman\":\"tmn\",\"tanggungjawab\":\"tjb\",\"tanjung\":\"tg\",\"vitamin\":\"vit\",\"khas\":\"*\",\"nyaris\":\"[\",\"syor\":\"%\",\"dan\":\"&\",\"ada\":\"(\",\"apa\":\")\",\"ahli\":\"$\",\"am\":\"!\",\"anda\":\"]\",\"kita\":\"=\",\"di\":\"4\",\"ke\":\"6\",\"beberapa\":\"2\",\"pula\":\"0\"}";const DATA_SCH="{\"iaitu\":\"ia3x\",\"apabila\":\")bila\",\"frasa\":\"frasa\",\"badan\":\"ba&\",\"perumahan\":\"\\\\rum$]\",\"keperluan\":\"60lu]\",\"bekerjasama\":\"be6rjasm\",\"kerjasama\":\"6rjasm\",\"condong\":\"condong\",\"beriadah\":\"beriad$\",\"dikehendaki\":\"463h3i\",\"peranan\":\"\\\\r]]\",\"bertanggungjawab\":\"2ta+gu+jawab\",\"setiausaha\":\"?tia_u\",\"peranti\":\"\\\\r]ti\",\"padi\":\"padi\",\"petikan\":\"\\\\tik]\",\"boleh\":\"b\\\"o\",\"membolehkan\":\"/mb\\\"o>\",\"memperolehi\":\"/m0\\\"oi\",\"keusahawanan\":\"6_uw]]\",\"melalui\":\"/^li\",\"kecemasan\":\"6c\\\"e]\",\"juruwang\":\"juru^w\",\"bagaimanapun\":\"bmn3p\",\"mendepani\":\"/ndep]i\",\"kesibukan\":\"6sibuk]\",\"metabolisme\":\"/tabolisme\",\"dititikberatkan\":\"4titikb_e>\",\"peringkat\":\"\\\\ri+kat\"}";
 (function(){
 const $=id=>document.getElementById(id);
@@ -1482,8 +1894,9 @@ const KAMUS_URLS=[...(/^https?:$/.test(location.protocol)?['kamus.txt']:[]),'htt
 const loc=()=>{const t=fromText($('dict').value),o={};for(const k in t){if(k in OFF&&SCH[k]===t[k])continue;o[k]=t[k]}return o};
 const dict=()=>E.B.withOverrides(E.B.withOverrides(BASE,OFF),loc());
 let punct={};try{punct=JSON.parse(LS.get('brl_punct')||'{}')||{}}catch(e){punct={}}
-let MOD=(()=>{try{return localStorage.getItem('brl_mod')==='sn'?'sn':'bm'}catch(e){return'bm'}})();
-const setMod=m=>{MOD=m==='sn'?'sn':'bm';try{localStorage.setItem('brl_mod',MOD)}catch(e){}const l=document.getElementById('modl');if(l)l.textContent='Modul: '+(MOD==='sn'?'Sains':'Bahasa Melayu')};
+let MOD=(()=>{try{const m=localStorage.getItem('brl_mod');return m==='sn'||m==='en'?m:'bm'}catch(e){return'bm'}})();
+const MODN={bm:'Bahasa Melayu',sn:'Sains',en:'English (UEB)'};
+const setMod=m=>{MOD=m==='sn'||m==='en'?m:'bm';try{localStorage.setItem('brl_mod',MOD)}catch(e){}if(E.setLang)E.setLang(MOD==='en'?'en':'bm');document.body.classList.toggle('en',MOD==='en');{const ln=document.getElementById('langn');if(ln)ln.textContent=MOD==='en'?'UEB, bahasa Inggeris':'Bahasa Melayu'}const l=document.getElementById('modl');if(l)l.textContent='Modul: '+MODN[MOD]};
 let xml=null,last=null,name='kertas',imgDesc={},imgTac={},imgBlobs={},edits={},editing={};
 // ---- muat turun ----
 let DL=null;
@@ -1563,7 +1976,7 @@ async function load(f){
   }catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">'+esc(e.message)+'</div>'}
 }
 let brks=new Set(),restored=0,sTm=null,curBuf=null;
-function cfg(){return{cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:MOD==='sn'?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
+function cfg(){return{lang:MOD==='en'?'en':'bm',cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:MOD==='sn'?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
 function go(){
   let r;try{r=E.P.run(xml,dict(),cfg())}catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">Ralat: '+esc(e.message)+'</div>';return}
   last=r;buildPool();$('out').hidden=false;
@@ -2246,6 +2659,7 @@ function openHome(){drawHome();$('hverd').textContent=$('verd').textContent?$('v
 const temaUpd=()=>{$('tema').textContent=document.documentElement.getAttribute('data-theme')==='dark'?'Mod cerah':'Mod gelap'};
 $('tema').onclick=()=>{const d=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',d);LS.set('brl_tema',d);temaUpd();try{if(typeof xml!=='undefined'&&xml)go2()}catch(e){}};temaUpd();
 $('hopen').onclick=()=>$('hfile').click();$('hfile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)bukaTitik(f)};
+$('hmen').onclick=()=>{document.body.classList.remove('studio');setMod('en');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};
 $('hmbm').onclick=()=>{document.body.classList.remove('studio');setMod('bm');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};
 let STUDIO=null;
 async function blankFile(){const c=document.createElement('canvas');c.width=1000;c.height=700;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,1000,700);return new File([await new Promise(ok=>c.toBlob(ok,'image/png'))],'Lakaran.png',{type:'image/png'})}
