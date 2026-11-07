@@ -1,0 +1,38 @@
+name: Bina APK Titik
+on:
+  workflow_dispatch:
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Sediakan projek Capacitor
+        run: |
+          mkdir cap && cd cap
+          npm init -y
+          npm i @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/filesystem@6 @capacitor/share@6
+          mkdir www && cp ../index.html www/index.html
+          cp ../android-src/capacitor.config.json .
+          npx cap add android
+          PKG=android/app/src/main/java/my/edu/smkpks/titik
+          mkdir -p $PKG
+          cp ../android-src/TitikPrintPlugin.java ../android-src/MainActivity.java $PKG/
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26
+          cp -r ../android-src/res/* android/app/src/main/res/
+          npx cap sync android
+      - name: Bina APK
+        run: |
+          cd cap/android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Titik-APK
+          path: cap/android/app/build/outputs/apk/debug/app-debug.apk
