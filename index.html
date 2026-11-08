@@ -2397,7 +2397,7 @@ function tacUI(im,b){
   '<div class="tb" hidden><div class="row sm">Ambang <input type="range" min="40" max="230" class="ta"> Ketebalan <input type="range" min="6" max="20" class="tr"> Kepekatan <input type="range" min="2" max="40" class="tf"> <label><input type="checkbox" class="ti"> Songsang</label> <label><input type="checkbox" class="te"> Garis tepi sahaja</label> <label><input type="checkbox" class="tx"> Buang teks bercetak, letak huruf label</label> <button class="g tg">Jana semula daripada gambar</button></div>'+
   '<div class="row sm">Saiz gambar <input type="range" min="20" max="150" class="tz"> <span class="tzv"></span> Kiri-kanan <input type="range" min="-50" max="50" class="tdx"> Atas-bawah <input type="range" min="-50" max="50" class="tdy"> <button class="g tzr" type="button">Set semula saiz</button></div>'+
   '<div class="row sm tlay"><label>Susun atur <select class="tly"><option value="">Satu muka surat penuh</option><option value="half">Separuh muka surat (dua rajah satu muka)</option><option value="in">Dalam kertas, tinggi sendiri</option><option value="sp">Belah rajah besar kepada beberapa muka</option></select></label> <label class="tlh" hidden>Tinggi <input type="number" class="thr" min="4" max="40" style="width:64px"> baris</label> <label class="tln" hidden>Bilangan muka <input type="number" class="tn" min="2" max="4" style="width:56px"></label> <label>Lebar <input type="number" class="twc" min="8" max="42" style="width:64px" placeholder="penuh"> sel</label> <span class="tlhint"></span></div><div class="tinfo"><div class="fld"><label><b>Tajuk muka surat</b> <span class="sm">dicetak di atas muka surat rajah ini</span></label><input class="tt" maxlength="80" placeholder="cth Rajah 2.1 Anatomi Kucing"></div><div class="fld"><label><b>Label huruf (kunci)</b> <span class="sm">satu baris satu label, cth <code>A ; telinga kiri</code>. Letak huruf pada rajah dengan alat Label huruf di bawah.</span></label><textarea class="tkey" rows="4" placeholder="A ; telinga kiri&#10;B ; telinga kanan"></textarea></div></div><canvas class="tc"></canvas>'+
-  '<div class="row sm">Alat: <button class="g tm" data-m="d">Lukis</button><button class="g tm" data-m="e">Padam</button><button class="g tm" data-m="b">Padam kotak</button><button class="g tm" data-m="g">Garis</button><button class="g tm" data-m="k">Segi empat</button><button class="g tm" data-m="o">Bulatan</button><button class="g tun" type="button">Buat asal</button><button class="g tm" data-m="l">Label huruf</button><button class="g tm" data-m="f">Isi corak</button><button class="g tm" data-m="s">Simbol</button> <input class="tl" maxlength="60" size="14" placeholder="cth P, 30 atau nama bahagian" aria-label="Teks label (huruf, nombor atau perkataan pendek)"> <label><input type="checkbox" class="tg2"> Panduan gambar asal</label> <button class="g tclr">Kosongkan</button> <button class="g tpiaf">PNG untuk PIAF</button> <button class="g tlib">Simpan ke Pustaka</button> <span class="sm ts"></span></div><div class="row sm tmap"><label>Gaya garis <select class="tls"><option value="">Penuh</option><option value="p">Putus-putus</option><option value="t">Bertitik</option><option value="r">Rel (garis + palang)</option><option value="w">Bergelombang</option></select></label> <label>Corak isi <select class="tfp"><option value="d">Titik jarang</option><option value="s">Titik padat</option><option value="v">Jalur menegak</option><option value="h">Jalur mendatar</option><option value="x">Papan dam</option><option value="f">Penuh</option></select></label> <input class="tfn" maxlength="30" size="14" placeholder="maksud corak, cth Hutan" aria-label="Maksud corak"> <label>Simbol <select class="tss"><option value="bandar">Bandar</option><option value="ibu">Ibu negeri</option><option value="gunung">Gunung</option><option value="api">Gunung berapi</option><option value="lapangan">Lapangan terbang</option><option value="pelabuhan">Pelabuhan</option><option value="sekolah">Bangunan</option><option value="kampung">Kampung</option></select></label> <button class="g tleg" type="button">Jana kunci peta</button> <span class="sm tmh"></span></div>'+
+  '<div class="row sm">Alat: <button class="g tm" data-m="d">Lukis</button><button class="g tm" data-m="e">Padam</button><button class="g tm" data-m="b">Padam kotak</button><button class="g tm" data-m="g">Garis</button><button class="g tm" data-m="k">Segi empat</button><button class="g tm" data-m="o">Bulatan</button><button class="g tun" type="button">Buat asal</button><button class="g tm" data-m="l">Label huruf</button><button class="g tm" data-m="f">Isi corak</button><button class="g tm" data-m="s">Simbol</button> <input class="tl" maxlength="60" size="14" placeholder="cth P, 30 atau nama bahagian" aria-label="Teks label (huruf, nombor atau perkataan pendek)"> <label><input type="checkbox" class="tg2"> Panduan gambar asal</label> <button class="g tclr">Kosongkan</button> <button class="g tpiaf">PNG untuk PIAF</button> <button class="g tlib">Simpan ke Pustaka</button> <span class="sm ts"></span></div><div class="row sm tmap"><label>Garis <select class="tls"><option value="">Garis penuh (kontur)</option><option value="D">Jalan berturap (garis berganda)</option><option value="p">Jalan tidak berturap (putus-putus)</option><option value="t">Denai / lorong (bertitik)</option><option value="r">Landasan keretapi (garis + palang)</option><option value="w">Sungai (bergelombang)</option><option value="s">Sempadan (putus-titik)</option></select></label> <label>Kawasan <select class="tfp"><option value="d">Hutan</option><option value="m">Paya bakau</option><option value="c">Paya nipah</option><option value="b">Kelapa sawit</option><option value="p">Getah</option><option value="h">Sawah padi</option><option value="v">Tasik / laut</option><option value="s">Belukar</option><option value="x">Kawasan bandar</option><option value="f">Kawasan terbina (penuh)</option></select></label> <label>Simbol <select class="tss"><option value="masjid">Masjid</option><option value="sekolah">Sekolah</option><option value="polis">Balai polis</option><option value="hospital">Hospital / klinik</option><option value="pos">Pejabat pos</option><option value="kilang">Kilang</option><option value="jambatan">Jambatan</option><option value="jeti">Jeti / pelabuhan</option><option value="stesen">Stesen keretapi</option><option value="trig">Titik ketinggian / stesen trig</option><option value="tangki">Tangki air</option><option value="bandar">Bandar / petempatan</option><option value="ibu">Ibu negeri</option><option value="lapangan">Lapangan terbang</option></select></label> <button class="g tleg" type="button">Jana kunci peta</button> <span class="sm tmh"></span></div>'+
   '</div>';
   const q=c=>sec.querySelector(c),tb=q('.tb'),cv=q('.tc'),ts=q('.ts');let mode='d',dn=null,gray=null,bs=null;
   const sync=()=>{const t=T();q('.tk').checked=!!t.on;tb.hidden=!t.on;q('.ta').value=t.thr;q('.tr').value=t.rad;q('.tf').value=t.frac;q('.ti').checked=!!t.inv;q('.te').checked=!!t.edge;q('.tx').checked=!!t.rmText;q('.tt').value=t.title||'';q('.tkey').value=t.key||'';q('.tz').value=t.zoom==null?100:t.zoom;q('.tdx').value=t.dx||0;q('.tdy').value=t.dy||0;q('.tly').value=t.lay||'';q('.thr').value=t.hr||12;q('.tlh').hidden=t.lay!=='in';q('.tln').hidden=t.lay!=='sp';q('.tn').value=t.n||2;q('.twc').value=t.wc||'';q('.tlhint').textContent={in:'Rajah disusun bersama soalan dalam aliran kertas; muka belakang kosong tidak ditambah.',half:'Setengah muka surat: dua rajah berturutan muat satu muka surat.',sp:'Rajah dilukis pada kanvas tinggi dan dipecah ikut muka surat; tajuk ditanda (1/2), (2/2) dan seterusnya.'}[t.lay]||'Rajah mengambil satu muka surat penuh dengan muka belakang kosong untuk interpoint.';q('.tzv').textContent=(t.zoom==null?100:t.zoom)+'%'};
@@ -2414,11 +2414,13 @@ function tacUI(im,b){
     return bd<=9?{dot:best}:{}};
   let down=false,hist=[],base=null;
   // ---- alat peta: gaya garis, isi corak, simbol, kunci peta ----
-  const SYMB={bandar:['1111','1111','1111'],ibu:['1111','0110','1111'],gunung:['0110','1111','1111'],api:['1001','1111','1111'],lapangan:['0110','1111','0110'],pelabuhan:['1111','0110','0110'],sekolah:['1111','1001','1111'],kampung:['0110','1001','0110']};
-  const SYMN={bandar:'Bandar',ibu:'Ibu negeri',gunung:'Gunung',api:'Gunung berapi',lapangan:'Lapangan terbang',pelabuhan:'Pelabuhan',sekolah:'Bangunan',kampung:'Kampung'};
-  const PATN={d:'Titik jarang',s:'Titik padat',v:'Jalur menegak',h:'Jalur mendatar',x:'Papan dam',f:'Penuh'};
-  const LSN={p:'Garis putus-putus',t:'Garis bertitik',r:'Rel keretapi',w:'Sungai'};
-  const PATF={d:(y,x)=>x%4===0&&y%6===0,s:(y,x)=>y%3!==1,v:(y,x)=>x%4<2,h:(y,x)=>y%6<3,x:(y,x)=>(((x>>1)+((y/3)|0))%2)===0,f:()=>true};
+  const SYMB={masjid:['0110','1111','1001'],sekolah:['1111','1001','1111'],polis:['1001','0110','1001'],hospital:['0110','1111','0110'],pos:['1010','0101','1010'],kilang:['0011','1111','1111'],jambatan:['1111','0000','1111'],jeti:['1111','0110','0110'],stesen:['1001','1111','1001'],trig:['0110','1001','1111'],tangki:['0110','1001','0110'],bandar:['1111','1111','1111'],ibu:['1111','0110','1111'],lapangan:['0110','1111','0110'],
+    gunung:['0110','1111','1111'],api:['1001','1111','1111'],pelabuhan:['1111','0110','0110'],kampung:['0110','1001','0110']};
+  const SYMN={masjid:'Masjid',sekolah:'Sekolah',polis:'Balai polis',hospital:'Hospital / klinik',pos:'Pejabat pos',kilang:'Kilang',jambatan:'Jambatan',jeti:'Jeti / pelabuhan',stesen:'Stesen keretapi',trig:'Titik ketinggian',tangki:'Tangki air',bandar:'Bandar / petempatan',ibu:'Ibu negeri',lapangan:'Lapangan terbang',gunung:'Gunung',api:'Gunung berapi',pelabuhan:'Pelabuhan',kampung:'Kampung'};
+  const PATN={d:'Hutan',m:'Paya bakau',c:'Paya nipah',b:'Kelapa sawit',p:'Getah',h:'Sawah padi',v:'Tasik / laut',s:'Belukar',x:'Kawasan bandar',f:'Kawasan terbina'};
+  const LSN={D:'Jalan berturap',p:'Jalan tidak berturap',t:'Denai / lorong',r:'Landasan keretapi',w:'Sungai',s:'Sempadan'};
+  const PATF={d:(y,x)=>x%4===0&&y%6===0,s:(y,x)=>y%3!==1,v:(y,x)=>x%4<2,h:(y,x)=>y%6<3,x:(y,x)=>(((x>>1)+((y/3)|0))%2)===0,f:()=>true,
+    m:(y,x)=>(((x>>1)+((y/3)|0))%3)===0&&(x%2===0||y%3===1),c:(y,x)=>x%4<2||y%6<3,b:(y,x)=>(x>>1)%2===0&&((y/3)|0)%2===0&&y%3!==1,p:(y,x)=>(x%4===0||x%4===1)&&y%6===1};
   const used=()=>{const t=T();return t.used||(t.used={pat:{},sym:{},line:{}})};
   const stamp=(t,y0,x0,name)=>{SYMB[name].forEach((row,dy)=>{for(let dx=0;dx<row.length;dx++)if(row[dx]==='1')setDot(y0+dy,x0+dx,1)})};
   const floodFill=(t,sy,sx,pf)=>{const H=t.dots.length,W=t.dots[0].length;if(t.dots[sy][sx]==='1')return 0;const seen=new Uint8Array(H*W),st=[[sy,sx]],reg=[];seen[sy*W+sx]=1;
@@ -2426,7 +2428,7 @@ function tacUI(im,b){
     if(reg.length>H*W*.85){ts.textContent='Kawasan tidak bertutup (garis ada celah). Tutup sempadan dahulu.';return 0}
     reg.forEach(([y,x])=>{if(pf(y,x))setDot(y,x,1)});return reg.length};
   const mapAct=h=>{const t=T();if(!h.dot)return;const[y,x]=h.dot;
-    if(mode==='f'){const k=q('.tfp').value,n=floodFill(t,y,x,PATF[k]);if(n){const u=used();u.pat[k]=(q('.tfn').value||'').trim()||PATN[k]}}
+    if(mode==='f'){const k=q('.tfp').value,n=floodFill(t,y,x,PATF[k]);if(n){used().pat[k]=PATN[k]}}
     else if(mode==='s'){const k=q('.tss').value;stamp(t,y-1,x-1,k);used().sym[k]=1}};
 
   const pushH=()=>{const t=T();if(t.dots){hist.push(t.dots.slice());if(hist.length>30)hist.shift()}};
@@ -2449,9 +2451,9 @@ function tacUI(im,b){
   const nearest=(d,x,y)=>{const c0=Math.floor(x/K.CP),r0=Math.floor(y/K.LP);let best=null,bd=1e9;for(let r=r0-1;r<=r0+1;r++)for(let c=c0-1;c<=c0+1;c++){if(r<0||c<0||r>=d.H||c>=d.W)continue;for(let dy=0;dy<3;dy++)for(let dx=0;dx<2;dx++){const dd=(c*K.CP+dx*K.DP-x)**2+(r*K.LP+dy*K.DP-y)**2;if(dd<bd){bd=dd;best=[r*3+dy,c*2+dx]}}}return{best,bd}};
   const plot=(t,x0,y0,x1,y1)=>{const d=tacDims(t),seg=Math.hypot(x1-x0,y1-y0),n=Math.max(1,Math.ceil(seg/.8)),sty=q('.tls').value,nx=seg?-(y1-y0)/seg:0,ny=seg?(x1-x0)/seg:0;
     for(let i=0;i<=n;i++){const f=i/n,dist=lacc+seg*f;let x=x0+(x1-x0)*f,y=y0+(y1-y0)*f;
-      if(sty==='p'&&(dist%9)>=6)continue;if(sty==='t'&&(dist%5)>=1.4)continue;
+      if(sty==='p'&&(dist%9)>=6)continue;if(sty==='t'&&(dist%5)>=1.4)continue;if(sty==='s'){const m=dist%14;if(!(m<7||(m>=9&&m<10.6)))continue}
       if(sty==='w'){const a=2.6*Math.sin(dist/3);x+=nx*a;y+=ny*a}
-      const{best,bd}=nearest(d,x,y);if(best&&bd<=3.3)setDot(best[0],best[1],1);
+      if(sty==='D'){for(const sg of[-1,1]){const q3=nearest(d,x+nx*3*sg,y+ny*3*sg);if(q3.best&&q3.bd<=3.3)setDot(q3.best[0],q3.best[1],1)}}else{const{best,bd}=nearest(d,x,y);if(best&&bd<=3.3)setDot(best[0],best[1],1)}
       if(sty==='r'){const prev=lacc+seg*Math.max(0,(i-1)/n);if(Math.floor(dist/9)!==Math.floor(prev/9)||i===0)for(const sg of[-1,1]){const q2=nearest(d,x+nx*3.2*sg,y+ny*3.2*sg);if(q2.best&&q2.bd<=3.3)setDot(q2.best[0],q2.best[1],1)}}}
     lacc+=seg};
   const shape=(m,a,b2)=>{const t=T();lacc=0;if(m==='g')plot(t,a[0],a[1],b2[0],b2[1]);else if(m==='k'){plot(t,a[0],a[1],b2[0],a[1]);plot(t,b2[0],a[1],b2[0],b2[1]);plot(t,b2[0],b2[1],a[0],b2[1]);plot(t,a[0],b2[1],a[0],a[1])}
@@ -3369,6 +3371,45 @@ if(showHome)openHome();
     'Isi corak': 'Fill pattern', 'Simbol': 'Symbol', 'Gaya garis': 'Line style', 'Putus-putus': 'Dashed', 'Bertitik': 'Dotted', 'Rel (garis + palang)': 'Rail (line + ticks)', 'Bergelombang': 'Wavy', 'Corak isi': 'Fill pattern', 'Titik jarang': 'Sparse dots', 'Titik padat': 'Dense dots', 'Jalur menegak': 'Vertical stripes', 'Jalur mendatar': 'Horizontal stripes', 'Papan dam': 'Checkerboard', 'Bandar': 'Town', 'Ibu negeri': 'State capital', 'Gunung': 'Mountain', 'Gunung berapi': 'Volcano', 'Lapangan terbang': 'Airport', 'Pelabuhan': 'Port', 'Bangunan': 'Building', 'Kampung': 'Village', 'Jana kunci peta': 'Generate map key', 'maksud corak, cth Hutan': 'meaning of pattern, e.g. Forest', 'Maksud corak': 'Pattern meaning',
     'Kawasan tidak bertutup (garis ada celah). Tutup sempadan dahulu.': 'The area is not closed (the outline has a gap). Close the border first.', 'Belum ada simbol, corak atau gaya garis yang digunakan.': 'No symbols, patterns or line styles have been used yet.', 'Terlalu banyak entri untuk satu muka surat.': 'Too many entries for one page.',
     'Geografi': 'Geography', 'Kertas Geografi dengan peta timbul: corak isi kawasan, gaya garis, simbol peta dan kunci peta automatik. Rajah boleh satu muka penuh, separuh muka, dalam kertas atau dibelah beberapa muka.': 'Geography papers with raised maps: area fill patterns, line styles, map symbols and an automatic map key. A diagram can be one full page, half a page, inside the paper or split over several pages.',
+    'Garis': 'Line',
+    'Garis penuh (kontur)': 'Solid line (contour)',
+    'Jalan berturap (garis berganda)': 'Paved road (double line)',
+    'Jalan tidak berturap (putus-putus)': 'Unpaved road (dashed)',
+    'Denai / lorong (bertitik)': 'Track / lane (dotted)',
+    'Landasan keretapi (garis + palang)': 'Railway (line + ticks)',
+    'Sungai (bergelombang)': 'River (wavy)',
+    'Sempadan (putus-titik)': 'Boundary (dash-dot)',
+    'Kawasan': 'Area',
+    'Hutan': 'Forest',
+    'Paya bakau': 'Mangrove swamp',
+    'Paya nipah': 'Nipah swamp',
+    'Kelapa sawit': 'Oil palm',
+    'Getah': 'Rubber',
+    'Sawah padi': 'Padi field',
+    'Tasik / laut': 'Lake / sea',
+    'Belukar': 'Scrub',
+    'Kawasan bandar': 'Urban area',
+    'Kawasan terbina (penuh)': 'Built-up area (solid)',
+    'Kawasan terbina': 'Built-up area',
+    'Masjid': 'Mosque',
+    'Sekolah': 'School',
+    'Balai polis': 'Police station',
+    'Hospital / klinik': 'Hospital / clinic',
+    'Pejabat pos': 'Post office',
+    'Kilang': 'Factory',
+    'Jambatan': 'Bridge',
+    'Jeti / pelabuhan': 'Jetty / port',
+    'Stesen keretapi': 'Railway station',
+    'Titik ketinggian / stesen trig': 'Spot height / trig station',
+    'Titik ketinggian': 'Spot height',
+    'Tangki air': 'Water tank',
+    'Bandar / petempatan': 'Town / settlement',
+    'Jalan berturap': 'Paved road',
+    'Jalan tidak berturap': 'Unpaved road',
+    'Denai / lorong': 'Track / lane',
+    'Landasan keretapi': 'Railway',
+    'Sungai': 'River',
+    'Sempadan': 'Boundary',
     'buang sel': 'delete cell', 'tambah sel': 'add cell', 'Muat turun ': 'Download '
   };
   const PAT = [

@@ -1,5 +1,5 @@
 {
-  "version": "1.17.0",
-  "sha256": "37886963e740dc720bf03e0f5615ac994203140701e165d7faf9190768a39929",
-  "notes": "Kad Geografi (versi awal), alat peta (gaya garis, isi corak, simbol, kunci peta), susun atur rajah: separuh/dalam kertas/belah, lebar"
+  "version": "1.17.1",
+  "sha256": "06e910d75d6abdba891d52668a224015096c24b6326535c24f5a3904e7df543e",
+  "notes": "Alat peta: senarai simbol, corak kawasan dan garis ikut petunjuk peta topografi KSSM"
 }
