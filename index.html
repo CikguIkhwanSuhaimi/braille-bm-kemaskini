@@ -1133,7 +1133,8 @@ function sample(gray, iw, ih, W, H, opt = {}) {
 function hdrOf(t, tr) { return [(t.main || '').trim(), (t.title || '').trim()].filter(Boolean).map(x => tr(x)).filter(Boolean); }
 function dims(t, cols, rows, tr) {
   const nk = (t.key || '').split(/\n/).map(s => s.trim()).filter(Boolean).slice(0, 10).length, head = hdrOf(t, tr).length ? hdrOf(t, tr).length + 1 : 0, foot = nk ? nk + 1 : 0;
-  return { W: cols, H: Math.max(1, rows - head - foot), head, foot };
+  const inl = t.lay === 'in', H = inl ? Math.max(3, Math.min(+t.hr || 12, rows - head - foot)) : Math.max(1, rows - head - foot);
+  return { W: cols, H, head, foot, total: head + H + foot, inl };
 }
 
 // Cari teks bercetak dalam imej: komponen bersambung kecil yang berderet jadi kelompok. Pulang {mask, clusters:[{x0,y0,x1,y1,n}]}
@@ -1192,7 +1193,7 @@ function placeLabels(dots, clusters, iw, ih, W, H, max = 12, vo) {
 function pageLines(t, cols, rows, tr) {
   const key = (t.key || '').split(/\n/).map(s => s.trim()).filter(Boolean).slice(0, 10).map(s => tr(s));
   const hdr = hdrOf(t, tr);
-  const { H } = dims(t, cols, rows, tr);
+  const { H, total, inl } = dims(t, cols, rows, tr); if (inl) rows = total;
   const d = fit(t.dots || blank(cols, H), cols, H);
   const lines = [];
   if (hdr.length) { lines.push(...hdr, ''); }
@@ -1948,7 +1949,8 @@ function compose(blocks, dict, cfg = {}) {
         return { t: 'raw', text: l, src };
       });
       if (b.text) flat.push({ role: 'image', gap: gapFor(b, prev), lb: { t: 'para', text: tr(IMGD + b.text), src: MT.plain(IMGD + b.text) }, pb: !!b.pageBreak });
-      flat.push({ role: 'tac', gap: 0, lb: lbs, pb: true });
+      if (dm.inl) flat.push({ role: 'tacin', gap: 1, lb: lbs, pb: false });
+      else flat.push({ role: 'tac', gap: 0, lb: lbs, pb: true });
       prev = b; continue;
     }
     let lb;
@@ -2376,11 +2378,11 @@ function tacUI(im,b){
   sec.innerHTML='<label class="row"><input type="checkbox" class="tk"> <b>Rajah timbul</b> <span class="sm">(satu muka surat penuh dalam BRF, dengan muka belakang kosong untuk interpoint)</span></label> <button class="g tpick" type="button">Ambil dari Pustaka</button> <button class="g trm" type="button">Buang rajah ini</button>'+
   '<div class="tb" hidden><div class="row sm">Ambang <input type="range" min="40" max="230" class="ta"> Ketebalan <input type="range" min="6" max="20" class="tr"> Kepekatan <input type="range" min="2" max="40" class="tf"> <label><input type="checkbox" class="ti"> Songsang</label> <label><input type="checkbox" class="te"> Garis tepi sahaja</label> <label><input type="checkbox" class="tx"> Buang teks bercetak, letak huruf label</label> <button class="g tg">Jana semula daripada gambar</button></div>'+
   '<div class="row sm">Saiz gambar <input type="range" min="20" max="150" class="tz"> <span class="tzv"></span> Kiri-kanan <input type="range" min="-50" max="50" class="tdx"> Atas-bawah <input type="range" min="-50" max="50" class="tdy"> <button class="g tzr" type="button">Set semula saiz</button></div>'+
-  '<div class="tinfo"><div class="fld"><label><b>Tajuk muka surat</b> <span class="sm">dicetak di atas muka surat rajah ini</span></label><input class="tt" maxlength="80" placeholder="cth Rajah 2.1 Anatomi Kucing"></div><div class="fld"><label><b>Label huruf (kunci)</b> <span class="sm">satu baris satu label, cth <code>A ; telinga kiri</code>. Letak huruf pada rajah dengan alat Label huruf di bawah.</span></label><textarea class="tkey" rows="4" placeholder="A ; telinga kiri&#10;B ; telinga kanan"></textarea></div></div><canvas class="tc"></canvas>'+
+  '<div class="row sm tlay"><label>Susun atur <select class="tly"><option value="">Satu muka surat penuh</option><option value="in">Dalam kertas, di tempat gambar</option></select></label> <label class="tlh" hidden>Tinggi <input type="number" class="thr" min="4" max="40" style="width:64px"> baris</label> <span class="tlhint"></span></div><div class="tinfo"><div class="fld"><label><b>Tajuk muka surat</b> <span class="sm">dicetak di atas muka surat rajah ini</span></label><input class="tt" maxlength="80" placeholder="cth Rajah 2.1 Anatomi Kucing"></div><div class="fld"><label><b>Label huruf (kunci)</b> <span class="sm">satu baris satu label, cth <code>A ; telinga kiri</code>. Letak huruf pada rajah dengan alat Label huruf di bawah.</span></label><textarea class="tkey" rows="4" placeholder="A ; telinga kiri&#10;B ; telinga kanan"></textarea></div></div><canvas class="tc"></canvas>'+
   '<div class="row sm">Alat: <button class="g tm" data-m="d">Lukis</button><button class="g tm" data-m="e">Padam</button><button class="g tm" data-m="b">Padam kotak</button><button class="g tm" data-m="g">Garis</button><button class="g tm" data-m="k">Segi empat</button><button class="g tm" data-m="o">Bulatan</button><button class="g tun" type="button">Buat asal</button><button class="g tm" data-m="l">Label huruf</button> <input class="tl" maxlength="60" size="14" placeholder="cth P, 30 atau nama bahagian" aria-label="Teks label (huruf, nombor atau perkataan pendek)"> <label><input type="checkbox" class="tg2"> Panduan gambar asal</label> <button class="g tclr">Kosongkan</button> <button class="g tpiaf">PNG untuk PIAF</button> <button class="g tlib">Simpan ke Pustaka</button> <span class="sm ts"></span></div>'+
   '</div>';
   const q=c=>sec.querySelector(c),tb=q('.tb'),cv=q('.tc'),ts=q('.ts');let mode='d',dn=null,gray=null,bs=null;
-  const sync=()=>{const t=T();q('.tk').checked=!!t.on;tb.hidden=!t.on;q('.ta').value=t.thr;q('.tr').value=t.rad;q('.tf').value=t.frac;q('.ti').checked=!!t.inv;q('.te').checked=!!t.edge;q('.tx').checked=!!t.rmText;q('.tt').value=t.title||'';q('.tkey').value=t.key||'';q('.tz').value=t.zoom==null?100:t.zoom;q('.tdx').value=t.dx||0;q('.tdy').value=t.dy||0;q('.tzv').textContent=(t.zoom==null?100:t.zoom)+'%'};
+  const sync=()=>{const t=T();q('.tk').checked=!!t.on;tb.hidden=!t.on;q('.ta').value=t.thr;q('.tr').value=t.rad;q('.tf').value=t.frac;q('.ti').checked=!!t.inv;q('.te').checked=!!t.edge;q('.tx').checked=!!t.rmText;q('.tt').value=t.title||'';q('.tkey').value=t.key||'';q('.tz').value=t.zoom==null?100:t.zoom;q('.tdx').value=t.dx||0;q('.tdy').value=t.dy||0;q('.tly').value=t.lay||'';q('.thr').value=t.hr||12;q('.tlh').hidden=t.lay!=='in';q('.tlhint').textContent=t.lay==='in'?'Rajah disusun bersama soalan dalam aliran kertas; muka belakang kosong tidak ditambah.':'Rajah mengambil satu muka surat penuh dengan muka belakang kosong untuk interpoint.';q('.tzv').textContent=(t.zoom==null?100:t.zoom)+'%'};
   const SC=3,draw=()=>{const t=T(),d=tacDims(t);if(!t.dots||t.dots.length!==3*d.H||t.dots[0].length!==2*d.W)t.dots=K.fit(t.dots||K.blank(d.W,d.H),d.W,d.H);
     cv.width=Math.round(d.W*K.CP*SC);cv.height=Math.round(((d.H-1)*K.LP+2*K.DP+4)*SC);const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);if(q('.tg2').checked&&gray){const wm=(d.W-1)*K.CP+K.DP,hm=(d.H-1)*K.LP+2*K.DP,sc=Math.min(wm/gray.w,hm/gray.h)*((t.zoom==null?100:t.zoom)/100),ox=(wm-gray.w*sc)/2+(t.dx||0)/100*wm,oy=(hm-gray.h*sc)/2+(t.dy||0)/100*hm;if(!gray.cv){const o=document.createElement('canvas');o.width=gray.w;o.height=gray.h;const og=o.getContext('2d'),id=og.createImageData(gray.w,gray.h);for(let i=0;i<gray.w*gray.h;i++){id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=gray.gr[i];id.data[i*4+3]=255}og.putImageData(id,0,0);gray.cv=o}g.globalAlpha=.3;g.drawImage(gray.cv,ox*SC+1.5,oy*SC+1.5,gray.w*sc*SC,gray.h*sc*SC);g.globalAlpha=1}
     g.strokeStyle='#e5e0d0';g.lineWidth=1;for(let r=0;r<d.H;r++)for(let c=0;c<d.W;c++)g.strokeRect(c*K.CP*SC+.5,r*K.LP*SC+.5,(K.DP+1)*SC,(2*K.DP+1)*SC);
@@ -2428,6 +2430,7 @@ function tacUI(im,b){
   q('.tg').onclick=()=>{if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
   q('.tg2').onchange=async()=>{if(q('.tg2').checked&&!gray&&b){try{gray=await tacGray(b,1200)}catch(e){}}draw()};
   q('.tclr').onclick=()=>{const t=T(),d=tacDims(t);t.dots=K.blank(d.W,d.H);t.labels=[];t.edited=true;draw();tacSave()};
+  const relay=()=>{const t=T();t.lay=q('.tly').value;t.hr=Math.max(4,Math.min(40,+q('.thr').value||12));sync();draw();tacSave()};q('.tly').onchange=relay;q('.thr').oninput=relay;
   q('.tt').oninput=()=>{T().title=q('.tt').value;draw();tacSave()};
   q('.tkey').oninput=()=>{T().key=q('.tkey').value;draw();tacSave()};
   q('.tpiaf').onclick=async()=>{const t=T();if(t.edited||!b){if(!(t.dots||[]).some(r=>r.includes('1'))){ts.textContent='Rajah kosong.';return}const d=tacDims(t),c2=document.createElement('canvas');libThumb(c2,{W:d.W,H:d.H,dots:t.dots},4,'#000');const c3=document.createElement('canvas');c3.width=c2.width;c3.height=c2.height;const g3=c3.getContext('2d');g3.fillStyle='#fff';g3.fillRect(0,0,c3.width,c3.height);g3.drawImage(c2,0,0);dl(name+'_rajah'+no+'_piaf.png',await new Promise(ok=>c3.toBlob(ok,'image/png')));return}try{const G=await tacGray(b,2400),cv2=document.createElement('canvas');cv2.width=G.w;cv2.height=G.h;const g=cv2.getContext('2d'),id=g.createImageData(G.w,G.h);
@@ -3304,6 +3307,8 @@ if(showHome)openHome();
     'Buang rajah ini daripada Studio Rajah': 'Remove this diagram from Diagram Studio',
     'kamus sekolah': 'school dictionary',
     'asas': 'base',
+    'Susun atur': 'Layout', 'Satu muka surat penuh': 'One full page', 'Dalam kertas, di tempat gambar': 'Inside the paper, where the image is', 'Tinggi': 'Height', ' baris ': ' lines ',
+    'Rajah disusun bersama soalan dalam aliran kertas; muka belakang kosong tidak ditambah.': 'The diagram flows with the questions in the paper; no blank back page is added.', 'Rajah mengambil satu muka surat penuh dengan muka belakang kosong untuk interpoint.': 'The diagram takes one full page with a blank back for interpoint.',
     'buang sel': 'delete cell', 'tambah sel': 'add cell', 'Muat turun ': 'Download '
   };
   const PAT = [
