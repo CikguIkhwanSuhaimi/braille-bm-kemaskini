@@ -3060,14 +3060,9 @@ async function studioBuild(files,titles,seeds){
   titles.seeds=seeds||null;titles.nm=nm;STUDIO=titles;document.body.classList.add('studio');imgKey='';setMod('sn');openApp();stSync();await load(new File([blob],nm+'.docx'));
 }
 async function stuHome(files){files=[...files||[]].filter(f=>/^image\//.test(f.type));if(!files.length)return;
-  const m=[];for(const k of await idbKeys()){if(!isStu(k))continue;const v=await idbGet(k);if(v&&v.buf)m.push({k,t:v.t||0})}
-  if(!m.length){STUNAME='Studio Rajah';return studioFiles(files)}
-  m.sort((a,b)=>b.t-a.t);const last=m[0].k;let used=new Set(m.map(x=>x.k)),nn='Studio Rajah',i=1;while(used.has(nn)){i++;nn='Studio Rajah '+i}
-  const lab=stLabel(last);
-  const ch=await new Promise(ok=>{const d=document.createElement('div');d.className='stdlg';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
-    d.innerHTML='<div class="stdb"><h3 style="margin:0 0 6px">Set rajah sedia ada</h3><p style="margin:0 0 12px">Ada set rajah tersimpan: <b></b>. Tambah gambar ini ke set itu, atau mulakan set baharu?</p><div class="row"><button type="button" data-c="new" class="pri">Mula set baharu</button><button type="button" data-c="old">Tambah ke set sedia ada</button><button type="button" data-c="x" class="g">Batal</button></div></div>';
-    d.querySelector('b').textContent=lab;d.onclick=e=>{const b=e.target.closest('button');if(!b&&e.target!==d)return;d.remove();ok(b?b.dataset.c:'x')};document.body.appendChild(d);d.querySelector('button').focus()});
-  if(ch==='x')return;STUNAME=ch==='new'?nn:last;return studioFiles(files)}
+  const used=new Set();for(const k of await idbKeys()){if(isStu(k))used.add(k)}
+  let nn='Studio Rajah',i=1;while(used.has(nn)){i++;nn='Studio Rajah '+i}
+  STUNAME=nn;imgTac={};return studioFiles(files)}
 const studioAdd=nf=>studioFiles(nf);
 $('stadd').onclick=()=>$('stfile').click();$('stfile').onchange=e=>{studioAdd(e.target.files);e.target.value=''};$('stlib').onclick=()=>openLib();$('stblank').onclick=async()=>studioAdd([await blankFile()]);
 [['stc','cols'],['str','rows']].forEach(([a,b])=>{$(a).oninput=()=>{$(b).value=$(a).value;$(b).dispatchEvent(new Event('input',{bubbles:true}));$(b).dispatchEvent(new Event('change',{bubbles:true}));stRe()}});$('sti').onchange=()=>{$('inter').checked=$('sti').checked;$('inter').dispatchEvent(new Event('change',{bubbles:true}));stRe()};
