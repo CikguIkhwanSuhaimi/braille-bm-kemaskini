@@ -1,5 +1,5 @@
 {
-  "version": "1.14.1",
-  "sha256": "dbe208185cc39a77928adcc6035601ad92cbb94323e5c78b55564084f62f380a",
-  "notes": "Studio Rajah: Tajuk utama dicetak di muka pertama (preview = BRF)"
+  "version": "1.14.2",
+  "sha256": "09f1193797270bb6b61d5e436010f36378d79d9bc53caa1f18df85e337896e36",
+  "notes": "Studio Rajah: pilihan cetak Tajuk utama (muka pertama / setiap muka / tidak)"
 }
