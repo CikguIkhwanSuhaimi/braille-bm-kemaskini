@@ -104,6 +104,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 .hmf{margin-top:34px;padding-top:14px;border-top:1px solid var(--bd);font-size:13px;color:var(--mut)}
 .fld{margin:0 0 12px}.fld label{display:block;margin-bottom:4px}.fld input,.tinfo input,.tinfo textarea{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg)}.tinfo textarea{font-family:ui-monospace,Menlo,Consolas,monospace;min-height:96px;resize:vertical}.tinfo{max-width:720px;margin:10px 0 12px;padding:12px;border:1px solid var(--bd);border-radius:10px}
 .uisw{display:inline-flex;border:1px solid var(--bd);border-radius:999px;overflow:hidden;vertical-align:middle}.uisw button{border:0;background:transparent;color:var(--fg);padding:6px 12px;font:600 13px/1 inherit;font-family:inherit;cursor:pointer;min-height:34px;border-radius:0}.uisw button.on{background:var(--ac,#0f766e);color:#fff}.uisw button:focus-visible{outline:2px solid var(--ac,#0f766e);outline-offset:-2px}
+.hmk.soon{opacity:.55;cursor:default;box-shadow:none}.hmk.soon:hover{transform:none;border-color:var(--bd)}
 </style>
 <div id="home" class="hm" hidden>
 <div class="hmh"><svg width="30" height="42" viewBox="0 0 34 46" role="img" aria-label="Logo Titik: sel braille huruf t"><g fill="currentColor"><circle cx="9" cy="8" r="5" opacity=".18"/><circle cx="9" cy="23" r="5"/><circle cx="9" cy="38" r="5"/><circle cx="25" cy="8" r="5" opacity=".18"/><circle cx="25" cy="23" r="5"/><circle cx="25" cy="38" r="5" opacity=".18"/></g></svg>
@@ -2222,6 +2223,7 @@ const loc=()=>{const t=fromText($('dict').value),o={};for(const k in t){if(k in 
 const dict=()=>E.B.withOverrides(E.B.withOverrides(BASE,OFF),loc());
 let punct={};try{punct=JSON.parse(LS.get('brl_punct')||'{}')||{}}catch(e){punct={}}
 let MOD=(()=>{try{const m=localStorage.getItem('brl_mod');return m==='sn'||m==='en'||m==='mt'||m==='gf'?m:'bm'}catch(e){return'bm'}})();
+const MODON={bm:true,sn:false,en:false,mt:false,gf:false};// ubah ke true untuk hidupkan semula kad modul
 const MODN={bm:'Bahasa Melayu',sn:'Sains',en:'English (UEB)',mt:'Matematik (awal)',gf:'Geografi'};
 const setMod=m=>{MOD=m==='sn'||m==='en'||m==='mt'||m==='gf'?m:'bm';try{localStorage.setItem('brl_mod',MOD)}catch(e){}if(E.setLang)E.setLang(MOD==='en'?'en':'bm');document.body.classList.toggle('en',MOD==='en');{const ln=document.getElementById('langn');if(ln)ln.textContent=MOD==='en'?'UEB, bahasa Inggeris':MOD==='mt'?'Bahasa Melayu + Kod Nemeth (awal)':'Bahasa Melayu'}const l=document.getElementById('modl');if(l)l.textContent='Modul: '+MODN[MOD]};
 let numXml='',xml=null,last=null,name='kertas',imgDesc={},imgTac={},imgBlobs={},edits={},editing={};
@@ -3141,7 +3143,9 @@ $('libx').onclick=async()=>{const a=await libAll();if(!a.length){$('libsub').tex
 $('libi').onclick=()=>$('libif').click();
 $('libif').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const z=await JSZip.loadAsync(await f.arrayBuffer()),ix=z.file('index.json');if(!ix)throw 0;const arr=JSON.parse(await ix.async('string'));let n=0;for(const it of arr){if(!it||!it.id||!Array.isArray(it.dots))continue;const im=z.file('img/'+it.id+'.png');it.src=im?new Blob([await im.async('arraybuffer')],{type:'image/png'}):null;await libPut(it);n++}$('libsub').textContent='Diimport '+n+' rajah.';await libRender()}catch(x){$('libsub').textContent='Fail bukan pustaka Titik yang sah.'}};
 libCount();loadPus();
-$('hmgf').onclick=()=>{document.body.classList.remove('studio');setMod('gf');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('hmsn').onclick=()=>{document.body.classList.remove('studio');setMod('sn');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('gohome').onclick=openHome;setMod(MOD);
+$('hmgf').onclick=()=>{document.body.classList.remove('studio');setMod('gf');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('hmsn').onclick=()=>{document.body.classList.remove('studio');setMod('sn');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('gohome').onclick=openHome;
+['sn','en','mt','gf'].forEach(k=>{if(MODON[k])return;const b=$('hm'+k);if(!b)return;b.disabled=true;b.setAttribute('aria-disabled','true');b.classList.add('soon');b.classList.remove('on');const t=b.querySelector('.hmt');if(t)t.textContent='Akan datang';const go=b.querySelector('span[style*="margin-top:auto"]');if(go)go.remove()});
+if(!MODON[MOD]&&!(typeof STUDIO!=='undefined'&&STUDIO))MOD='bm';setMod(MOD);
 if(showHome)openHome();
 })();
 </script>
@@ -3410,6 +3414,7 @@ if(showHome)openHome();
     'Landasan keretapi': 'Railway',
     'Sungai': 'River',
     'Sempadan': 'Boundary',
+    'Akan datang': 'Coming soon',
     'buang sel': 'delete cell', 'tambah sel': 'add cell', 'Muat turun ': 'Download '
   };
   const PAT = [
