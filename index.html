@@ -1740,7 +1740,7 @@ function expr(s) { return emit(parse(s), { start: true }, 0, 0, 0); }
 // ---------- teks biasa: kesan petak matematik ----------
 const OPCH = /[=≠<>≤≥×÷±√\^²³½¼¾≈]|[α-ωΔΣΩΠ]/;
 function isMathTok(t) { return /^[\s]*$/.test(t) ? false : (OPCH.test(t) || /^[+\-*−]$/.test(t) || /^\d+\/\d+$/.test(t)) && !/[\u0000-\u0006\u000e\u000f]/.test(t) && !/[A-Za-z]{4,}/.test(t); }
-function operand(t) { return /^[(\[]?[A-Za-z0-9.,]{1,6}[)\]]?[.,;:]?$/.test(t) || /^[(\[]?\(?[A-Za-z0-9.,+\-*−×÷\/\^²³()]{1,12}[)\]]?[.,;:]?$/.test(t); }
+function operand(t, k) { if (k === 0 && /^([A-Za-z]{1,2}|\d{1,3})[.)]$/.test(t)) return false; return /^[(\[]?[A-Za-z0-9.,]{1,6}[)\]]?[.,;:]?$/.test(t) || /^[(\[]?\(?[A-Za-z0-9.,+\-*−×÷\/\^²³()]{1,12}[)\]]?[.,;:]?$/.test(t); }
 function autoZones(s) {
   if (s.indexOf(ZO) >= 0) {
     // sudah ada petak OMML; kesan hanya pada bahagian di luar petak
@@ -1753,8 +1753,8 @@ function autoZones(s) {
   const inZ = tok.map(() => false);
   for (let k = 0; k < tok.length; k++) if (mt[k]) {
     inZ[k] = true;
-    for (let j = k - 1; j >= 0 && !mt[j] && operand(tok[j]) && (j === k - 1) && !/^[A-Za-z]{2,}[.,;:]?$/.test(tok[j]) ; j--) { inZ[j] = true; break; }
-    for (let j = k + 1; j < tok.length && !mt[j] && operand(tok[j]) && !/^[A-Za-z]{2,}[.,;:]?$/.test(tok[j]); j++) { inZ[j] = true; if (j + 1 < tok.length && !mt[j + 1]) { /* hanya satu operan selepas operator */ break; } }
+    for (let j = k - 1; j >= 0 && !mt[j] && operand(tok[j], j) && (j === k - 1) && !/^[A-Za-z]{2,}[.,;:]?$/.test(tok[j]) ; j--) { inZ[j] = true; break; }
+    for (let j = k + 1; j < tok.length && !mt[j] && operand(tok[j], j) && !/^[A-Za-z]{2,}[.,;:]?$/.test(tok[j]); j++) { inZ[j] = true; if (j + 1 < tok.length && !mt[j + 1]) { /* hanya satu operan selepas operator */ break; } }
   }
   // cantum petak bersebelahan
   let out = '', open = false;
@@ -1781,13 +1781,18 @@ function trimZone(z) { const m = z.match(/^(.*?)([.,;:]+)$/); return m ? [m[1], 
 // tr = penterjemah teks biasa (BM); pengendali campuran: petak dalam teks dibungkus _% ... _:
 function text(src, tr, opt) {
   if (!src) return tr ? tr(src) : '';
-  const s = autoZones(src);
+  // label (A. / 1.) kekal BM; baki yang semuanya nombor/simbol (tiada perkataan) = petak matematik
+  let s;
+  const lm = /^(\s*(?:[A-Za-z]{1,2}|\d{1,3}|[ivxIVX]{1,4})[.)]\s+)([^\uE010]*)$/.exec(src);
+  const rest = lm ? lm[2] : src, pre = lm ? lm[1] : '';
+  if (/\d/.test(rest) && !/[A-Za-z\u00c0-\u024f]{2,}/.test(rest) && !/[\u0000-\u0006\u000e\u000f]/.test(rest) && src.indexOf(ZO) < 0) s = pre + ZO + rest.trim() + ZC;
+  else s = autoZones(src);
   if (s.indexOf(ZO) < 0) return tr(s);
   const segs = s.split(/([^]*)/);
-  const pure = segs.every((p, k) => k % 2 ? true : !p.replace(/[\s\u0002-\u0005\u000e\u000f]/g, ''));
+  const pure = segs.every((p, k) => k % 2 ? true : !p.replace(/^\s*(?:[A-Za-z]{1,2}|\d{1,3}|[ivxIVX]{1,4})[.)]/, '').replace(/[\s\u0002-\u0005\u000e\u000f]/g, ''));
   let o = '';
   segs.forEach((p, k) => {
-    if (k % 2 === 0) { o += p ? tr(p) : ''; return; }
+    if (k % 2 === 0) { o += p ? tr(p) : ''; if (p && /\s$/.test(p) && !o.endsWith(' ')) o += ' '; return; }
     let inner = p.slice(1, -1), tail = '';
     [inner, tail] = trimZone(inner);
     const m = expr(inner);

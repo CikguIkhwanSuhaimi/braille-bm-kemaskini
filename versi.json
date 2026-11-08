@@ -1,5 +1,5 @@
 {
-  "version": "1.13.0",
-  "sha256": "f36835ebc27adad6d5b6073fe92cfd307c6e6513a9b41b679824a14a64adfe8d",
-  "notes": "Modul Matematik (versi awal): persamaan Word ke Kod Nemeth"
+  "version": "1.13.1",
+  "sha256": "a8bf59cc434964e101de698ba517f4d70651b294ad94f5f95c7c1b87ec3a31f5",
+  "notes": "Matematik: label kekal BM, nombor jawapan guna Nemeth, ruang sekeliling petak"
 }
