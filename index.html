@@ -1796,6 +1796,7 @@ function text(src, tr, opt) {
     let inner = p.slice(1, -1), tail = '';
     [inner, tail] = trimZone(inner);
     const m = expr(inner);
+    if (o && !o.endsWith(' ')) o += ' ';
     o += pure ? m + (tail ? tr(tail) : '') : '_%' + m + '_:' + (tail ? tr(tail) : '');
   });
   return o;

@@ -1,5 +1,5 @@
 {
-  "version": "1.13.1",
-  "sha256": "a8bf59cc434964e101de698ba517f4d70651b294ad94f5f95c7c1b87ec3a31f5",
-  "notes": "Matematik: label kekal BM, nombor jawapan guna Nemeth, ruang sekeliling petak"
+  "version": "1.13.2",
+  "sha256": "534f7c5fa3be74a80606855520fb7f8f91997e529372a23d4394e1bebeda0835",
+  "notes": "Matematik: ruang sebelum petak Nemeth"
 }
