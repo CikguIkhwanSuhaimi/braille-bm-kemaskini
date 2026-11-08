@@ -1,5 +1,5 @@
 {
-  "version": "1.14.0",
-  "sha256": "aaa0a53e6c67ccf18cdbb4884dc08e6a89c1f3b74ff29b9e11b25da802dc5ea4",
-  "notes": "Studio Rajah: ruang Tajuk utama, Tajuk muka surat dan Label huruf"
+  "version": "1.14.1",
+  "sha256": "dbe208185cc39a77928adcc6035601ad92cbb94323e5c78b55564084f62f380a",
+  "notes": "Studio Rajah: Tajuk utama dicetak di muka pertama (preview = BRF)"
 }

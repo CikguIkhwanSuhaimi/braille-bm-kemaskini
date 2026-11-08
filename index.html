@@ -166,7 +166,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 <label><input id="bnp" type="checkbox"> Setiap Bahagian mula muka surat baharu</label>
 <label>Nombor biasa untuk guru (bawah kanan) <select id="pnprint"><option value="medium" selected>Sederhana, 2 baris</option><option value="big">Besar, 3 baris</option><option value="none">Tiada</option></select></label>
 </div></div>
-<div id="stbar" class="card"><h2 style="margin-top:0">Studio Rajah</h2><div class="fld"><label for="stname"><b>Tajuk utama</b> <span class="sm">nama set rajah ini (dipaparkan dalam senarai projek)</span></label><input id="stname" type="text" maxlength="80" placeholder="cth Anatomi Haiwan, Bab 2" style="width:100%;font-size:16px;padding:8px 10px;box-sizing:border-box"></div><div class="row"><button id="stadd" type="button">+ Tambah gambar</button><input id="stfile" type="file" accept="image/*" multiple hidden><button class="g" id="stblank" type="button">+ Lakaran kosong</button><button class="g" id="stlib" type="button">Pustaka Rajah</button><label>Sel/baris <input id="stc" type="number" min="20" max="42" style="width:70px"></label><label>Baris/muka <input id="str" type="number" min="10" max="40" style="width:70px"></label><label><input id="sti" type="checkbox"> Interpoint</label></div><div class="sm" style="margin-top:8px">1. Setiap gambar jadi satu muka surat rajah. Laraskan ambang dan ketebalan, kemudian betulkan dengan alat Lukis atau Padam. 2. Tekan <b>Simpan ke Pustaka</b> untuk guna semula. 3. Muat turun BRF atau PNG untuk PIAF di bahagian Hasil, di bawah.</div></div>
+<div id="stbar" class="card"><h2 style="margin-top:0">Studio Rajah</h2><div class="fld"><label for="stname"><b>Tajuk utama</b> <span class="sm">dicetak di atas muka surat rajah pertama, dan jadi nama dalam senarai projek. Kosongkan jika tak mahu dicetak.</span></label><input id="stname" type="text" maxlength="80" placeholder="cth Anatomi Haiwan, Bab 2" style="width:100%;font-size:16px;padding:8px 10px;box-sizing:border-box"></div><div class="row"><button id="stadd" type="button">+ Tambah gambar</button><input id="stfile" type="file" accept="image/*" multiple hidden><button class="g" id="stblank" type="button">+ Lakaran kosong</button><button class="g" id="stlib" type="button">Pustaka Rajah</button><label>Sel/baris <input id="stc" type="number" min="20" max="42" style="width:70px"></label><label>Baris/muka <input id="str" type="number" min="10" max="40" style="width:70px"></label><label><input id="sti" type="checkbox"> Interpoint</label></div><div class="sm" style="margin-top:8px">1. Setiap gambar jadi satu muka surat rajah. Laraskan ambang dan ketebalan, kemudian betulkan dengan alat Lukis atau Padam. 2. Tekan <b>Simpan ke Pustaka</b> untuk guna semula. 3. Muat turun BRF atau PNG untuk PIAF di bahagian Hasil, di bawah.</div></div>
 <div id="imgcard" class="card" hidden><h2>Gambar dan deskripsi</h2>
 <p class="sm" style="margin-top:0">Murid buta tak nampak gambar, jadi setiap gambar mesti ada deskripsi. Taip sendiri, atau minta Claude cadangkan, kemudian semak dan betulkan. Deskripsi akan masuk di tempat gambar.</p><div id="imgs"></div></div>
 <div class="card bmonly"><h2>Kamus sekolah</h2>
@@ -1128,8 +1128,10 @@ function sample(gray, iw, ih, W, H, opt = {}) {
   }
   return g.map(a => a.join(''));
 }
+// tajuk utama (hanya muka pertama, jika diisi) + tajuk muka surat
+function hdrOf(t, tr) { return [(t.main || '').trim(), (t.title || '').trim()].filter(Boolean).map(x => tr(x)).filter(Boolean); }
 function dims(t, cols, rows, tr) {
-  const nk = (t.key || '').split(/\n/).map(s => s.trim()).filter(Boolean).slice(0, 10).length, head = tr((t.title || '').trim()) ? 2 : 0, foot = nk ? nk + 1 : 0;
+  const nk = (t.key || '').split(/\n/).map(s => s.trim()).filter(Boolean).slice(0, 10).length, head = hdrOf(t, tr).length ? hdrOf(t, tr).length + 1 : 0, foot = nk ? nk + 1 : 0;
   return { W: cols, H: Math.max(1, rows - head - foot), head, foot };
 }
 
@@ -1188,17 +1190,17 @@ function placeLabels(dots, clusters, iw, ih, W, H, max = 12, vo) {
 // halaman penuh: tajuk, grid, kunci. Pulangkan baris aksara tepat `rows` baris
 function pageLines(t, cols, rows, tr) {
   const key = (t.key || '').split(/\n/).map(s => s.trim()).filter(Boolean).slice(0, 10).map(s => tr(s));
-  const title = tr((t.title || '').trim());
+  const hdr = hdrOf(t, tr);
   const { H } = dims(t, cols, rows, tr);
   const d = fit(t.dots || blank(cols, H), cols, H);
   const lines = [];
-  if (title) { lines.push(title, ''); }
+  if (hdr.length) { lines.push(...hdr, ''); }
   lines.push(...toLines(d, cols, H));
   if (key.length) lines.push('', ...key);
   while (lines.length < rows) lines.push('');
   return lines.slice(0, rows);
 }
-module.exports = { findText, placeLabels, mapXY, dims, DP, CP, LP, ASC, bitsOf, blank, cellBits, toLines, fit, sample, pageLines, BIT };
+module.exports = { hdrOf, findText, placeLabels, mapXY, dims, DP, CP, LP, ASC, bitsOf, blank, cellBits, toLines, fit, sample, pageLines, BIT };
 
 return module.exports})();
 __m['ueb']=(function(){const module={exports:{}};const require=k=>__m[k.replace(/^\.\/|\.js$/g,'')];// Enjin terjemah UEB Gred 2 (Unified English Braille) — ditulis sendiri mengikut "Rules of Unified English Braille".
@@ -1934,12 +1936,12 @@ function compose(blocks, dict, cfg = {}) {
     if (b.role === 'image' && b.tactile) {              // muka surat rajah timbul: satu muka penuh, bersendirian
       const rows = cfg.rows || L.DEFAULT.rows, cols = cfg.cols || L.DEFAULT.cols;
       const pl = TAC.pageLines(b.tactile, cols, rows, tr);
-      const hd = tr((b.tactile.title || '').trim()) ? 2 : 0, labm = {};
+      const hd = TAC.dims(b.tactile, cols, rows, tr).head, labm = {};
       (b.tactile.labels || []).forEach(l => { if (l && TAC.cellBits(b.tactile.dots, l.r, l.c)) (labm[hd + l.r] = labm[hd + l.r] || []).push(l.tx + ' (sel ' + (l.c + 1) + ')'); });
       const dm = TAC.dims(b.tactile, cols, rows, tr), ttl = (b.tactile.title || '').trim(), keyL = (b.tactile.key || '').split(/\n/).map(x => x.trim()).filter(Boolean).slice(0, 10), kStart = dm.head + dm.H + 1;
       const lbs = pl.map((l, k) => {
         let src = k === 0 ? 'Rajah timbul (gambar ' + b.imageNo + ')' : '';
-        if (hd && k === 0) src = 'Tajuk: ' + ttl + '  (rajah timbul, gambar ' + b.imageNo + ')';
+        if (hd && k < hd - 1) src = (b.tactile.main && k === 0 ? 'Tajuk utama: ' + b.tactile.main.trim() : 'Tajuk: ' + ttl) + '  (rajah timbul, gambar ' + b.imageNo + ')';
         if (k >= kStart && k - kStart < keyL.length) src = 'Kunci: ' + keyL[k - kStart];
         if (labm[k]) src += (src ? '  ' : '') + 'Label ' + labm[k].join(', ');
         return { t: 'raw', text: l, src };
@@ -2280,7 +2282,7 @@ async function load(f){
   }catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">'+esc(e.message)+'</div>'}
 }
 let brks=new Set(),restored=0,sTm=null,curBuf=null;
-function cfg(){return{numXml,tableMode:($('tmode')||{}).value||'auto',lang:MOD==='en'?'en':MOD==='mt'?'mt':'bm',cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:MOD==='sn'?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
+function cfg(){syncMain();return{numXml,tableMode:($('tmode')||{}).value||'auto',lang:MOD==='en'?'en':MOD==='mt'?'mt':'bm',cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:MOD==='sn'?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
 function go(){
   let r;try{r=E.P.run(xml,dict(),cfg())}catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">Ralat: '+esc(e.message)+'</div>';return}
   last=r;buildPool();$('out').hidden=false;
@@ -2996,8 +2998,9 @@ async function studioBuild(files,titles,seeds){
 const studioAdd=nf=>studioFiles(nf);
 $('stadd').onclick=()=>$('stfile').click();$('stfile').onchange=e=>{studioAdd(e.target.files);e.target.value=''};$('stlib').onclick=()=>openLib();$('stblank').onclick=async()=>studioAdd([await blankFile()]);
 [['stc','cols'],['str','rows']].forEach(([a,b])=>{$(a).oninput=()=>{$(b).value=$(a).value;$(b).dispatchEvent(new Event('input',{bubbles:true}));$(b).dispatchEvent(new Event('change',{bubbles:true}));stRe()}});$('sti').onchange=()=>{$('inter').checked=$('sti').checked;$('inter').dispatchEvent(new Event('change',{bubbles:true}));stRe()};
-let stT=null;function stRe(){clearTimeout(stT);stT=setTimeout(()=>{imgKey='';drawImages().then(()=>go2())},500)}
-function stSync(){try{$('stname').value=localStorage.getItem('brl_stname')||''}catch(e){}$('stname').oninput=()=>{try{localStorage.setItem('brl_stname',$('stname').value)}catch(e){}};$('stc').value=$('cols').value;$('str').value=$('rows').value;$('sti').checked=$('inter').checked}
+let stT=null;function stRe(){clearTimeout(stT);stT=setTimeout(()=>{syncMain();imgKey='';drawImages().then(()=>go2())},500)}
+function syncMain(){let mn='';try{mn=(localStorage.getItem('brl_stname')||'').trim()}catch(e){}if(!(STUDIO&&STUDIO.nm===name)){Object.values(imgTac).forEach(t=>{if(t)delete t.main});return}const ks=Object.keys(imgTac).map(Number).sort((a,b)=>a-b).filter(k=>imgTac[k]&&imgTac[k].on);ks.forEach((k,i)=>{if(i===0&&mn)imgTac[k].main=mn;else delete imgTac[k].main})}
+function stSync(){try{$('stname').value=localStorage.getItem('brl_stname')||''}catch(e){}$('stname').oninput=()=>{try{localStorage.setItem('brl_stname',$('stname').value)}catch(e){}stRe()};$('stc').value=$('cols').value;$('str').value=$('rows').value;$('sti').checked=$('inter').checked}
 $('hmst').onclick=()=>$('hstf').click();$('hstf').onchange=e=>{studioFiles(e.target.files);e.target.value=''};
 document.addEventListener('paste',e=>{const fs=[...(e.clipboardData&&e.clipboardData.files||[])].filter(f=>/^image\//.test(f.type));if(fs.length&&(!xml||!$('home').hidden)){e.preventDefault();studioFiles(fs)}});
 // ---- Pustaka Rajah (galeri) ----
