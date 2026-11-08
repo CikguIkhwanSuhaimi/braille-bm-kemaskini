@@ -103,10 +103,11 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 @media(min-width:1500px){.hm{max-width:1500px;font-size:19px;padding-top:24px}.hm h1{font-size:42px}.hm p.s{font-size:20px;max-width:820px}.hmh b{font-size:36px}.hmh small{font-size:16px}.hmk{min-height:230px;padding:30px;gap:14px}.hmk strong{font-size:26px}.hmk .sm{font-size:17px}.hmt{font-size:12px}.hm .hmf{font-size:16px}.hmc{gap:22px}}
 .hmf{margin-top:34px;padding-top:14px;border-top:1px solid var(--bd);font-size:13px;color:var(--mut)}
 .fld{margin:0 0 12px}.fld label{display:block;margin-bottom:4px}.fld input,.tinfo input,.tinfo textarea{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg)}.tinfo textarea{font-family:ui-monospace,Menlo,Consolas,monospace;min-height:96px;resize:vertical}.tinfo{max-width:720px;margin:10px 0 12px;padding:12px;border:1px solid var(--bd);border-radius:10px}
+.uisw{display:inline-flex;border:1px solid var(--bd);border-radius:999px;overflow:hidden;vertical-align:middle}.uisw button{border:0;background:transparent;color:var(--fg);padding:6px 12px;font:600 13px/1 inherit;font-family:inherit;cursor:pointer;min-height:34px;border-radius:0}.uisw button.on{background:var(--ac,#0f766e);color:#fff}.uisw button:focus-visible{outline:2px solid var(--ac,#0f766e);outline-offset:-2px}
 </style>
 <div id="home" class="hm" hidden>
 <div class="hmh"><svg width="30" height="42" viewBox="0 0 34 46" role="img" aria-label="Logo Titik: sel braille huruf t"><g fill="currentColor"><circle cx="9" cy="8" r="5" opacity=".18"/><circle cx="9" cy="23" r="5"/><circle cx="9" cy="38" r="5"/><circle cx="25" cy="8" r="5" opacity=".18"/><circle cx="25" cy="23" r="5"/><circle cx="25" cy="38" r="5" opacity=".18"/></g></svg>
-<div><b>Titik</b><small>Penterjemah Braille Kita</small></div><span id="hverd" class="sm" style="margin-left:auto"></span><button class="g" id="hemb" type="button">Embosser</button><button class="g" id="tema" type="button"></button></div>
+<div><b>Titik</b><small>Penterjemah Braille Kita</small></div><span id="hverd" class="sm" style="margin-left:auto"></span><span class="uisw" role="group" aria-label="Bahasa antara muka"><button type="button" data-l="bm" title="Bahasa Melayu">BM</button><button type="button" data-l="en" title="English">EN</button></span><button class="g" id="hemb" type="button">Embosser</button><button class="g" id="tema" type="button"></button></div>
 <h1>Apa yang hendak diterjemah hari ini?</h1>
 <p class="s" style="max-width:640px">Pilih jenis dokumen. Muat naik fail Word, semak titik braille bersebelahan paparan biasa, kemudian cetak terus ke embosser.</p>
 <div class="hmc">
@@ -149,7 +150,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 <label style="display:block;margin-top:8px">Tag (pisah dengan koma)<br><input type="text" id="ld_g" style="width:100%" placeholder="cth garis selari, tingkatan 1"></label>
 <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="g" value="x" type="button" id="ld_x">Batal</button><button value="ok" id="ld_ok">Simpan</button></div></form></dialog>
 <main id="app">
-<div style="margin-bottom:8px"><button class="g" id="gohome">← Skrin utama</button> <span class="sm" id="modl"></span></div>
+<div style="margin-bottom:8px"><button class="g" id="gohome">← Skrin utama</button> <span class="sm" id="modl"></span> <span class="uisw" style="margin-left:10px" role="group" aria-label="Bahasa antara muka"><button type="button" data-l="bm" title="Bahasa Melayu">BM</button><button type="button" data-l="en" title="English">EN</button></span></div>
 <h1>Titik <span style="font-weight:400;font-size:.6em;opacity:.7">Penterjemah Braille Kita</span></h1>
 <p class="s"><span id="verd" class="sm" style="float:right"></span>Word (.docx) → Braille Grade 2 (<span id="langn">Bahasa Melayu</span>) untuk Index Basic-D. Semua diproses dalam pelayar anda; fail tidak dihantar ke mana-mana.</p>
 <p class="sm" style="margin:-6px 0 8px">Dibangunkan oleh <b>Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi)</b> · SMK Pendidikan Khas Setapak, Kuala Lumpur</p>
@@ -3084,3 +3085,274 @@ $('hmsn').onclick=()=>{document.body.classList.remove('studio');setMod('sn');if(
 if(showHome)openHome();
 })();
 </script>
+<script>/* Titik – bahasa antara muka (BM / English). Kamus + pemerhati DOM; BM ialah bahasa asal dalam kod. */
+(function () {
+  const EN = {
+    // ---- umum / tajuk ----
+    'Penterjemah Braille Kita': 'Our Braille Translator',
+    'Titik – Penterjemah Braille Kita': 'Titik – Our Braille Translator',
+    'Apa yang hendak diterjemah hari ini?': 'What would you like to translate today?',
+    'Pilih jenis dokumen. Muat naik fail Word, semak titik braille bersebelahan paparan biasa, kemudian cetak terus ke embosser.': 'Choose a document type. Upload a Word file, check the braille dots next to the plain view, then print straight to the embosser.',
+    '← Skrin utama': '← Home',
+    'Dibangunkan oleh': 'Developed by',
+    'Dibangunkan oleh Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi) · SMK Pendidikan Khas Setapak, Kuala Lumpur': 'Developed by Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi) · SMK Pendidikan Khas Setapak, Kuala Lumpur',
+    'Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi)': 'Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi)',
+    '· SMK Pendidikan Khas Setapak, Kuala Lumpur': '· SMK Pendidikan Khas Setapak, Kuala Lumpur',
+    'Sedia digunakan': 'Ready to use', 'Baharu': 'New', 'Versi awal – sila semak': 'Early version – review',
+    'Mula →': 'Start →',
+    // ---- kad modul ----
+    'Braille Grade 2. Kod Braille BM Pindaan 2020, kamus sekolah, singkatan dan jadual. Rajah dengan deskripsi.': 'Grade 2 braille. Malay Braille Code (2020 amendment), school dictionary, contractions and tables. Figures with descriptions.',
+    'Unified English Braille Grade 2 untuk kertas Bahasa Inggeris. Susun atur dan cetakan sama seperti Bahasa Melayu. Semak pratonton, terutama singkatan dan nama khas.': 'Unified English Braille Grade 2 for English papers. Layout and printing are the same as Bahasa Melayu. Check the preview, especially contractions and proper names.',
+    'Persamaan Word (pecahan, kuasa, punca, simbol) ditukar kepada Kod Nemeth. Teks biasa kekal Braille BM. Jadual simbol belum disahkan dengan kertas DBT sebenar.': 'Word equations (fractions, powers, roots, symbols) are converted to Nemeth Code. Ordinary text stays in Malay braille. The symbol table has not yet been verified against a real DBT paper.',
+    'Kertas Sains dwibahasa dengan rajah timbul (grafik titik) selain deskripsi. Teks guna kod BM; simbol kimia dan unit khas masih dalam semakan, jadi semak pratonton.': 'Bilingual Science papers with raised diagrams (dot graphics) as well as descriptions. Text uses the Malay code; chemical symbols and special units are still being reviewed, so check the preview.',
+    'Tukar gambar (imej, tangkap layar, tampal) atau lakaran sendiri kepada muka surat rajah timbul. Tak perlu fail Word. Simpan dalam Pustaka untuk guna semula.': 'Turn a picture (image, screenshot, paste) or your own sketch into a raised-diagram page. No Word file needed. Save to the Library to reuse.',
+    'Bahasa Melayu': 'Bahasa Melayu', 'Matematik': 'Mathematics', 'Sains': 'Science', 'Studio Rajah': 'Diagram Studio', 'Pustaka Rajah': 'Diagram Library',
+    'Pilih gambar': 'Choose image', 'Lakaran baharu': 'New sketch',
+    'Seret fail .docx (atau projek .titik) ke sini, atau klik untuk pilih': 'Drag a .docx file (or .titik project) here, or click to choose',
+    'Buka fail projek (.titik)': 'Open project file (.titik)',
+    'Fail projek daripada peranti lain atau rakan guru.': 'Project file from another device or a fellow teacher.',
+    'Projek tersimpan': 'Saved projects', 'Buka': 'Open', 'Buang': 'Delete',
+    'Buka terus menyambung suntingan yang disimpan. Fail Word disimpan dalam peranti ini sahaja. Buang memadam fail dan suntingan projek itu daripada peranti ini.': 'Open continues the saved edits. The Word file is kept on this device only. Delete removes the file and the project edits from this device.',
+    '(fail Word tiada: muat naik semula)': '(Word file missing: upload again)',
+    'Cari projek': 'Search projects',
+    // ---- tetapan ----
+    'Tetapan': 'Settings', 'Embosser': 'Embosser', 'Bahasa': 'Language', 'Mata pelajaran': 'Subject', 'Templat': 'Template', 'Braille': 'Braille', 'Perkataan': 'Word',
+    'Sel/baris': 'Cells/line', 'Baris/muka': 'Lines/page', 'Interpoint': 'Interpoint', 'Interpoint (genapkan muka surat setiap set)': 'Interpoint (round each set up to an even page count)',
+    'Nombor muka surat': 'Page numbers', 'Nombor pada muka pertama': 'Number on first page', 'Nombor biasa untuk guru (bawah kanan)': 'Print page number for teacher (bottom right)',
+    'Atas kanan': 'Top right', 'Atas kiri': 'Top left', 'Atas tengah': 'Top centre', 'Bawah kanan': 'Bottom right', 'Bawah kiri': 'Bottom left', 'Bawah tengah': 'Bottom centre',
+    'Tiada': 'None', 'Besar': 'Large', 'Besar, 3 baris': 'Large, 3 lines', 'Kecil': 'Small', 'Sederhana': 'Medium', 'Sederhana, 2 baris': 'Medium, 2 lines',
+    'Setiap Bahagian mula muka surat baharu': 'Each Section starts a new page',
+    'Baris kosong atas dan bawah dalam sel': 'Blank lines above and below inside the cell',
+    'Simpan tetapan sekarang sebagai templat': 'Save current settings as a template',
+    'Jadual': 'Tables', 'Jadual lebar': 'Wide tables', 'Auto (English: senarai jika lajur sempit)': 'Auto (English: list if columns are narrow)', 'Sentiasa bingkai': 'Always framed', 'Sentiasa senarai': 'Always list',
+    'Jadual dalam Word dibina semula dengan bingkai titik. Lebar lajur ikut Word, teks dilipat dalam sel, dan dinding sentiasa sejajar. Klik titik untuk ubah sel bagi setiap bahagian bingkai (lalai: ikut jadual DXB sekolah).': 'Word tables are rebuilt with a dot frame. Column widths follow Word, text wraps inside cells and the walls always line up. Click a dot to change the cell for each part of the frame (default: the school DXB table).',
+    'Tanda baca': 'Punctuation',
+    'Tanda bagi kh, ng, ny, sy, awalan, akhiran dan vokal+konsonan. Klik titik untuk mengubah. Ini kod am: perkataan dalam kamus sekolah dan kamus asas menyimpan kodnya sendiri dan tidak berubah.': 'Signs for kh, ng, ny, sy, prefixes, suffixes and vowel+consonant. Click a dot to change it. This is the general code: words in the school dictionary and base dictionary keep their own codes and do not change.',
+    'Singkatan huruf dan imbuhan': 'Letter contractions and affixes',
+    'Rujukan: Kod Braille Bahasa Melayu (Pindaan 2020)': 'Reference: Malay Braille Code (2020 amendment)',
+    'Kamus sekolah': 'School dictionary', 'Betulkan atau tambah perkataan': 'Correct or add words',
+    'Perkataan yang braille-nya mengikut kehendak sekolah dan bukan terjemahan automatik. Cari, tambah atau betulkan. Braille ditunjuk sebagai titik, jadi tidak perlu tahu kod huruf. Disimpan dalam pelayar ini; guna Eksport untuk kongsi dengan guru lain.': 'Words whose braille follows the school\'s preference rather than the automatic translation. Search, add or correct. Braille is shown as dots, so you do not need to know the letter codes. Saved in this browser; use Export to share with other teachers.',
+    'Pilih perkataan daripada dokumen (senarai di bawah) atau taip perkataan baru. Masukkan kod braille dengan 6 kekunci, atau klik titik. Tidak perlu ingat kod teks.': 'Pick a word from the document (list below) or type a new one. Enter the braille code with the 6 keys, or click the dots. You do not need to remember text codes.',
+    'Perkataan dalam dokumen': 'Words in the document', 'Hanya yang belum ada dalam kamus sekolah': 'Only those not yet in the school dictionary',
+    'Papan kekunci: klik di sini, tekan kekunci serentak (satu sel setiap kali). Retur: tambah. Backspace: padam.': 'Keyboard: click here, press the keys together (one cell at a time). Return: add. Backspace: delete.',
+    'lalai: F D S J K L': 'default: F D S J K L', 'Peta kekunci': 'Key map', 'Titik 1 hingga 6:': 'Dots 1 to 6:',
+    'Tambah sel': 'Add cell', 'Padam sel': 'Delete cell', 'Belum ada sel.': 'No cells yet.',
+    'Klik titik untuk hidup/matikan (bulatan penuh = titik timbul). Guna + dan − untuk tambah atau buang sel. Perubahan terus digunakan dan dipratonton.': 'Click a dot to toggle it (filled circle = raised dot). Use + and − to add or remove cells. Changes apply and preview immediately.',
+    'Simpan dalam kamus': 'Save to dictionary', 'Simpan': 'Save', 'Batal': 'Cancel', 'Tutup': 'Close', 'Padam': 'Erase', 'Kosongkan': 'Clear', 'Pulihkan lalai': 'Restore defaults',
+    'Braille semasa': 'Current braille', 'Buang entri': 'Delete entry', 'Tambah perkataan': 'Add word', 'Satu baris satu entri:': 'One entry per line:', 'perkataan=kod braille': 'word=braille code',
+    'Import': 'Import', 'Eksport': 'Export', 'Eksport pustaka': 'Export library',
+    'Cadangkan perkataan saya kepada penyelia': 'Suggest my words to the supervisor', 'Penyelia: gabung fail cadangan': 'Supervisor: merge suggestion files',
+    'Cari juga dalam kamus asas': 'Also search the base dictionary', 'Singkatan rasmi yang digunakan sistem. Braille di sini ialah yang sistem hasilkan sekarang (termasuk pindaan kamus sekolah, ditanda': 'Official contractions used by the system. The braille shown here is what the system produces now (including school dictionary amendments, marked',
+    'sekolah': 'school',
+    // ---- gambar / deskripsi ----
+    'Gambar dan deskripsi': 'Images and descriptions',
+    'Murid buta tak nampak gambar, jadi setiap gambar mesti ada deskripsi. Taip sendiri, atau minta Claude cadangkan, kemudian semak dan betulkan. Deskripsi akan masuk di tempat gambar.': 'Blind students cannot see pictures, so every picture needs a description. Type it yourself, or ask Claude to suggest one, then check and correct it. The description is placed where the picture is.',
+    'Cadangkan dengan Claude': 'Suggest with Claude', 'Teruskan walaupun ada gambar tanpa deskripsi': 'Continue even if some images have no description',
+    // ---- hasil ----
+    'Hasil': 'Output', 'Cetak': 'Print', 'Bilangan set': 'Number of sets', 'Muka': 'Page', 'hingga': 'to', 'Susunan salinan': 'Copy order', 'Set demi set': 'Set by set', 'Muka demi muka': 'Page by page', 'Muka ujian dahulu': 'Test page first',
+    'Simpan projek (.titik)': 'Save project (.titik)', 'Eksport suntingan (.json)': 'Export edits (.json)', 'Gabung suntingan (.json)': 'Merge edits (.json)',
+    'Muat turun BRF (.zip)': 'Download BRF (.zip)', 'Muat turun .txt': 'Download .txt', 'Muat turun PDF semakan': 'Download review PDF', 'Pratonton titik (gambar)': 'Dot preview (image)', 'Papar teks biasa di sebelah': 'Show plain text alongside',
+    'Lebar muka surat': 'Page width', 'Padam simpanan': 'Clear saved data', 'Buang semua suntingan': 'Delete all edits',
+    'Cetak terus ke embosser': 'Print straight to the embosser', 'Urus': 'Manage', 'Salin perintah cetak': 'Copy print command', 'Salin perintah cetak (PowerShell)': 'Copy print command (PowerShell)', 'Salin teks BRF': 'Copy BRF text',
+    'Cara biasa: tekan': 'Usual way: press', ', tampal dalam PowerShell pada PC yang disambung ke embosser, kemudian Enter. Tiada pemasangan diperlukan.': ', paste into PowerShell on the PC connected to the embosser, then press Enter. No installation needed.',
+    'Pilihan tanpa tampal (perlu pemasangan sekali)': 'Option without pasting (one-time installation)',
+    'Pada PC yang disambung ke Wi-Fi embosser, jalankan Pasang_Automatik.bat sekali sahaja. Selepas itu butang ini memulakan pelayan sendiri jika belum jalan. Atau letakkan fail .zip BRF dalam folder EMBOSSER yang dipantau dan ia dicetak sendiri.': 'On the PC connected to the embosser Wi-Fi, run Pasang_Automatik.bat once only. After that this button starts its own server if it is not running. Or put the BRF .zip file in the monitored EMBOSSER folder and it prints by itself.',
+    'Muat turun tidak tersedia dalam paparan ini. Buka halaman ini dalam Claude.': 'Downloads are not available in this view. Open this page in Claude.',
+    'Pratonton (satu set)': 'Preview (one set)', 'Terkini': 'Latest', 'Tajuk': 'Title', 'Tajuk A–Z': 'Title A–Z', 'Topik': 'Topic', 'Tag (pisah dengan koma)': 'Tags (comma separated)',
+    'Tekan Sunting pada muka surat untuk ubah teks biasa (tulisan cetak): Enter menolak baris ke bawah, Backspace menarik naik. Tekan Siap dan app terjemah semula ke braille. Mod braille (lanjutan) ada untuk yang perlu ubah aksara terus. Suntingan ikut masuk ke fail muat turun. Jika teks muka surat itu berubah kerana kamus atau dokumen, suntingannya dibuang dan anda diberitahu.': 'Press Edit on a page to change the plain (print) text: Enter pushes lines down, Backspace pulls them up. Press Done and the app re-translates to braille. Braille (advanced) mode is there for those who need to change characters directly. Edits are included in the downloaded file. If the text of that page changes because of the dictionary or document, the edit is discarded and you are told.',
+    'Sunting': 'Edit', 'Siap': 'Done', 'Lanjutan: sunting teks, eksport dan import': 'Advanced: edit text, export and import',
+    '(ASCII). Untuk pengguna yang biasa dengan kod.': '(ASCII). For users familiar with the code.',
+    // ---- embosser ----
+    'Tambah atau ubah embosser': 'Add or edit embosser', 'Alamat IP': 'IP address', 'Rangkaian (alamat IP)': 'Network (IP address)', 'USB (pencetak Windows)': 'USB (Windows printer)', 'Jenis sambungan': 'Connection type', 'Nama pencetak dalam Windows': 'Printer name in Windows',
+    'Nama (cth Makmal Braille)': 'Name (e.g. Braille Lab)', 'Simpan nama embosser sekali sahaja. Selepas itu pilih nama dalam mana-mana ruang cetak, tak perlu taip IP lagi.': 'Save the embosser name once only. After that, pick the name in any print area; no need to type the IP again.',
+    'Tekan HELP dan 10 pada embosser untuk melihat alamat IP. Komputer dan embosser mesti dalam rangkaian yang sama.': 'Press HELP and 10 on the embosser to see its IP address. The computer and embosser must be on the same network.',
+    ') untuk Index Basic-D. Semua diproses dalam pelayar anda; fail tidak dihantar ke mana-mana.': ') for Index Basic-D. Everything is processed in your browser; no file is sent anywhere.',
+    'Word (.docx) → Braille Grade 2 (': 'Word (.docx) → Grade 2 braille (',
+    '). Klik satu entri untuk membetulkannya.': '). Click an entry to correct it.',
+    // ---- studio rajah ----
+    '+ Tambah gambar': '+ Add image', '+ Lakaran kosong': '+ Blank sketch', 'Mula dari': 'Start from', 'Mula daripada terjemahan automatik': 'Start from automatic translation',
+    '1. Setiap gambar jadi satu muka surat rajah. Laraskan ambang dan ketebalan, kemudian betulkan dengan alat Lukis atau Padam. 2. Tekan': '1. Each image becomes one diagram page. Adjust the threshold and thickness, then fix it with the Draw or Erase tool. 2. Press',
+    'untuk guna semula. 3. Muat turun BRF atau PNG untuk PIAF di bahagian Hasil, di bawah.': 'to reuse it. 3. Download the BRF or PNG for PIAF in the Output section below.',
+    'Simpan ke Pustaka': 'Save to Library', 'Tajuk utama': 'Main title',
+    'dicetak di atas muka surat rajah pertama, dan jadi nama dalam senarai projek.': 'printed above the first diagram page, and used as the name in the project list.',
+    'Cetak di muka pertama sahaja': 'Print on the first page only', 'Cetak di setiap muka surat rajah': 'Print on every diagram page', 'Jangan cetak (nama senarai projek sahaja)': 'Do not print (project list name only)',
+    'Rajah timbul': 'Raised diagram', '(satu muka surat penuh dalam BRF, dengan muka belakang kosong untuk interpoint)': '(one full page in the BRF, with a blank back for interpoint)',
+    'Ambil dari Pustaka': 'Take from Library', 'Buang rajah ini': 'Remove this diagram', 'Ambang': 'Threshold', 'Ketebalan': 'Thickness', 'Kepekatan': 'Density', 'Songsang': 'Invert', 'Garis tepi sahaja': 'Outline only',
+    'Buang teks bercetak, letak huruf label': 'Remove printed text, place label letters', 'Jana semula daripada gambar': 'Regenerate from image', 'Saiz gambar': 'Image size', 'Kiri-kanan': 'Left-right', 'Atas-bawah': 'Up-down', 'Set semula saiz': 'Reset size',
+    'Tajuk muka surat': 'Page title', 'dicetak di atas muka surat rajah ini': 'printed above this diagram page', 'Label huruf (kunci)': 'Letter labels (key)',
+    'satu baris satu label, cth': 'one label per line, e.g.', 'Letak huruf pada rajah dengan alat Label huruf di bawah.': 'Place letters on the diagram with the Letter label tool below.',
+    'Alat:': 'Tools:', 'Lukis': 'Draw', 'Padam kotak': 'Erase box', 'Garis': 'Line', 'Segi empat': 'Rectangle', 'Bulatan': 'Circle', 'Buat asal': 'Undo', 'Label huruf': 'Letter label', 'Panduan gambar asal': 'Original image guide',
+    'PNG untuk PIAF': 'PNG for PIAF', 'Kunci rajah (pilihan)': 'Diagram key (optional)',
+    // ---- pustaka ----
+    'Sumber pustaka': 'Library source', 'Penapis mata pelajaran': 'Subject filter', 'Saiz kad': 'Card size', 'Isih': 'Sort', 'Tapis': 'Filter', 'Lain-lain': 'Other',
+    'Belum ada rajah': 'No diagrams yet', 'Klik untuk besarkan': 'Click to enlarge',
+    'Belum ada rajah rasmi sekolah, atau peranti ini tiada sambungan. Penyelia menerbitkan rajah ke sini.': 'There are no official school diagrams yet, or this device has no connection. The supervisor publishes diagrams here.',
+    'Pustaka masih kosong. Siapkan satu rajah dalam Studio Rajah atau kertas Sains, kemudian tekan Simpan ke Pustaka.': 'The library is still empty. Finish a diagram in Diagram Studio or a Science paper, then press Save to Library.',
+    'Pustaka sekolah belum ada rajah atau tiada sambungan': 'The school library has no diagrams yet or there is no connection',
+    'Tiada rajah sepadan dengan carian.': 'No diagrams match the search.',
+    'Guna untuk Gambar ': 'Use for Image ', 'Gambar tidak tersedia untuk ditukar.': 'The image is not available to convert.',
+    'Kamus rasmi sekolah: belum ada atau tiada sambungan.': 'Official school dictionary: not available yet or no connection.', 'Kamus rasmi sekolah: belum ada.': 'Official school dictionary: not available yet.',
+    // ---- mesej ----
+    'Bukan fail Word yang sah.': 'Not a valid Word file.', 'Bukan fail projek Titik yang sah.': 'Not a valid Titik project file.', 'Fail bukan pustaka Titik yang sah.': 'Not a valid Titik library file.', 'Fail projek rosak.': 'The project file is damaged.',
+    'Gagal menjana PNG.': 'Could not generate the PNG.', 'Gagal menjana.': 'Could not generate.', 'Gagal simpan ke Pustaka.': 'Could not save to the Library.', 'Kebenaran tidak diberi.': 'Permission was not granted.',
+    'Pilih embosser dahulu (tekan Urus).': 'Choose an embosser first (press Manage).', 'Pilih embosser dahulu: tekan Urus.': 'Choose an embosser first: press Manage.',
+    'Semak dan betulkan sebelum guna.': 'Check and correct before using.', 'tidak diketahui': 'unknown',
+    'Pelayan cetak tidak dapat dimulakan. Jalankan Pasang_Automatik.bat sekali pada PC ini (dalam folder Pelayan), kemudian cuba lagi. Jika Chrome tanya kebenaran membuka aplikasi, pilih Buka.': 'The print server could not be started. Run Pasang_Automatik.bat once on this PC (in the Pelayan folder), then try again. If Chrome asks for permission to open the app, choose Open.',
+    'Muat turun terus tidak tersedia dalam paparan ini (cuba Sign in ke Claude di bahagian atas halaman). Saya cuba simpan juga melalui pelayar; jika tiada fail, salin teks BRF di bawah.': 'Direct download is not available in this view (try signing in to Claude at the top of the page). I also tried saving through the browser; if no file appears, copy the BRF text below.',
+    'Fail dihantar ke pelayar: ': 'File sent to the browser: ',
+    '. Jika tiada fail di fon, semak notifikasi muat turun atau folder Downloads.': '. If there is no file on your phone, check the download notification or the Downloads folder.',
+    ' disalin. Tampal dalam PowerShell pada PC Windows yang bersambung ke embosser, kemudian Enter.': ' copied. Paste into PowerShell on the Windows PC connected to the embosser, then press Enter.',
+    ' sedia. Pilih Simpan atau aplikasi untuk berkongsi.': ' ready. Choose Save or an app to share.',
+    'Pencetak tidak dijumpai: ': 'Printer not found: ', 'Gagal menghubungi PC pantau: ': 'Could not reach the monitoring PC: ', 'Gagal: ': 'Failed: ', 'Simpan gagal (': 'Save failed (',
+    '(Tiada fail)': '(No file)', 'Ada baris melebihi ': 'There are lines longer than ',
+    // ---- struktur kecil ----
+    ' baris': ' lines', ' baris.': ' lines.', ' rajah': ' diagrams', ' rajah.': ' diagrams.', ' rajah ke ': ' diagrams to ', ' muka surat, ': ' pages, ', ' pecahan manual': ' manual breaks', 'Buang semua': 'Delete all',
+    ' muka disunting).': ' pages edited).', ' muka). Semak muka yang bertanda disunting.': ' pages). Check the pages marked as edited.',
+    ' suntingan dibuang kerana teks muka surat itu berubah.': ' edits discarded because the text of that page changed.',
+    'Mula muka surat baharu sebelum ini': 'Start a new page before this', 'Buang pecahan muka surat sebelum ini': 'Remove the page break before this',
+    'Tiada format': 'No formatting', 'Buang semua format pada teks terpilih (Ctrl+Space)': 'Remove all formatting from the selected text (Ctrl+Space)',
+    'Pilih teks, kemudian tekan B, I atau U. Tekan sekali lagi pada teks yang sudah berformat untuk membuangnya, seperti dalam Word. Tanda **tebal**, *condong*, ++garis bawah++ ialah penanda braille.': 'Select text, then press B, I or U. Press again on formatted text to remove it, as in Word. The marks **bold**, *italic*, ++underline++ are the braille markers.',
+    'Ubah ayat seperti biasa. Baris bertanda': 'Edit the sentence as usual. Lines marked', ' (jadual, nombor muka surat) dikekalkan. Lebihan baris mengalir ke muka surat seterusnya bila tekan Siap.': ' (tables, page numbers) are kept. Extra lines flow onto the next page when you press Done.',
+    'Terangkan gambar ini untuk murid buta: apa yang ada, di mana, dan maklumat yang perlu untuk menjawab soalan.': 'Describe this image for a blind student: what is in it, where, and the information needed to answer the question.',
+    // ---- atribut ----
+    'Cari dalam kamus': 'Search the dictionary', 'Cari dalam rujukan': 'Search the reference', 'Cari rajah': 'Search diagrams', 'Cari tajuk, topik atau tag': 'Search title, topic or tag', 'Logo Titik: sel braille huruf t': 'Titik logo: braille cell for the letter t',
+    'Nama templat': 'Template name', 'Penapis mata pelajaran': 'Subject filter', 'Pilih embosser': 'Choose embosser', 'Pilih templat': 'Choose template', 'Uji perkataan': 'Test word', 'akhir': 'end',
+    'cari dalam rujukan': 'search the reference', 'cari perkataan': 'search words', 'cth Anatomi Haiwan, Bab 2': 'e.g. Animal Anatomy, Chapter 2', 'cth Index Basic-D V4': 'e.g. Index Basic-D V4', 'cth Sudut, Sel': 'e.g. Angles, Cells', 'cth garis selari, tingkatan 1': 'e.g. parallel lines, form 1',
+    'nama templat baharu': 'new template name', 'perkataan': 'word', 'tapis': 'filter', 'uji satu perkataan': 'test one word', 'cth Rajah 2.1 Anatomi Kucing': 'e.g. Figure 2.1 Cat Anatomy', 'cth P, 30 atau nama bahagian': 'e.g. P, 30 or a part name',
+    'Teks label (huruf, nombor atau perkataan pendek)': 'Label text (letter, number or short word)', 'Cari projek ': 'Search projects ',
+    'Bahasa antara muka': 'Interface language', 'Ubah': 'Edit', 'pilih titik': 'choose dots', 'Pemisah baris: kiri': 'Row divider: left', 'Pemisah baris: simpang': 'Row divider: junction', 'Pemisah baris: kanan': 'Row divider: right', 'Garis pemisah baris': 'Row divider line',
+    ' (+1 kosong untuk genap = ': ' (+1 blank to make it even = ',
+    ' (rasmi sekolah)': ' (official school)',
+    ' bait). Embosser akan mula sebentar lagi.': ' bytes). The embosser will start shortly.',
+    ' disalin ke papan klip.': ' copied to the clipboard.',
+    ' entri sekolah': ' school entries',
+    ' muka surat': ' pages',
+    ' perkataan dalam fail cadangan. Hantar fail itu kepada penyelia.': ' words in the suggestion file. Send that file to the supervisor.',
+    ' templat diimport.': ' templates imported.',
+    '" daripada Pustaka?': '" from the Library?',
+    '" daripada fail projek. Guna suntingan daripada fail juga?': '" from the project file. Use the edits from the file as well?',
+    '" digunakan.': '" applied.',
+    '" dipadam.': '" deleted.',
+    '" disimpan.': '" saved.',
+    '", bukan "': '", not "',
+    '". Teruskan?': '". Continue?',
+    '(belum ada, tekan Urus)': '(none yet, press Manage)',
+    '). Guna Salin teks BRF di bawah.': '). Use Copy BRF text below.',
+    '. Jumlah ': '. Total ',
+    '. Pertembungan antara fail (yang terakhir digunakan): ': '. Conflicts between files (the last one used): ',
+    '. Semak folder Muat turun.': '. Check the Downloads folder.',
+    '. Upload kamus.txt ke GitHub.': '. Upload kamus.txt to GitHub.',
+    'Alamat IP tak sah (cth 192.168.0.240).': 'Invalid IP address (e.g. 192.168.0.240).',
+    'Bahasa Melayu + Kod Nemeth (awal)': 'Malay + Nemeth Code (draft)',
+    'Belum ada embosser sendiri. Tambah di bawah.': 'No embosser of your own yet. Add one below.',
+    'Buang rajah ini daripada Studio Rajah?': 'Remove this diagram from Diagram Studio?',
+    'Cetak ke embosser': 'Print to embosser',
+    'Dihantar ke embosser (': 'Sent to the embosser (',
+    'Diimport ': 'Imported ',
+    'Disimpan automatik dalam pelayar ini (': 'Saved automatically in this browser (',
+    'Disimpan ke Pustaka: ': 'Saved to Library: ',
+    'Disimpan: ': 'Saved: ',
+    'Embosser mesti dipasang dalam Windows sebagai pencetak (pemacu Index) dan kabel USB disambung. Nama mesti sama dengan yang tertera di Settings, Printers & scanners.': 'The embosser must be installed in Windows as a printer (Index driver) with the USB cable connected. The name must match the one shown in Settings, Printers & scanners.',
+    'Embosser sekolah (daripada penyelia)': 'School embosser (from supervisor)',
+    'Entri berbilang perkataan tidak boleh diubah di sini.': 'Multi-word entries cannot be edited here.',
+    'Entri dibuang: ': 'Entry deleted: ',
+    'Fail ': 'File ',
+    'Fail projek tidak sah.': 'Invalid project file.',
+    'Fail templat tidak sah.': 'Invalid template file.',
+    'Gagal menukar gambar.': 'Could not convert the image.',
+    'Kamus rasmi sekolah: ': 'Official school dictionary: ',
+    'Isi nama embosser.': 'Enter the embosser name.',
+    'Isi nama pencetak seperti dalam Windows.': 'Enter the printer name as in Windows.',
+    'Label dialihkan ke kiri supaya muat.': 'Label moved left to fit.',
+    'Label panjang dipecah kepada ': 'Long label split into ',
+    'Masukkan sekurang-kurangnya satu sel.': 'Enter at least one cell.',
+    'Memulakan pelayan cetak...': 'Starting the print server...',
+    'Menghantar ke embosser ': 'Sending to the embosser ',
+    'Menghantar ke embosser...': 'Sending to the embosser...',
+    'Menjana...': 'Generating...',
+    'Menyediakan PDF...': 'Preparing PDF...',
+    'Menyimpan ': 'Saving ',
+    'Mod cerah': 'Light mode',
+    'Mod gelap': 'Dark mode',
+    'Muat turun dibatalkan.': 'Download cancelled.',
+    'Muka ': 'Page ',
+    'PDF gagal: ': 'PDF failed: ',
+    'Padam suntingan yang disimpan untuk fail ini?': 'Delete the saved edits for this file?',
+    'Pasti buang?': 'Sure you want to delete?',
+    'Pasti padam?': 'Sure you want to erase?',
+    'Pilih rajah untuk Gambar ': 'Choose a diagram for Image ',
+    'Pustaka saya': 'My library',
+    'Pustaka sekolah': 'School library',
+    'Rajah kosong.': 'The diagram is empty.',
+    'Rajah masih kosong. Hidupkan rajah timbul dan jana dahulu.': 'The diagram is still empty. Turn on the raised diagram and generate it first.',
+    'Rasmi sekolah': 'Official school',
+    'Selesai menyimpan ': 'Finished saving ',
+    'Taip nama templat dahulu.': 'Type the template name first.',
+    'Taip satu perkataan dahulu.': 'Type a word first.',
+    'Teks BRF (tanda \f ialah pemisah muka surat dan tak kelihatan).': 'BRF text (the \\f mark is the page separator and is invisible).',
+    'Teks sudah dipilih dalam kotak di bawah. Tekan Ctrl+C untuk menyalin.': 'The text is selected in the box below. Press Ctrl+C to copy.',
+    'Templat "': 'Template "',
+    'Tiada langkah untuk dibuat asal.': 'Nothing to undo.',
+    'Tiada perkataan baharu untuk dicadangkan.': 'No new words to suggest.',
+    'Tiada rajah untuk dieksport.': 'No diagrams to export.',
+    'Tiada suntingan.': 'No edits.',
+    'Titik yang telah disunting akan diganti. Teruskan?': 'Edited dots will be replaced. Continue?',
+    'UEB, bahasa Inggeris': 'UEB, English',
+    'Versi ': 'Version ',
+    'pilih titik': 'choose dots',
+    'Padam "': 'Delete "',
+    'Buang rajah ini daripada Studio Rajah': 'Remove this diagram from Diagram Studio',
+    'kamus sekolah': 'school dictionary',
+    'asas': 'base',
+    'buang sel': 'delete cell', 'tambah sel': 'add cell', 'Muat turun ': 'Download '
+  };
+  const PAT = [
+    [/^Muka (\d+) \(disunting\)$/, 'Page $1 (edited)'], [/^Muka (\d+) \(kosong\)$/, 'Page $1 (blank)'], [/^Muka (\d+)$/, 'Page $1'], [/^Muka surat (\d+)$/, 'Page $1'], [/^Muka (\d+) hingga (\d+) daripada (\d+)\.\s*Jumlah (\d+) muka = (\d+) helai\.$/, 'Pages $1 to $2 of $3. Total $4 pages = $5 sheet(s).'],
+    [/^(\d+) muka surat \(\+(\d+) kosong untuk genap = (\d+)\) setiap set; (\d+) set = (\d+) muka surat, (\d+) helai\.$/, '$1 page(s) (+$2 blank to make it even = $3) per set; $4 set = $5 pages, $6 sheet(s).'],
+    [/^(\d+) muka surat setiap set; (\d+) set = (\d+) muka surat, (\d+) helai\.$/, '$1 page(s) per set; $2 set = $3 pages, $4 sheet(s).'],
+    [/^(\d+) sel × (\d+) baris$/, '$1 cells × $2 lines'], [/^(\d+) suntingan$/, '$1 edit(s)'], [/^Rajah (\d+)$/, 'Figure $1'], [/^Gambar (\d+)$/, 'Image $1'], [/^Modul: (.*)$/, 'Module: $1'],
+    [/^Projek tersimpan \((\d+)\)$/, 'Saved projects ($1)'], [/^Studio Rajah · (.*)$/, 'Diagram Studio · $1'], [/^Matematik \(awal\)$/, 'Mathematics (draft)'],
+    [/^(\d+) perkataan$/, '$1 word(s)'], [/^(\d+) entri$/, '$1 entr(y/ies)'], [/^Versi (.*)$/, 'Version $1'],
+    [/^Muka (\d+) hingga (\d+)\b/, 'Pages $1 to $2'], [/^Tajuk: (.*)$/, 'Title: $1'], [/^Kunci: (.*)$/, 'Key: $1'],
+    [/^Projek ini untuk "(.*)"$/, 'This project is for "$1"'], [/^Perintah untuk (.*)$/, 'Command for $1'], [/^Peranti ini ada suntingan lebih baharu bagi "(.*)$/, 'This device has newer edits for "$1'],
+    [/^Aplikasi desktop, versi (.*)$/, 'Desktop app, version $1'], [/^Aplikasi telefon$/, 'Phone app'], [/^Telefon$/, 'Phone'], [/^Simpan (.*)$/, 'Save $1']
+  ];
+  const MAL = /\b(dan|yang|untuk|tidak|sila|dengan|muka|gagal|simpan|buang|fail|rajah|tekan|atau|ini|sudah|belum|baris|pilih|cari)\b/i;
+  const orig = new WeakMap(); let lang = 'bm';
+  function tx(s) {
+    const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(s), core = m[2].replace(/\s+/g, ' ');
+    if (!core) return s;
+    let r = EN[core];
+    if (r === undefined) for (const [re, rp] of PAT) if (re.test(core)) { r = core.replace(re, rp); break; }
+    return r === undefined ? s : m[1] + r + m[3];
+  }
+  const ATTR = ['placeholder', 'title', 'aria-label', 'alt'];
+  function doNode(n) {
+    if (n.nodeType === 3) {
+      const p = n.parentNode; if (p && /^(SCRIPT|STYLE|TEXTAREA)$/.test(p.nodeName)) return;
+      if (lang === 'en') { const o = orig.has(n) && orig.get(n).en === n.nodeValue ? orig.get(n).bm : n.nodeValue; const t = tx(o); if (t !== n.nodeValue) { orig.set(n, { bm: o, en: t }); n.nodeValue = t } }
+      else if (orig.has(n)) { const o = orig.get(n); if (n.nodeValue === o.en) n.nodeValue = o.bm; orig.delete(n) }
+    } else if (n.nodeType === 1) {
+      if (/^(SCRIPT|STYLE)$/.test(n.nodeName)) return;
+      ATTR.forEach(a => { if (!n.hasAttribute(a)) return; const k = 'data-bm-' + a; if (lang === 'en') { const cur = n.getAttribute(a), o = n.hasAttribute(k) && n.getAttribute(k + '-en') === cur ? n.getAttribute(k) : cur, t = tx(o); if (t !== cur) { n.setAttribute(k, o); n.setAttribute(k + '-en', t); n.setAttribute(a, t) } } else if (n.hasAttribute(k)) { if (n.getAttribute(a) === n.getAttribute(k + '-en')) n.setAttribute(a, n.getAttribute(k)); n.removeAttribute(k); n.removeAttribute(k + '-en') } });
+    }
+  }
+  function walk(r) { doNode(r); const w = document.createTreeWalker(r, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) doNode(n) }
+  let busy = false;
+  const mo = new MutationObserver(ms => { if (busy) return; busy = true; try { ms.forEach(m => { if (m.type === 'childList') m.addedNodes.forEach(n => walk(n)); else if (m.type === 'characterData') doNode(m.target); else if (m.type === 'attributes') doNode(m.target) }) } finally { busy = false } });
+  function set(l) {
+    lang = l === 'en' ? 'en' : 'bm';
+    try { localStorage.setItem('brl_ui', lang) } catch (e) { }
+    document.documentElement.lang = lang === 'en' ? 'en' : 'ms';
+    busy = true; try { walk(document.body || document.documentElement) } finally { busy = false }
+    document.title = lang === 'en' ? 'Titik – Our Braille Translator' : 'Titik – Penterjemah Braille Kita';
+    document.querySelectorAll('.uisw button').forEach(b => { const on = b.dataset.l === lang; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.classList.toggle('on', on) });
+  }
+  const A = window.alert, C = window.confirm, P = window.prompt;
+  window.alert = m => A.call(window, lang === 'en' ? tx(String(m)) : m);
+  window.confirm = m => C.call(window, lang === 'en' ? tx(String(m)) : m);
+  window.prompt = (m, d) => P.call(window, lang === 'en' ? tx(String(m)) : m, d);
+  window.UI = { set, get: () => lang, tx, EN, MAL, start() { mo.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTR }); let l = 'bm'; try { l = localStorage.getItem('brl_ui') || 'bm' } catch (e) { } set(l) } };
+})();
+
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest(".uisw button");if(b)UI.set(b.dataset.l)});UI.start();</script>

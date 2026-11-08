@@ -1,5 +1,5 @@
 {
-  "version": "1.14.2",
-  "sha256": "09f1193797270bb6b61d5e436010f36378d79d9bc53caa1f18df85e337896e36",
-  "notes": "Studio Rajah: pilihan cetak Tajuk utama (muka pertama / setiap muka / tidak)"
+  "version": "1.15.0",
+  "sha256": "6ed689540733cf9e7a806d185012832ecc9868ee300971c73ff417fbd9e23c50",
+  "notes": "Bahasa antara muka BM/English (suis BM|EN di skrin utama dan app)"
 }
