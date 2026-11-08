@@ -1,5 +1,5 @@
 {
-  "version": "1.13.3",
-  "sha256": "4f31fd05547d36483dbc652479b0855d65ed943e8feed63fa6162470f2997779",
-  "notes": "Senarai projek: Studio Rajah dinamakan ikut tajuk muka surat rajah"
+  "version": "1.14.0",
+  "sha256": "aaa0a53e6c67ccf18cdbb4884dc08e6a89c1f3b74ff29b9e11b25da802dc5ea4",
+  "notes": "Studio Rajah: ruang Tajuk utama, Tajuk muka surat dan Label huruf"
 }
