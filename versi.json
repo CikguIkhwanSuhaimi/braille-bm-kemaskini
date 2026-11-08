@@ -1,5 +1,5 @@
 {
-  "version": "1.16.0",
-  "sha256": "bb9310fd97c5af3baee1b8f297f0c8c45c22b03833341ab9739b5090eefeb6a9",
-  "notes": "Rajah timbul: pilihan susun atur (satu muka penuh atau dalam kertas dengan tinggi sendiri)"
+  "version": "1.17.0",
+  "sha256": "37886963e740dc720bf03e0f5615ac994203140701e165d7faf9190768a39929",
+  "notes": "Kad Geografi (versi awal), alat peta (gaya garis, isi corak, simbol, kunci peta), susun atur rajah: separuh/dalam kertas/belah, lebar"
 }

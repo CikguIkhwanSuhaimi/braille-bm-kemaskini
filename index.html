@@ -115,6 +115,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 <button class="hmk on" id="hmen"><span class="hmt">Sedia digunakan</span><strong>English (UEB)</strong><span class="sm">Unified English Braille Grade 2 untuk kertas Bahasa Inggeris. Susun atur dan cetakan sama seperti Bahasa Melayu. Semak pratonton, terutama singkatan dan nama khas.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
 <button class="hmk on" id="hmmt"><span class="hmt">Versi awal – sila semak</span><strong>Matematik</strong><span class="sm">Persamaan Word (pecahan, kuasa, punca, simbol) ditukar kepada Kod Nemeth. Teks biasa kekal Braille BM. Jadual simbol belum disahkan dengan kertas DBT sebenar.</span></button>
 <button class="hmk on" id="hmsn"><span class="hmt">Sedia digunakan</span><strong>Sains</strong><span class="sm">Kertas Sains dwibahasa dengan rajah timbul (grafik titik) selain deskripsi. Teks guna kod BM; simbol kimia dan unit khas masih dalam semakan, jadi semak pratonton.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
+<button class="hmk on" id="hmgf"><span class="hmt">Versi awal – sila semak</span><strong>Geografi</strong><span class="sm">Kertas Geografi dengan peta timbul: corak isi kawasan, gaya garis, simbol peta dan kunci peta automatik. Rajah boleh satu muka penuh, separuh muka, dalam kertas atau dibelah beberapa muka.</span><span style="margin-top:auto;font-weight:700;color:var(--ac)">Mula →</span></button>
 <div class="hmk on" id="hmstc" style="cursor:default"><span class="hmt">Baharu</span><strong>Studio Rajah</strong><span class="sm">Tukar gambar (imej, tangkap layar, tampal) atau lakaran sendiri kepada muka surat rajah timbul. Tak perlu fail Word. Simpan dalam Pustaka untuk guna semula.</span>
 <div class="row" style="margin-top:auto"><button id="hmst" type="button">Pilih gambar</button><button class="g" id="hsk" type="button">Lakaran baharu</button><button class="g" id="hlib" type="button">Pustaka Rajah <span id="hlibn"></span></button></div></div><input id="hstf" type="file" accept="image/*" multiple hidden>
 </div>
@@ -1132,9 +1133,17 @@ function sample(gray, iw, ih, W, H, opt = {}) {
 // tajuk utama (hanya muka pertama, jika diisi) + tajuk muka surat
 function hdrOf(t, tr) { return [(t.main || '').trim(), (t.title || '').trim()].filter(Boolean).map(x => tr(x)).filter(Boolean); }
 function dims(t, cols, rows, tr) {
-  const nk = (t.key || '').split(/\n/).map(s => s.trim()).filter(Boolean).slice(0, 10).length, head = hdrOf(t, tr).length ? hdrOf(t, tr).length + 1 : 0, foot = nk ? nk + 1 : 0;
-  const inl = t.lay === 'in', H = inl ? Math.max(3, Math.min(+t.hr || 12, rows - head - foot)) : Math.max(1, rows - head - foot);
-  return { W: cols, H, head, foot, total: head + H + foot, inl };
+  const nk = (t.key || '').split(/\n/).map(s => s.trim()).filter(Boolean).slice(0, 10).length, hl = hdrOf(t, tr).length, foot = nk ? nk + 1 : 0;
+  const W = Math.max(8, Math.min(cols, +t.wc || cols)), lay = t.lay || '';
+  const head = hl ? hl + 1 : (lay === 'sp' ? 2 : 0);
+  const inl = lay === 'in' || lay === 'half', sp = lay === 'sp' ? Math.max(2, Math.min(4, +t.n || 2)) : 0;
+  let H;
+  if (lay === 'half') H = Math.max(3, Math.floor((rows - 1) / 2) - head - foot);
+  else if (lay === 'in') H = Math.max(3, Math.min(+t.hr || 12, rows - head - foot));
+  else H = Math.max(1, rows - head - foot);
+  const HP = H;
+  if (sp) H = HP * sp;               // kanvas tinggi = n muka surat
+  return { W, H, HP, sp, head, foot, total: head + HP + foot, inl };
 }
 
 // Cari teks bercetak dalam imej: komponen bersambung kecil yang berderet jadi kelompok. Pulang {mask, clusters:[{x0,y0,x1,y1,n}]}
@@ -1190,17 +1199,23 @@ function placeLabels(dots, clusters, iw, ih, W, H, max = 12, vo) {
   return { dots: d, letters: out, pos };
 }
 // halaman penuh: tajuk, grid, kunci. Pulangkan baris aksara tepat `rows` baris
-function pageLines(t, cols, rows, tr) {
+function pageLines(t, cols, rows, tr, pi) {
+  pi = pi || 0;
   const key = (t.key || '').split(/\n/).map(s => s.trim()).filter(Boolean).slice(0, 10).map(s => tr(s));
-  const hdr = hdrOf(t, tr);
-  const { H, total, inl } = dims(t, cols, rows, tr); if (inl) rows = total;
-  const d = fit(t.dots || blank(cols, H), cols, H);
-  const lines = [];
-  if (hdr.length) { lines.push(...hdr, ''); }
-  lines.push(...toLines(d, cols, H));
-  if (key.length) lines.push('', ...key);
-  while (lines.length < rows) lines.push('');
-  return lines.slice(0, rows);
+  const dm = dims(t, cols, rows, tr), { H, HP, total, inl, sp, W } = dm;
+  let hdr = hdrOf(t, tr);
+  if (sp && hdr.length) hdr = hdr.slice(0, -1).concat(tr(((t.title || '').trim() || '') + ' (' + (pi + 1) + '/' + sp + ')'));
+  else if (sp) hdr = [tr('(' + (pi + 1) + '/' + sp + ')')];
+  const head = hdr.length ? hdr.length + 1 : 0;
+  const d = fit(t.dots || blank(W, H), W, H);
+  const all = toLines(d, W, H), lines = [];
+  if (hdr.length) lines.push(...hdr, '');
+  lines.push(...(sp ? all.slice(pi * HP, (pi + 1) * HP) : all));
+  while (sp && lines.length < head + HP) lines.push('');
+  if (key.length && (!sp || pi === sp - 1)) lines.push('', ...key);
+  const R = inl ? total : rows;
+  while (lines.length < R) lines.push('');
+  return lines.slice(0, R);
 }
 module.exports = { hdrOf, findText, placeLabels, mapXY, dims, DP, CP, LP, ASC, bitsOf, blank, cellBits, toLines, fit, sample, pageLines, BIT };
 
@@ -1935,22 +1950,25 @@ function compose(blocks, dict, cfg = {}) {
     if (b.role === 'bahagian') { inArahan = false; bahagianSeen = true; }
     const gap = gapFor(b, prev);
     if (b.role === 'table') { const chs = T.toChunks(b.table, tr, cfg); chs.forEach((c, i) => flat.push({ role: 'table', pb: i === 0 && !!b.pageBreak, tbl: i === 0 ? b.table : null, nch: i === 0 ? chs.length : 0, gap: i ? 1 : gap, lb: c.map((l, k) => ({ t: 'raw', text: l, src: c.src ? c.src[k] : '', sw: c.sw ? c.sw[k] : null })) })); prev = b; continue; }
-    if (b.role === 'image' && b.tactile) {              // muka surat rajah timbul: satu muka penuh, bersendirian
+    if (b.role === 'image' && b.tactile) {              // rajah timbul: muka penuh / dalam kertas / separuh / belah
       const rows = cfg.rows || L.DEFAULT.rows, cols = cfg.cols || L.DEFAULT.cols;
-      const pl = TAC.pageLines(b.tactile, cols, rows, tr);
-      const hd = TAC.dims(b.tactile, cols, rows, tr).head, labm = {};
-      (b.tactile.labels || []).forEach(l => { if (l && TAC.cellBits(b.tactile.dots, l.r, l.c)) (labm[hd + l.r] = labm[hd + l.r] || []).push(l.tx + ' (sel ' + (l.c + 1) + ')'); });
-      const dm = TAC.dims(b.tactile, cols, rows, tr), ttl = (b.tactile.title || '').trim(), keyL = (b.tactile.key || '').split(/\n/).map(x => x.trim()).filter(Boolean).slice(0, 10), kStart = dm.head + dm.H + 1;
-      const lbs = pl.map((l, k) => {
-        let src = k === 0 ? 'Rajah timbul (gambar ' + b.imageNo + ')' : '';
-        if (hd && k < hd - 1) src = (b.tactile.main && k === 0 ? 'Tajuk utama: ' + b.tactile.main.trim() : 'Tajuk: ' + ttl) + '  (rajah timbul, gambar ' + b.imageNo + ')';
-        if (k >= kStart && k - kStart < keyL.length) src = 'Kunci: ' + keyL[k - kStart];
-        if (labm[k]) src += (src ? '  ' : '') + 'Label ' + labm[k].join(', ');
-        return { t: 'raw', text: l, src };
-      });
+      const dm = TAC.dims(b.tactile, cols, rows, tr), npg = dm.sp || 1;
       if (b.text) flat.push({ role: 'image', gap: gapFor(b, prev), lb: { t: 'para', text: tr(IMGD + b.text), src: MT.plain(IMGD + b.text) }, pb: !!b.pageBreak });
-      if (dm.inl) flat.push({ role: 'tacin', gap: 1, lb: lbs, pb: false });
-      else flat.push({ role: 'tac', gap: 0, lb: lbs, pb: true });
+      for (let pi = 0; pi < npg; pi++) {
+        const pl = TAC.pageLines(b.tactile, cols, rows, tr, pi);
+        const nh = TAC.hdrOf(b.tactile, tr).length, hd = dm.head, labm = {};
+        (b.tactile.labels || []).forEach(l => { if (l && TAC.cellBits(b.tactile.dots, l.r, l.c) && l.r >= pi * dm.HP && l.r < (pi + 1) * dm.HP) (labm[hd + l.r - pi * dm.HP] = labm[hd + l.r - pi * dm.HP] || []).push(l.tx + ' (sel ' + (l.c + 1) + ')'); });
+        const ttl = (b.tactile.title || '').trim(), keyL = (b.tactile.key || '').split(/\n/).map(x => x.trim()).filter(Boolean).slice(0, 10), kStart = dm.head + dm.HP + 1;
+        const lbs = pl.map((l, k) => {
+          let src = k === 0 ? 'Rajah timbul (gambar ' + b.imageNo + (npg > 1 ? ', bahagian ' + (pi + 1) + '/' + npg : '') + ')' : '';
+          if (hd && k < hd - 1) src = (b.tactile.main && k === 0 && nh > 1 ? 'Tajuk utama: ' + b.tactile.main.trim() : 'Tajuk: ' + ttl) + '  (rajah timbul, gambar ' + b.imageNo + ')';
+          if (k >= kStart && k - kStart < keyL.length && (!dm.sp || pi === npg - 1)) src = 'Kunci: ' + keyL[k - kStart];
+          if (labm[k]) src += (src ? '  ' : '') + 'Label ' + labm[k].join(', ');
+          return { t: 'raw', text: l, src };
+        });
+        if (dm.inl) flat.push({ role: 'tacin', gap: 1, lb: lbs, pb: false });
+        else flat.push({ role: 'tac', gap: 0, lb: lbs, pb: true });
+      }
       prev = b; continue;
     }
     let lb;
@@ -2203,9 +2221,9 @@ const KAMUS_URLS=[...(/^https?:$/.test(location.protocol)?['kamus.txt']:[]),'htt
 const loc=()=>{const t=fromText($('dict').value),o={};for(const k in t){if(k in OFF&&SCH[k]===t[k])continue;o[k]=t[k]}return o};
 const dict=()=>E.B.withOverrides(E.B.withOverrides(BASE,OFF),loc());
 let punct={};try{punct=JSON.parse(LS.get('brl_punct')||'{}')||{}}catch(e){punct={}}
-let MOD=(()=>{try{const m=localStorage.getItem('brl_mod');return m==='sn'||m==='en'||m==='mt'?m:'bm'}catch(e){return'bm'}})();
-const MODN={bm:'Bahasa Melayu',sn:'Sains',en:'English (UEB)',mt:'Matematik (awal)'};
-const setMod=m=>{MOD=m==='sn'||m==='en'||m==='mt'?m:'bm';try{localStorage.setItem('brl_mod',MOD)}catch(e){}if(E.setLang)E.setLang(MOD==='en'?'en':'bm');document.body.classList.toggle('en',MOD==='en');{const ln=document.getElementById('langn');if(ln)ln.textContent=MOD==='en'?'UEB, bahasa Inggeris':MOD==='mt'?'Bahasa Melayu + Kod Nemeth (awal)':'Bahasa Melayu'}const l=document.getElementById('modl');if(l)l.textContent='Modul: '+MODN[MOD]};
+let MOD=(()=>{try{const m=localStorage.getItem('brl_mod');return m==='sn'||m==='en'||m==='mt'||m==='gf'?m:'bm'}catch(e){return'bm'}})();
+const MODN={bm:'Bahasa Melayu',sn:'Sains',en:'English (UEB)',mt:'Matematik (awal)',gf:'Geografi'};
+const setMod=m=>{MOD=m==='sn'||m==='en'||m==='mt'||m==='gf'?m:'bm';try{localStorage.setItem('brl_mod',MOD)}catch(e){}if(E.setLang)E.setLang(MOD==='en'?'en':'bm');document.body.classList.toggle('en',MOD==='en');{const ln=document.getElementById('langn');if(ln)ln.textContent=MOD==='en'?'UEB, bahasa Inggeris':MOD==='mt'?'Bahasa Melayu + Kod Nemeth (awal)':'Bahasa Melayu'}const l=document.getElementById('modl');if(l)l.textContent='Modul: '+MODN[MOD]};
 let numXml='',xml=null,last=null,name='kertas',imgDesc={},imgTac={},imgBlobs={},edits={},editing={};
 // ---- muat turun ----
 let DL=null;
@@ -2285,7 +2303,7 @@ async function load(f){
   }catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">'+esc(e.message)+'</div>'}
 }
 let brks=new Set(),restored=0,sTm=null,curBuf=null;
-function cfg(){syncMain();return{numXml,tableMode:($('tmode')||{}).value||'auto',lang:MOD==='en'?'en':MOD==='mt'?'mt':'bm',cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:MOD==='sn'?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
+function cfg(){syncMain();return{numXml,tableMode:($('tmode')||{}).value||'auto',lang:MOD==='en'?'en':MOD==='mt'?'mt':'bm',cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:(MOD==='sn'||MOD==='gf')?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
 function go(){
   let r;try{r=E.P.run(xml,dict(),cfg())}catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">Ralat: '+esc(e.message)+'</div>';return}
   last=r;buildPool();$('out').hidden=false;
@@ -2378,14 +2396,15 @@ function tacUI(im,b){
   sec.innerHTML='<label class="row"><input type="checkbox" class="tk"> <b>Rajah timbul</b> <span class="sm">(satu muka surat penuh dalam BRF, dengan muka belakang kosong untuk interpoint)</span></label> <button class="g tpick" type="button">Ambil dari Pustaka</button> <button class="g trm" type="button">Buang rajah ini</button>'+
   '<div class="tb" hidden><div class="row sm">Ambang <input type="range" min="40" max="230" class="ta"> Ketebalan <input type="range" min="6" max="20" class="tr"> Kepekatan <input type="range" min="2" max="40" class="tf"> <label><input type="checkbox" class="ti"> Songsang</label> <label><input type="checkbox" class="te"> Garis tepi sahaja</label> <label><input type="checkbox" class="tx"> Buang teks bercetak, letak huruf label</label> <button class="g tg">Jana semula daripada gambar</button></div>'+
   '<div class="row sm">Saiz gambar <input type="range" min="20" max="150" class="tz"> <span class="tzv"></span> Kiri-kanan <input type="range" min="-50" max="50" class="tdx"> Atas-bawah <input type="range" min="-50" max="50" class="tdy"> <button class="g tzr" type="button">Set semula saiz</button></div>'+
-  '<div class="row sm tlay"><label>Susun atur <select class="tly"><option value="">Satu muka surat penuh</option><option value="in">Dalam kertas, di tempat gambar</option></select></label> <label class="tlh" hidden>Tinggi <input type="number" class="thr" min="4" max="40" style="width:64px"> baris</label> <span class="tlhint"></span></div><div class="tinfo"><div class="fld"><label><b>Tajuk muka surat</b> <span class="sm">dicetak di atas muka surat rajah ini</span></label><input class="tt" maxlength="80" placeholder="cth Rajah 2.1 Anatomi Kucing"></div><div class="fld"><label><b>Label huruf (kunci)</b> <span class="sm">satu baris satu label, cth <code>A ; telinga kiri</code>. Letak huruf pada rajah dengan alat Label huruf di bawah.</span></label><textarea class="tkey" rows="4" placeholder="A ; telinga kiri&#10;B ; telinga kanan"></textarea></div></div><canvas class="tc"></canvas>'+
-  '<div class="row sm">Alat: <button class="g tm" data-m="d">Lukis</button><button class="g tm" data-m="e">Padam</button><button class="g tm" data-m="b">Padam kotak</button><button class="g tm" data-m="g">Garis</button><button class="g tm" data-m="k">Segi empat</button><button class="g tm" data-m="o">Bulatan</button><button class="g tun" type="button">Buat asal</button><button class="g tm" data-m="l">Label huruf</button> <input class="tl" maxlength="60" size="14" placeholder="cth P, 30 atau nama bahagian" aria-label="Teks label (huruf, nombor atau perkataan pendek)"> <label><input type="checkbox" class="tg2"> Panduan gambar asal</label> <button class="g tclr">Kosongkan</button> <button class="g tpiaf">PNG untuk PIAF</button> <button class="g tlib">Simpan ke Pustaka</button> <span class="sm ts"></span></div>'+
+  '<div class="row sm tlay"><label>Susun atur <select class="tly"><option value="">Satu muka surat penuh</option><option value="half">Separuh muka surat (dua rajah satu muka)</option><option value="in">Dalam kertas, tinggi sendiri</option><option value="sp">Belah rajah besar kepada beberapa muka</option></select></label> <label class="tlh" hidden>Tinggi <input type="number" class="thr" min="4" max="40" style="width:64px"> baris</label> <label class="tln" hidden>Bilangan muka <input type="number" class="tn" min="2" max="4" style="width:56px"></label> <label>Lebar <input type="number" class="twc" min="8" max="42" style="width:64px" placeholder="penuh"> sel</label> <span class="tlhint"></span></div><div class="tinfo"><div class="fld"><label><b>Tajuk muka surat</b> <span class="sm">dicetak di atas muka surat rajah ini</span></label><input class="tt" maxlength="80" placeholder="cth Rajah 2.1 Anatomi Kucing"></div><div class="fld"><label><b>Label huruf (kunci)</b> <span class="sm">satu baris satu label, cth <code>A ; telinga kiri</code>. Letak huruf pada rajah dengan alat Label huruf di bawah.</span></label><textarea class="tkey" rows="4" placeholder="A ; telinga kiri&#10;B ; telinga kanan"></textarea></div></div><canvas class="tc"></canvas>'+
+  '<div class="row sm">Alat: <button class="g tm" data-m="d">Lukis</button><button class="g tm" data-m="e">Padam</button><button class="g tm" data-m="b">Padam kotak</button><button class="g tm" data-m="g">Garis</button><button class="g tm" data-m="k">Segi empat</button><button class="g tm" data-m="o">Bulatan</button><button class="g tun" type="button">Buat asal</button><button class="g tm" data-m="l">Label huruf</button><button class="g tm" data-m="f">Isi corak</button><button class="g tm" data-m="s">Simbol</button> <input class="tl" maxlength="60" size="14" placeholder="cth P, 30 atau nama bahagian" aria-label="Teks label (huruf, nombor atau perkataan pendek)"> <label><input type="checkbox" class="tg2"> Panduan gambar asal</label> <button class="g tclr">Kosongkan</button> <button class="g tpiaf">PNG untuk PIAF</button> <button class="g tlib">Simpan ke Pustaka</button> <span class="sm ts"></span></div><div class="row sm tmap"><label>Gaya garis <select class="tls"><option value="">Penuh</option><option value="p">Putus-putus</option><option value="t">Bertitik</option><option value="r">Rel (garis + palang)</option><option value="w">Bergelombang</option></select></label> <label>Corak isi <select class="tfp"><option value="d">Titik jarang</option><option value="s">Titik padat</option><option value="v">Jalur menegak</option><option value="h">Jalur mendatar</option><option value="x">Papan dam</option><option value="f">Penuh</option></select></label> <input class="tfn" maxlength="30" size="14" placeholder="maksud corak, cth Hutan" aria-label="Maksud corak"> <label>Simbol <select class="tss"><option value="bandar">Bandar</option><option value="ibu">Ibu negeri</option><option value="gunung">Gunung</option><option value="api">Gunung berapi</option><option value="lapangan">Lapangan terbang</option><option value="pelabuhan">Pelabuhan</option><option value="sekolah">Bangunan</option><option value="kampung">Kampung</option></select></label> <button class="g tleg" type="button">Jana kunci peta</button> <span class="sm tmh"></span></div>'+
   '</div>';
   const q=c=>sec.querySelector(c),tb=q('.tb'),cv=q('.tc'),ts=q('.ts');let mode='d',dn=null,gray=null,bs=null;
-  const sync=()=>{const t=T();q('.tk').checked=!!t.on;tb.hidden=!t.on;q('.ta').value=t.thr;q('.tr').value=t.rad;q('.tf').value=t.frac;q('.ti').checked=!!t.inv;q('.te').checked=!!t.edge;q('.tx').checked=!!t.rmText;q('.tt').value=t.title||'';q('.tkey').value=t.key||'';q('.tz').value=t.zoom==null?100:t.zoom;q('.tdx').value=t.dx||0;q('.tdy').value=t.dy||0;q('.tly').value=t.lay||'';q('.thr').value=t.hr||12;q('.tlh').hidden=t.lay!=='in';q('.tlhint').textContent=t.lay==='in'?'Rajah disusun bersama soalan dalam aliran kertas; muka belakang kosong tidak ditambah.':'Rajah mengambil satu muka surat penuh dengan muka belakang kosong untuk interpoint.';q('.tzv').textContent=(t.zoom==null?100:t.zoom)+'%'};
+  const sync=()=>{const t=T();q('.tk').checked=!!t.on;tb.hidden=!t.on;q('.ta').value=t.thr;q('.tr').value=t.rad;q('.tf').value=t.frac;q('.ti').checked=!!t.inv;q('.te').checked=!!t.edge;q('.tx').checked=!!t.rmText;q('.tt').value=t.title||'';q('.tkey').value=t.key||'';q('.tz').value=t.zoom==null?100:t.zoom;q('.tdx').value=t.dx||0;q('.tdy').value=t.dy||0;q('.tly').value=t.lay||'';q('.thr').value=t.hr||12;q('.tlh').hidden=t.lay!=='in';q('.tln').hidden=t.lay!=='sp';q('.tn').value=t.n||2;q('.twc').value=t.wc||'';q('.tlhint').textContent={in:'Rajah disusun bersama soalan dalam aliran kertas; muka belakang kosong tidak ditambah.',half:'Setengah muka surat: dua rajah berturutan muat satu muka surat.',sp:'Rajah dilukis pada kanvas tinggi dan dipecah ikut muka surat; tajuk ditanda (1/2), (2/2) dan seterusnya.'}[t.lay]||'Rajah mengambil satu muka surat penuh dengan muka belakang kosong untuk interpoint.';q('.tzv').textContent=(t.zoom==null?100:t.zoom)+'%'};
   const SC=3,draw=()=>{const t=T(),d=tacDims(t);if(!t.dots||t.dots.length!==3*d.H||t.dots[0].length!==2*d.W)t.dots=K.fit(t.dots||K.blank(d.W,d.H),d.W,d.H);
     cv.width=Math.round(d.W*K.CP*SC);cv.height=Math.round(((d.H-1)*K.LP+2*K.DP+4)*SC);const g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);if(q('.tg2').checked&&gray){const wm=(d.W-1)*K.CP+K.DP,hm=(d.H-1)*K.LP+2*K.DP,sc=Math.min(wm/gray.w,hm/gray.h)*((t.zoom==null?100:t.zoom)/100),ox=(wm-gray.w*sc)/2+(t.dx||0)/100*wm,oy=(hm-gray.h*sc)/2+(t.dy||0)/100*hm;if(!gray.cv){const o=document.createElement('canvas');o.width=gray.w;o.height=gray.h;const og=o.getContext('2d'),id=og.createImageData(gray.w,gray.h);for(let i=0;i<gray.w*gray.h;i++){id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=gray.gr[i];id.data[i*4+3]=255}og.putImageData(id,0,0);gray.cv=o}g.globalAlpha=.3;g.drawImage(gray.cv,ox*SC+1.5,oy*SC+1.5,gray.w*sc*SC,gray.h*sc*SC);g.globalAlpha=1}
     g.strokeStyle='#e5e0d0';g.lineWidth=1;for(let r=0;r<d.H;r++)for(let c=0;c<d.W;c++)g.strokeRect(c*K.CP*SC+.5,r*K.LP*SC+.5,(K.DP+1)*SC,(2*K.DP+1)*SC);
+    if(d.sp){g.strokeStyle='#c0392b';g.lineWidth=1.5;g.setLineDash([6,4]);for(let k=1;k<d.sp;k++){const yy=k*d.HP*K.LP*SC-K.LP*SC/2+1.5;g.beginPath();g.moveTo(0,yy);g.lineTo(cv.width,yy);g.stroke()}g.setLineDash([])}
     g.fillStyle='#14213d';for(let y=0;y<3*d.H;y++)for(let x=0;x<2*d.W;x++)if(t.dots[y][x]==='1'){const c=x>>1,r=(y/3)|0,[px,py]=[c*K.CP+(x&1)*K.DP,r*K.LP+(y%3)*K.DP];g.beginPath();g.arc((px+.5)*SC+1,(py+.5)*SC+1,.8*SC,0,6.3);g.fill()}
     cv.style.width=cv.width/2+'px';ts.textContent=d.W+' sel × '+d.H+' baris'};
   const setDot=(y,x,v)=>{const t=T();if(y<0||x<0||y>=t.dots.length||x>=t.dots[0].length)return;const r=t.dots[y];if(r[x]===(v?'1':'0'))return;t.dots[y]=r.slice(0,x)+(v?'1':'0')+r.slice(x+1);t.edited=true};
@@ -2394,14 +2413,50 @@ function tacUI(im,b){
     let best=null,bd=1e9;const c0=Math.floor(mx/K.CP),r0=Math.floor(my/K.LP);for(let r=r0-1;r<=r0+1;r++)for(let c=c0-1;c<=c0+1;c++){if(r<0||c<0||r>=d.H||c>=d.W)continue;for(let dy=0;dy<3;dy++)for(let dx=0;dx<2;dx++){const px=c*K.CP+dx*K.DP,py=r*K.LP+dy*K.DP,dd=(px-mx)**2+(py-my)**2;if(dd<bd){bd=dd;best=[r*3+dy,c*2+dx]}}}
     return bd<=9?{dot:best}:{}};
   let down=false,hist=[],base=null;
+  // ---- alat peta: gaya garis, isi corak, simbol, kunci peta ----
+  const SYMB={bandar:['1111','1111','1111'],ibu:['1111','0110','1111'],gunung:['0110','1111','1111'],api:['1001','1111','1111'],lapangan:['0110','1111','0110'],pelabuhan:['1111','0110','0110'],sekolah:['1111','1001','1111'],kampung:['0110','1001','0110']};
+  const SYMN={bandar:'Bandar',ibu:'Ibu negeri',gunung:'Gunung',api:'Gunung berapi',lapangan:'Lapangan terbang',pelabuhan:'Pelabuhan',sekolah:'Bangunan',kampung:'Kampung'};
+  const PATN={d:'Titik jarang',s:'Titik padat',v:'Jalur menegak',h:'Jalur mendatar',x:'Papan dam',f:'Penuh'};
+  const LSN={p:'Garis putus-putus',t:'Garis bertitik',r:'Rel keretapi',w:'Sungai'};
+  const PATF={d:(y,x)=>x%4===0&&y%6===0,s:(y,x)=>y%3!==1,v:(y,x)=>x%4<2,h:(y,x)=>y%6<3,x:(y,x)=>(((x>>1)+((y/3)|0))%2)===0,f:()=>true};
+  const used=()=>{const t=T();return t.used||(t.used={pat:{},sym:{},line:{}})};
+  const stamp=(t,y0,x0,name)=>{SYMB[name].forEach((row,dy)=>{for(let dx=0;dx<row.length;dx++)if(row[dx]==='1')setDot(y0+dy,x0+dx,1)})};
+  const floodFill=(t,sy,sx,pf)=>{const H=t.dots.length,W=t.dots[0].length;if(t.dots[sy][sx]==='1')return 0;const seen=new Uint8Array(H*W),st=[[sy,sx]],reg=[];seen[sy*W+sx]=1;
+    while(st.length){const[y,x]=st.pop();reg.push([y,x]);for(const[dy,dx]of[[1,0],[-1,0],[0,1],[0,-1]]){const ny=y+dy,nx=x+dx;if(ny<0||nx<0||ny>=H||nx>=W||seen[ny*W+nx]||t.dots[ny][nx]==='1')continue;seen[ny*W+nx]=1;st.push([ny,nx])}}
+    if(reg.length>H*W*.85){ts.textContent='Kawasan tidak bertutup (garis ada celah). Tutup sempadan dahulu.';return 0}
+    reg.forEach(([y,x])=>{if(pf(y,x))setDot(y,x,1)});return reg.length};
+  const mapAct=h=>{const t=T();if(!h.dot)return;const[y,x]=h.dot;
+    if(mode==='f'){const k=q('.tfp').value,n=floodFill(t,y,x,PATF[k]);if(n){const u=used();u.pat[k]=(q('.tfn').value||'').trim()||PATN[k]}}
+    else if(mode==='s'){const k=q('.tss').value;stamp(t,y-1,x-1,k);used().sym[k]=1}};
+
   const pushH=()=>{const t=T();if(t.dots){hist.push(t.dots.slice());if(hist.length>30)hist.shift()}};
+
+  q('.tleg').onclick=()=>{const t=T(),u=used(),ents=[];Object.keys(u.sym).forEach(k=>ents.push(['sym',k,SYMN[k]]));Object.keys(u.pat).forEach(k=>ents.push(['pat',k,u.pat[k]]));Object.keys(u.line).forEach(k=>ents.push(['line',k,LSN[k]]));
+    if(!ents.length){q('.tmh').textContent='Belum ada simbol, corak atau gaya garis yang digunakan.';return}
+    const d=tacDims(t),n=ents.length,H=d.H;if(n>d.HP-2){q('.tmh').textContent='Terlalu banyak entri untuk satu muka surat.';return}
+    pushH();const r0=H-n;
+    for(let r=r0;r<H;r++)for(let y=r*3;y<r*3+3;y++)t.dots[y]=t.dots[y].replace(/./g,'0');
+    t.labels=(t.labels||[]).filter(l=>l.r<r0);
+    const enc=str=>{const o=[];let num=false;for(const ch of str){if(/[0-9]/.test(ch)){if(!num){o.push(K.bitsOf('#'));num=true}o.push(K.bitsOf('jabcdefghi'[+ch]))}else{num=false;if(/[A-Z]/.test(ch)){o.push(K.bitsOf(','));o.push(K.bitsOf(ch.toLowerCase()))}else o.push(K.bitsOf(ch))}}return o};
+    ents.forEach(([ty,k,nm],i)=>{const r=r0+i,y=r*3;
+      if(ty==='sym')stamp(t,y,0,k);
+      else if(ty==='pat'){for(let yy=y;yy<y+3;yy++)for(let x=0;x<4;x++)if(PATF[k](yy,x))setDot(yy,x,1)}
+      else{const sv=q('.tls').value;q('.tls').value=k;lacc=0;plot(t,0,r*K.LP+K.DP,3*K.CP-1,r*K.LP+K.DP);q('.tls').value=sv}
+      const tx=String(nm||'').slice(0,Math.max(4,d.W-4));(t.labels=t.labels||[]).push({r,c:4,tx});enc(tx).forEach((bits,m)=>{const c=4+m;if(c>=d.W)return;for(const[dy,dx,v]of K.BIT)setDot(r*3+dy,c*2+dx,bits&v)})});
+    t.edited=true;q('.tmh').textContent='Kunci peta dijana di bahagian bawah ('+n+' entri). Ubah suai dengan alat lukis jika perlu.';draw();tacSave()};
   q('.tun').onclick=()=>{if(!hist.length){ts.textContent='Tiada langkah untuk dibuat asal.';return}const t=T();t.dots=hist.pop();t.edited=true;draw();tacSave()};
-  const plot=(t,x0,y0,x1,y1)=>{const d=tacDims(t),n=Math.max(1,Math.ceil(Math.hypot(x1-x0,y1-y0)/.8));for(let i=0;i<=n;i++){const x=x0+(x1-x0)*i/n,y=y0+(y1-y0)*i/n,c0=Math.floor(x/K.CP),r0=Math.floor(y/K.LP);let best=null,bd=1e9;
-    for(let r=r0-1;r<=r0+1;r++)for(let c=c0-1;c<=c0+1;c++){if(r<0||c<0||r>=d.H||c>=d.W)continue;for(let dy=0;dy<3;dy++)for(let dx=0;dx<2;dx++){const dd=(c*K.CP+dx*K.DP-x)**2+(r*K.LP+dy*K.DP-y)**2;if(dd<bd){bd=dd;best=[r*3+dy,c*2+dx]}}}
-    if(best&&bd<=3.3)setDot(best[0],best[1],1)}};
-  const shape=(m,a,b2)=>{const t=T();if(m==='g')plot(t,a[0],a[1],b2[0],b2[1]);else if(m==='k'){plot(t,a[0],a[1],b2[0],a[1]);plot(t,b2[0],a[1],b2[0],b2[1]);plot(t,b2[0],b2[1],a[0],b2[1]);plot(t,a[0],b2[1],a[0],a[1])}
+  let lacc=0;
+  const nearest=(d,x,y)=>{const c0=Math.floor(x/K.CP),r0=Math.floor(y/K.LP);let best=null,bd=1e9;for(let r=r0-1;r<=r0+1;r++)for(let c=c0-1;c<=c0+1;c++){if(r<0||c<0||r>=d.H||c>=d.W)continue;for(let dy=0;dy<3;dy++)for(let dx=0;dx<2;dx++){const dd=(c*K.CP+dx*K.DP-x)**2+(r*K.LP+dy*K.DP-y)**2;if(dd<bd){bd=dd;best=[r*3+dy,c*2+dx]}}}return{best,bd}};
+  const plot=(t,x0,y0,x1,y1)=>{const d=tacDims(t),seg=Math.hypot(x1-x0,y1-y0),n=Math.max(1,Math.ceil(seg/.8)),sty=q('.tls').value,nx=seg?-(y1-y0)/seg:0,ny=seg?(x1-x0)/seg:0;
+    for(let i=0;i<=n;i++){const f=i/n,dist=lacc+seg*f;let x=x0+(x1-x0)*f,y=y0+(y1-y0)*f;
+      if(sty==='p'&&(dist%9)>=6)continue;if(sty==='t'&&(dist%5)>=1.4)continue;
+      if(sty==='w'){const a=2.6*Math.sin(dist/3);x+=nx*a;y+=ny*a}
+      const{best,bd}=nearest(d,x,y);if(best&&bd<=3.3)setDot(best[0],best[1],1);
+      if(sty==='r'){const prev=lacc+seg*Math.max(0,(i-1)/n);if(Math.floor(dist/9)!==Math.floor(prev/9)||i===0)for(const sg of[-1,1]){const q2=nearest(d,x+nx*3.2*sg,y+ny*3.2*sg);if(q2.best&&q2.bd<=3.3)setDot(q2.best[0],q2.best[1],1)}}}
+    lacc+=seg};
+  const shape=(m,a,b2)=>{const t=T();lacc=0;if(m==='g')plot(t,a[0],a[1],b2[0],b2[1]);else if(m==='k'){plot(t,a[0],a[1],b2[0],a[1]);plot(t,b2[0],a[1],b2[0],b2[1]);plot(t,b2[0],b2[1],a[0],b2[1]);plot(t,a[0],b2[1],a[0],a[1])}
     else{const cx=(a[0]+b2[0])/2,cy=(a[1]+b2[1])/2,rx=Math.abs(b2[0]-a[0])/2,ry=Math.abs(b2[1]-a[1])/2;let px=cx+rx,py=cy;for(let i=1;i<=96;i++){const an=i/96*6.2832,nx=cx+rx*Math.cos(an),ny=cy+ry*Math.sin(an);plot(t,px,py,nx,ny);px=nx;py=ny}}};
-  const act=ev=>{const h=hit(ev),t=T();if(mode==='l'){if(!h.cell)return;const tx=(q('.tl').value||'').trim().replace(/\s+/g,' ');if(!tx)return;
+  const act=ev=>{const h=hit(ev),t=T();if(mode==='f'||mode==='s'){mapAct(h);draw();return}if(mode==='l'){if(!h.cell)return;const tx=(q('.tl').value||'').trim().replace(/\s+/g,' ');if(!tx)return;
       const enc=str=>{const o=[];let num=false;for(const ch of str){if(/[0-9]/.test(ch)){if(!num){o.push(K.bitsOf('#'));num=true}o.push(K.bitsOf('jabcdefghi'[+ch]))}else{num=false;if(/[A-Z]/.test(ch)){o.push(K.bitsOf(','));o.push(K.bitsOf(ch.toLowerCase()))}else o.push(K.bitsOf(ch))}}return o};
       const dd=tacDims(t),W=dd.W;let r0=h.cell[0],c0=h.cell[1];const lines=[];
       if(enc(tx).length<=W-c0)lines.push([tx,c0]);else if(enc(tx).length<=W)lines.push([tx,W-enc(tx).length]);
@@ -2411,8 +2466,8 @@ function tacUI(im,b){
       }else if(h.dot)setDot(h.dot[0],h.dot[1],mode==='d');draw()};
   cv.onpointerdown=ev=>{down=true;cv.setPointerCapture(ev.pointerId);pushH();if(mode==='b'){bs=mm(ev)}else if('gko'.includes(mode)){bs=mm(ev);base=T().dots.slice()}else act(ev);ev.preventDefault()};
   const mm=ev=>{const R=cv.getBoundingClientRect(),k=cv.width/R.width;return[(ev.clientX-R.left)*k/SC,(ev.clientY-R.top)*k/SC]};
-  cv.onpointermove=ev=>{if(!down)return;if('gko'.includes(mode)){if(bs){T().dots=base.slice();shape(mode,bs,mm(ev));draw()}}else if(mode!=='l'&&mode!=='b')act(ev)};
-  cv.onpointerup=ev=>{if(down){down=false;if('gko'.includes(mode)&&bs){T().dots=base.slice();shape(mode,bs,mm(ev));bs=null;base=null;draw()}if(mode==='b'&&bs){const e=mm(ev),x0=Math.min(bs[0],e[0]),x1=Math.max(bs[0],e[0]),y0=Math.min(bs[1],e[1]),y1=Math.max(bs[1],e[1]);bs=null;const t=T();for(let y=0;y<t.dots.length;y++)for(let x=0;x<t.dots[0].length;x++){const px=(x>>1)*K.CP+(x&1)*K.DP,py=((y/3)|0)*K.LP+(y%3)*K.DP;if(px>=x0&&px<=x1&&py>=y0&&py<=y1)setDot(y,x,0)}draw()}tacSave()}};
+  cv.onpointermove=ev=>{if(!down)return;if('gko'.includes(mode)){if(bs){T().dots=base.slice();shape(mode,bs,mm(ev));draw()}}else if(mode!=='l'&&mode!=='b'&&mode!=='f'&&mode!=='s')act(ev)};
+  cv.onpointerup=ev=>{if(down){down=false;if('gko'.includes(mode)&&bs){T().dots=base.slice();shape(mode,bs,mm(ev));{const ls=q('.tls').value;if(ls)used().line[ls]=1}bs=null;base=null;draw()}if(mode==='b'&&bs){const e=mm(ev),x0=Math.min(bs[0],e[0]),x1=Math.max(bs[0],e[0]),y0=Math.min(bs[1],e[1]),y1=Math.max(bs[1],e[1]);bs=null;const t=T();for(let y=0;y<t.dots.length;y++)for(let x=0;x<t.dots[0].length;x++){const px=(x>>1)*K.CP+(x&1)*K.DP,py=((y/3)|0)*K.LP+(y%3)*K.DP;if(px>=x0&&px<=x1&&py>=y0&&py<=y1)setDot(y,x,0)}draw()}tacSave()}};
   sec.querySelectorAll('.tm').forEach(bn=>{bn.onclick=()=>{mode=bn.dataset.m;cv.style.touchAction=mode==='l'?'manipulation':'none';sec.querySelectorAll('.tm').forEach(x=>x.classList.toggle('on',x===bn))};if(bn.dataset.m==='d'){bn.classList.add('on');cv.style.touchAction='none'}});
   const gen=async()=>{const t=T();if(!b){ts.textContent='Gambar tidak tersedia untuk ditukar.';return}
     try{if(!gray)gray=await tacGray(b,1200);const d=tacDims(t);let g=gray.gr,cl=[];if(t.rmText){const f=K.findText(gray.gr,gray.w,gray.h,{thr:t.thr,invert:t.inv});cl=f.clusters;g=gray.gr.slice();for(let i=0;i<g.length;i++)if(f.mask[i])g[i]=255}
@@ -2430,7 +2485,7 @@ function tacUI(im,b){
   q('.tg').onclick=()=>{if(!T().edited||confirm('Titik yang telah disunting akan diganti. Teruskan?'))gen()};
   q('.tg2').onchange=async()=>{if(q('.tg2').checked&&!gray&&b){try{gray=await tacGray(b,1200)}catch(e){}}draw()};
   q('.tclr').onclick=()=>{const t=T(),d=tacDims(t);t.dots=K.blank(d.W,d.H);t.labels=[];t.edited=true;draw();tacSave()};
-  const relay=()=>{const t=T();t.lay=q('.tly').value;t.hr=Math.max(4,Math.min(40,+q('.thr').value||12));sync();draw();tacSave()};q('.tly').onchange=relay;q('.thr').oninput=relay;
+  const relay=()=>{const t=T();t.lay=q('.tly').value;t.hr=Math.max(4,Math.min(40,+q('.thr').value||12));t.n=Math.max(2,Math.min(4,+q('.tn').value||2));const w=+q('.twc').value;t.wc=w>=8?Math.min(42,w):0;sync();draw();tacSave()};q('.tly').onchange=relay;q('.thr').oninput=relay;q('.tn').oninput=relay;q('.twc').onchange=relay;
   q('.tt').oninput=()=>{T().title=q('.tt').value;draw();tacSave()};
   q('.tkey').oninput=()=>{T().key=q('.tkey').value;draw();tacSave()};
   q('.tpiaf').onclick=async()=>{const t=T();if(t.edited||!b){if(!(t.dots||[]).some(r=>r.includes('1'))){ts.textContent='Rajah kosong.';return}const d=tacDims(t),c2=document.createElement('canvas');libThumb(c2,{W:d.W,H:d.H,dots:t.dots},4,'#000');const c3=document.createElement('canvas');c3.width=c2.width;c3.height=c2.height;const g3=c3.getContext('2d');g3.fillStyle='#fff';g3.fillRect(0,0,c3.width,c3.height);g3.drawImage(c2,0,0);dl(name+'_rajah'+no+'_piaf.png',await new Promise(ok=>c3.toBlob(ok,'image/png')));return}try{const G=await tacGray(b,2400),cv2=document.createElement('canvas');cv2.width=G.w;cv2.height=G.h;const g=cv2.getContext('2d'),id=g.createImageData(G.w,G.h);
@@ -2473,7 +2528,7 @@ async function drawImages(){
         ta.value=r.text.trim();ta.oninput();st.textContent='Semak dan betulkan sebelum guna.'}
       catch(e){st.textContent=(e&&e.code==='not_granted')?'Kebenaran tidak diberi.':'Gagal menjana.'}
       btn.disabled=false};
-    if(MOD==='sn'){let seed=false;if((STUDIO&&STUDIO.nm===name)&&!imgTac[im.imageNo]&&STUDIO.seeds&&STUDIO.seeds[im.imageNo-1])imgTac[im.imageNo]=STUDIO.seeds[im.imageNo-1];else if((STUDIO&&STUDIO.nm===name)&&!imgTac[im.imageNo]){imgTac[im.imageNo]={on:false,thr:160,rad:13,frac:8,inv:false,edge:false,rmText:false,title:STUDIO[im.imageNo-1]||'',key:'',dots:null,edited:false};seed=true}
+    if(MOD==='sn'||MOD==='gf'){let seed=false;if((STUDIO&&STUDIO.nm===name)&&!imgTac[im.imageNo]&&STUDIO.seeds&&STUDIO.seeds[im.imageNo-1])imgTac[im.imageNo]=STUDIO.seeds[im.imageNo-1];else if((STUDIO&&STUDIO.nm===name)&&!imgTac[im.imageNo]){imgTac[im.imageNo]={on:false,thr:160,rad:13,frac:8,inv:false,edge:false,rmText:false,title:STUDIO[im.imageNo-1]||'',key:'',dots:null,edited:false};seed=true}
       const ui=tacUI(im,b);right.appendChild(ui);if(seed)setTimeout(()=>{const k=ui.querySelector('.tk');if(k&&!k.checked)k.click()},0)}
     row.append(left,right);host.append(row);
   }
@@ -3019,7 +3074,7 @@ async function psrc(it){if(it.src)return it.src;if(!it.rasmi)return null;for(con
 async function srcPng(b){if(!b)return null;try{const bm=await createImageBitmap(b),sc=Math.min(1,1200/Math.max(bm.width,bm.height)),w=Math.max(1,Math.round(bm.width*sc)),h=Math.max(1,Math.round(bm.height*sc)),cv=document.createElement('canvas');cv.width=w;cv.height=h;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(bm,0,0,w,h);return await new Promise(ok=>cv.toBlob(ok,'image/png'))}catch(e){return null}}
 async function libCount(){const a=await libAll();const n=$('hlibn');if(n)n.textContent=a.length?'('+a.length+')':'';return a}
 function libSave(t,b,say2){
-  const dlg=$('libd');$('ld_t').value=t.title||'';$('ld_p').value=t.topik||'';$('ld_g').value=(t.tags||[]).join(', ');$('ld_s').value=t.subjek||(MOD==='sn'?'Sains':'Lain-lain');dlg.returnValue='';
+  const dlg=$('libd');$('ld_t').value=t.title||'';$('ld_p').value=t.topik||'';$('ld_g').value=(t.tags||[]).join(', ');$('ld_s').value=t.subjek||(MOD==='sn'?'Sains':MOD==='gf'?'Geografi':'Lain-lain');dlg.returnValue='';
   $('ld_x').onclick=()=>dlg.close('x');
   dlg.onclose=async()=>{if(dlg.returnValue!=='ok')return;const d=tacDims(t),title=$('ld_t').value.trim()||'Rajah tanpa tajuk';
     const id=t.libId||('r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
@@ -3084,7 +3139,7 @@ $('libx').onclick=async()=>{const a=await libAll();if(!a.length){$('libsub').tex
 $('libi').onclick=()=>$('libif').click();
 $('libif').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const z=await JSZip.loadAsync(await f.arrayBuffer()),ix=z.file('index.json');if(!ix)throw 0;const arr=JSON.parse(await ix.async('string'));let n=0;for(const it of arr){if(!it||!it.id||!Array.isArray(it.dots))continue;const im=z.file('img/'+it.id+'.png');it.src=im?new Blob([await im.async('arraybuffer')],{type:'image/png'}):null;await libPut(it);n++}$('libsub').textContent='Diimport '+n+' rajah.';await libRender()}catch(x){$('libsub').textContent='Fail bukan pustaka Titik yang sah.'}};
 libCount();loadPus();
-$('hmsn').onclick=()=>{document.body.classList.remove('studio');setMod('sn');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('gohome').onclick=openHome;setMod(MOD);
+$('hmgf').onclick=()=>{document.body.classList.remove('studio');setMod('gf');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('hmsn').onclick=()=>{document.body.classList.remove('studio');setMod('sn');if(xml){setTimeout(()=>{location.hash='#app';location.reload()},450)}else openApp()};$('gohome').onclick=openHome;setMod(MOD);
 if(showHome)openHome();
 })();
 </script>
@@ -3309,6 +3364,11 @@ if(showHome)openHome();
     'asas': 'base',
     'Susun atur': 'Layout', 'Satu muka surat penuh': 'One full page', 'Dalam kertas, di tempat gambar': 'Inside the paper, where the image is', 'Tinggi': 'Height', ' baris ': ' lines ',
     'Rajah disusun bersama soalan dalam aliran kertas; muka belakang kosong tidak ditambah.': 'The diagram flows with the questions in the paper; no blank back page is added.', 'Rajah mengambil satu muka surat penuh dengan muka belakang kosong untuk interpoint.': 'The diagram takes one full page with a blank back for interpoint.',
+    'Separuh muka surat (dua rajah satu muka)': 'Half page (two diagrams per page)', 'Dalam kertas, tinggi sendiri': 'Inside the paper, own height', 'Belah rajah besar kepada beberapa muka': 'Split a large diagram over several pages', 'Bilangan muka': 'Number of pages', 'Lebar': 'Width', 'penuh': 'full',
+    'Setengah muka surat: dua rajah berturutan muat satu muka surat.': 'Half page: two diagrams in a row fit one page.', 'Rajah dilukis pada kanvas tinggi dan dipecah ikut muka surat; tajuk ditanda (1/2), (2/2) dan seterusnya.': 'The diagram is drawn on a tall canvas and split page by page; the title is marked (1/2), (2/2) and so on.',
+    'Isi corak': 'Fill pattern', 'Simbol': 'Symbol', 'Gaya garis': 'Line style', 'Putus-putus': 'Dashed', 'Bertitik': 'Dotted', 'Rel (garis + palang)': 'Rail (line + ticks)', 'Bergelombang': 'Wavy', 'Corak isi': 'Fill pattern', 'Titik jarang': 'Sparse dots', 'Titik padat': 'Dense dots', 'Jalur menegak': 'Vertical stripes', 'Jalur mendatar': 'Horizontal stripes', 'Papan dam': 'Checkerboard', 'Bandar': 'Town', 'Ibu negeri': 'State capital', 'Gunung': 'Mountain', 'Gunung berapi': 'Volcano', 'Lapangan terbang': 'Airport', 'Pelabuhan': 'Port', 'Bangunan': 'Building', 'Kampung': 'Village', 'Jana kunci peta': 'Generate map key', 'maksud corak, cth Hutan': 'meaning of pattern, e.g. Forest', 'Maksud corak': 'Pattern meaning',
+    'Kawasan tidak bertutup (garis ada celah). Tutup sempadan dahulu.': 'The area is not closed (the outline has a gap). Close the border first.', 'Belum ada simbol, corak atau gaya garis yang digunakan.': 'No symbols, patterns or line styles have been used yet.', 'Terlalu banyak entri untuk satu muka surat.': 'Too many entries for one page.',
+    'Geografi': 'Geography', 'Kertas Geografi dengan peta timbul: corak isi kawasan, gaya garis, simbol peta dan kunci peta automatik. Rajah boleh satu muka penuh, separuh muka, dalam kertas atau dibelah beberapa muka.': 'Geography papers with raised maps: area fill patterns, line styles, map symbols and an automatic map key. A diagram can be one full page, half a page, inside the paper or split over several pages.',
     'buang sel': 'delete cell', 'tambah sel': 'add cell', 'Muat turun ': 'Download '
   };
   const PAT = [
