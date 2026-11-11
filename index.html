@@ -518,7 +518,7 @@ function blockLinesSrc(b, c) {
   if (!b.src && b.t !== 'item') return ls.map(l => ({ l, s: { t: '', w: [], ap: true } }));
   const lab = b.t === 'item' ? (b.srcNum || '') : '';
   const toks = ls.map((l, i) => { const w = l.trim() ? l.trim().split(/ +/) : []; return (b.t === 'item' && i === 0) ? w.slice(1) : w; });
-  const sw = (b.src || '').replace(/[\u0002-\u0005\u000e\u000f]/g, '').split(/ +/).filter(Boolean);
+  const sw = (b.src || '').replace(/[\u0002-\u0005\u000e\u000f]/g, '').split(/\s+/).filter(Boolean);
   const nb = toks.reduce((a, t) => a + t.length, 0), exact = nb === sw.length;
   let pos = 0, cum = 0;
   const totalW = toks.reduce((a, t) => a + t.join('').length, 0) || 1;

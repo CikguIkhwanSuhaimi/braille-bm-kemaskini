@@ -1,5 +1,5 @@
 {
-  "version": "1.17.7",
-  "sha256": "bad202a97a991164eb00ce3463b5c62a3fb65330125f4ade9eef8132c5a47525",
-  "notes": "Baris Shift+Enter kekal baris sendiri; ruang cetak sahaja yang dilangkau dilaporkan"
+  "version": "1.17.8",
+  "sha256": "6baafd482bcd418cd5f1757ffa3b695e8ab186dd0cdbd22d893e6d12d2b11789",
+  "notes": "Teks braille baris tajuk boleh diklik"
 }
