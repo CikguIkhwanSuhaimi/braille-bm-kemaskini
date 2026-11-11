@@ -1,5 +1,5 @@
 {
-  "version": "1.17.6",
-  "sha256": "15ccb3d64c4c70061014a131698a99ec347b1a7bc66c1328143135f1c2487151",
-  "notes": "Betulkan: jadual yang mengandungi perkataan NAMA tidak lagi dibuang"
+  "version": "1.17.7",
+  "sha256": "bad202a97a991164eb00ce3463b5c62a3fb65330125f4ade9eef8132c5a47525",
+  "notes": "Baris Shift+Enter kekal baris sendiri; ruang cetak sahaja yang dilangkau dilaporkan"
 }
