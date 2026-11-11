@@ -1,5 +1,5 @@
 {
-  "version": "1.17.5",
-  "sha256": "314502fa106f04907dd994b4b037c49c6e41f3c7ff1bda8ede78ed3d47fbf552",
-  "notes": "Cetak USB terus melalui pelayan cetak (tanpa tampal PowerShell)"
+  "version": "1.17.6",
+  "sha256": "15ccb3d64c4c70061014a131698a99ec347b1a7bc66c1328143135f1c2487151",
+  "notes": "Betulkan: jadual yang mengandungi perkataan NAMA tidak lagi dibuang"
 }
