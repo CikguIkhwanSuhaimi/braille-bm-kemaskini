@@ -2950,7 +2950,13 @@ async function toClip(text,label){const fb=$('fb');fb.hidden=false;fb.value=text
 function showBrf(){const t=brf();$('fb').hidden=false;$('fb').value=t;$('fbm').textContent='Teks BRF (tanda \\f ialah pemisah muka surat dan tak kelihatan).'}
 $('pdirect').onclick=async()=>{if(!last)return;const b=$('pdirect'),m=$('fbm');b.disabled=true;
   if(DESK){const T=embSel();if(!T){m.textContent='Pilih embosser dahulu: tekan Urus.';b.disabled=false;return}
-    if(T.jenis==='usb'){await toClip(embCmd(T,brf()),'Perintah cetak USB (tampal dalam PowerShell dan tekan Enter)');b.disabled=false;return}const ip=T.ip;
+    if(T.jenis==='usb'){m.textContent='Menghantar ke pencetak USB "'+T.pencetak+'" ...';
+      try{const t=brf(),u=new Uint8Array(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i)&255;let ok=false,er='';
+        for(const bs of ['http://127.0.0.1:8080','http://localhost:8080']){try{const r=await fetch(bs+'/print?printer='+encodeURIComponent(T.pencetak),{method:'POST',body:u});const j=await r.json().catch(()=>({}));if(r.ok){m.textContent='Dihantar ke pencetak USB ('+(j.bytes||u.length)+' bait). Embosser akan mula sebentar lagi.';ok=true}else{er=j.error||('kod '+r.status);ok='ralat'}break}catch(e){}}
+        if(ok==='ralat'){m.textContent='Gagal: '+er}
+        else if(!ok){await toClip(embCmd(T,t),'Pelayan cetak tidak dikesan (jalankan Mula_Pelayan.bat). Perintah PowerShell disalin: tampal dalam PowerShell dan tekan Enter. Perintah cetak USB')}}
+      catch(e){m.textContent='Gagal: '+e.message}
+      b.disabled=false;return}const ip=T.ip;
     m.textContent='Menghantar ke embosser '+ip+' ...';
     try{const t=brf(),u=new Uint8Array(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i)&255;const r=await window.embosser.print(ip,u);
       m.textContent=r&&r.ok?'Dihantar ke embosser ('+r.bytes+' bait). Embosser akan mula sebentar lagi.':'Gagal: '+((r&&r.error)||'tidak diketahui')}
@@ -2963,7 +2969,7 @@ $('pdirect').onclick=async()=>{if(!last)return;const b=$('pdirect'),m=$('fbm');b
     if(!SRV){m.textContent='Pelayan cetak tidak dapat dimulakan. Jalankan Pasang_Automatik.bat sekali pada PC ini (dalam folder Pelayan), kemudian cuba lagi. Jika Chrome tanya kebenaran membuka aplikasi, pilih Buka.';b.disabled=false;return}}
   m.textContent='Menghantar ke embosser...';
   try{const t=brf(),u=new Uint8Array(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i)&255;
-    const r=await fetch(SBASE+'/print',{method:'POST',body:u});const j=await r.json().catch(()=>({}));
+    const T=embSel();const r=await fetch(SBASE+'/print'+(T&&T.jenis==='usb'?'?printer='+encodeURIComponent(T.pencetak):''),{method:'POST',body:u});const j=await r.json().catch(()=>({}));
     m.textContent=r.ok?'Dihantar ke embosser ('+(j.bytes||u.length)+' bait). Embosser akan mula sebentar lagi.':'Gagal: '+(j.error||r.status)}
   catch(e){m.textContent='Gagal menghubungi PC pantau: '+e.message}
   b.disabled=false};
