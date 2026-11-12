@@ -82,7 +82,7 @@ public class TitikPrintPlugin extends Plugin {
                     r.put("bytes", b.length);
                     call.resolve(r);
                 } catch (Exception e) {
-                    call.reject("Tak dapat sambung ke PC " + host + ":" + port + ". Pastikan pelayan cetak jalan di PC dan telefon di Wi-Fi yang sama. (" + e.getMessage() + ")");
+                    call.reject("Tak dapat sambung ke PC " + host + " (semua port dicuba). Pastikan pelayan cetak jalan di PC dan telefon di Wi-Fi yang sama. (" + e.getMessage() + ")");
                 }
             }
         }).start();
