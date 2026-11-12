@@ -138,6 +138,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 </div>
 <dialog id="embd"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Embosser</h3><button type="button" class="g" id="embx2">Tutup</button></div>
 <div class="sm" style="margin:6px 0 10px">Simpan nama embosser sekali sahaja. Selepas itu pilih nama dalam mana-mana ruang cetak, tak perlu taip IP lagi.</div>
+<div class="sm" id="srvst" style="margin:0 0 8px"></div>
 <div id="embl"></div>
 <div id="embr"></div>
 <details id="embf" style="margin-top:10px"><summary><b>Tambah atau ubah embosser</b></summary>
@@ -2247,7 +2248,9 @@ const plug=n=>(Capacitor.Plugins&&Capacitor.Plugins[n])||Capacitor.registerPlugi
 if(NATIVE&&!window.embosser){window.embosser={apk:true,version:async()=>'',printPc:async(host,printer,u)=>{try{let b='';for(let i=0;i<u.length;i+=8192)b+=String.fromCharCode.apply(null,u.subarray(i,i+8192));const r=await plug('TitikPrint').printPc({host,printer,data:btoa(b)});return{ok:true,bytes:r.bytes}}catch(e){return{ok:false,error:(e&&e.message)||'Cetak gagal.'}}},print:async(ip,u)=>{try{let b='';for(let i=0;i<u.length;i+=8192)b+=String.fromCharCode.apply(null,u.subarray(i,i+8192));const r=await plug('TitikPrint').print({ip,data:btoa(b)});return{ok:true,bytes:r.bytes}}catch(e){return{ok:false,error:(e&&e.message)||'Cetak gagal.'}}}}}
 let SRV=false,SBASE='';const DESK=!!window.embosser;
 if(DESK){SRV=true;document.addEventListener('DOMContentLoaded',()=>{})}
-async function findSrv(){for(const b of ['','http://127.0.0.1:8080','http://localhost:8080','http://127.0.0.1:8765','http://localhost:8765']){try{const r=await fetch(b+'/ping',{cache:'no-store'});const j=r.ok?await r.json():null;if(j&&j.pantau){SRV=true;SBASE=b;$('phint').hidden=true;$('sm2').hidden=true;if(j.ip)$('eip').value=j.ip;return true}}catch(e){}}return false}
+const PORTS=[8765,8766,8767,8768,8769,8770,8771,8772,8773,8774,8080];let SPORT=0;
+async function pingBase(b){const c=new AbortController(),t=setTimeout(()=>c.abort(),1500);try{const r=await fetch(b+'/ping',{cache:'no-store',signal:c.signal});const j=r.ok?await r.json():null;return j&&j.pantau?j:null}catch(e){return null}finally{clearTimeout(t)}}
+async function findSrv(){const bases=['',...PORTS.map(p=>'http://127.0.0.1:'+p)];const rs=await Promise.all(bases.map(b=>pingBase(b)));for(let k=0;k<bases.length;k++){const j=rs[k];if(j){SRV=true;SBASE=bases[k];SPORT=j.port||(bases[k]?+bases[k].split(':').pop():+location.port||0);const h1=$('phint'),h2=$('sm2'),ei=$('eip');if(h1)h1.hidden=true;if(h2)h2.hidden=true;if(ei&&j.ip)ei.value=j.ip;return true}}return false}
 findSrv();
 function anchorSave(n,t){const b=t instanceof Blob?t:new Blob([t],{type:'application/octet-stream'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=n;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
 function say(m){$('fbm').textContent=m;$('sm2').hidden=false;$('sm2').textContent=m}
@@ -2941,7 +2944,8 @@ function embList(){const L=$('embl'),R=$('embr');if(!L)return;L.innerHTML='';R.i
   if(EMBR.length){const h=document.createElement('div');h.className='sm';h.style.cssText='margin:12px 0 2px;font-weight:700';h.textContent='Embosser sekolah (daripada penyelia)';R.append(h);EMBR.forEach(e=>row(Object.assign({},e,{rasmi:true}),R,[['Pilih',()=>{LS.set('brl_emb_sel',e.id);embRender()}],['Salin ke senarai saya',()=>{EMBS.push(Object.assign({},e,{id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,4)}));embSaveL();embRender()}]]))}}
 function embJenis(){$('em_h').style.color='';$('em_h').style.fontWeight='';const u=$('em_j').value==='usb';$('em_ipw').hidden=u&&!NATIVE;$('em_ipl').textContent=u?'Alamat PC yang ada pelayan cetak (cth 172.30.109.166)':'Alamat IP';$('em_prw').hidden=!u;$('em_h').textContent=u?'Embosser mesti dipasang dalam Windows sebagai pencetak (pemacu Index) dan kabel USB disambung. Nama mesti sama dengan yang tertera di Settings, Printers & scanners.':'Tekan HELP dan 10 pada embosser untuk melihat alamat IP. Komputer dan embosser mesti dalam rangkaian yang sama.'}
 function embEdit(e){EMEDIT=e?e.id:null;$('em_n').value=e?e.nama:'';$('em_j').value=e?e.jenis:'ip';$('em_ip').value=e&&e.ip||'';$('em_pr').value=e&&e.pencetak||'';embJenis();$('embf').open=true;$('em_n').focus()}
-function embManage(){embRender();embEdit(null);$('embf').open=!EMBS.length&&!EMBR.length;$('embd').showModal()}
+async function srvStatus(){const e=$('srvst');if(!e)return;e.textContent='Memeriksa pelayan cetak...';const ok=await findSrv();e.innerHTML=ok?'Pelayan cetak PC ini: <b style="color:#0a7a3b">AKTIF</b> (port '+(SPORT||'?')+'). Cetak USB tersedia.':'Pelayan cetak PC ini: <b style="color:#b3261e">tidak dijumpai</b>. Perlu hanya untuk cetak USB. Tunggu seminit selepas PC dihidupkan, atau buka Start > Titik > Mula pelayan cetak. Jika masih tiada, jalankan Pasang_Titik.exe semula (ia akan uji dan papar sebabnya).'}
+function embManage(){srvStatus();embRender();embEdit(null);$('embf').open=!EMBS.length&&!EMBR.length;$('embd').showModal()}
 $('em_j').onchange=embJenis;$('em_c').onclick=()=>embEdit(null);$('embx2').onclick=()=>$('embd').close();
 const embErr=m=>{const h=$('em_h');h.textContent=m;h.style.color='#d33';h.style.fontWeight='700';try{h.scrollIntoView({block:'center'})}catch(e){}};
 $('em_s').onclick=()=>{const n=$('em_n').value.trim(),j=$('em_j').value,ip=$('em_ip').value.trim(),pr=$('em_pr').value.trim();
@@ -2968,7 +2972,7 @@ $('pdirect').onclick=async()=>{if(!last)return;const b=$('pdirect'),m=$('fbm');b
       b.disabled=false;return}
     if(T.jenis==='usb'){m.textContent='Menghantar ke pencetak USB "'+T.pencetak+'" ...';
       try{const t=brf(),u=new Uint8Array(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i)&255;let ok=false,er='';
-        for(const bs of (SBASE?[SBASE]:[]).concat(['http://127.0.0.1:8080','http://localhost:8080','http://127.0.0.1:8765','http://localhost:8765'])){try{const r=await fetch(bs+'/print?printer='+encodeURIComponent(T.pencetak),{method:'POST',body:u});const j=await r.json().catch(()=>({}));if(r.ok){m.textContent='Dihantar ke pencetak USB ('+(j.bytes||u.length)+' bait). Embosser akan mula sebentar lagi.';ok=true}else{er=j.error||('kod '+r.status);ok='ralat'}break}catch(e){}}
+        if(!SRV)await findSrv();for(const bs of (SBASE?[SBASE]:PORTS.map(p=>'http://127.0.0.1:'+p))){try{const r=await fetch(bs+'/print?printer='+encodeURIComponent(T.pencetak),{method:'POST',body:u});const j=await r.json().catch(()=>({}));if(r.ok){m.textContent='Dihantar ke pencetak USB ('+(j.bytes||u.length)+' bait). Embosser akan mula sebentar lagi.';ok=true}else{er=j.error||('kod '+r.status);ok='ralat'}break}catch(e){}}
         if(ok==='ralat'){m.textContent='Gagal: '+er}
         else if(!ok){await toClip(embCmd(T,t),'Pelayan cetak tidak dikesan (jalankan Mula_Pelayan.bat). Perintah PowerShell disalin: tampal dalam PowerShell dan tekan Enter. Perintah cetak USB')}}
       catch(e){m.textContent='Gagal: '+e.message}

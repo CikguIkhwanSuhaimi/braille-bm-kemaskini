@@ -63,15 +63,8 @@ public class TitikPrintPlugin extends Plugin {
                 try {
                     byte[] b = Base64.decode(data, Base64.DEFAULT);
                     if (b.length > 20 * 1024 * 1024) { call.reject("Fail terlalu besar."); return; }
-                    int port = 8080;
-                    try {
-                        HttpURLConnection pc = (HttpURLConnection) new URL("http://" + host + ":8080/ping").openConnection();
-                        pc.setConnectTimeout(2500); pc.setReadTimeout(2500);
-                        java.io.InputStream pin = pc.getInputStream();
-                        byte[] pb = new byte[256]; int pn = pin.read(pb); pin.close();
-                        String ptxt = pn > 0 ? new String(pb, 0, pn, "UTF-8") : "";
-                        if (!ptxt.contains("pantau")) port = 8765;
-                    } catch (Exception pe) { port = 8765; }
+                    int port = findPort(host);
+                    if (port == 0) { call.reject("Pelayan cetak tidak dijumpai di PC " + host + ". Pastikan PC hidup, Titik dipasang di PC, dan telefon di Wi-Fi yang sama."); return; }
                     URL u = new URL("http://" + host + ":" + port + "/print?printer=" + URLEncoder.encode(printer, "UTF-8"));
                     HttpURLConnection c = (HttpURLConnection) u.openConnection();
                     c.setConnectTimeout(6000);
@@ -89,9 +82,42 @@ public class TitikPrintPlugin extends Plugin {
                     r.put("bytes", b.length);
                     call.resolve(r);
                 } catch (Exception e) {
-                    call.reject("Tak dapat sambung ke PC " + host + ":8080. Pastikan pelayan cetak jalan di PC dan telefon di Wi-Fi yang sama. (" + e.getMessage() + ")");
+                    call.reject("Tak dapat sambung ke PC " + host + ":" + port + ". Pastikan pelayan cetak jalan di PC dan telefon di Wi-Fi yang sama. (" + e.getMessage() + ")");
                 }
             }
         }).start();
+    }
+
+    private static final int[] PORTS = {8765, 8766, 8767, 8768, 8769, 8770, 8771, 8772, 8773, 8774, 8080};
+
+    /** Cari port pelayan Titik pada PC (semua port dicuba serentak). 0 jika tiada. */
+    private static int findPort(final String host) throws InterruptedException {
+        final int[] found = {0};
+        final java.util.concurrent.CountDownLatch done = new java.util.concurrent.CountDownLatch(PORTS.length);
+        for (final int p : PORTS) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        HttpURLConnection pc = (HttpURLConnection) new URL("http://" + host + ":" + p + "/ping").openConnection();
+                        pc.setConnectTimeout(2500);
+                        pc.setReadTimeout(2500);
+                        java.io.InputStream in = pc.getInputStream();
+                        byte[] pb = new byte[256];
+                        int n = in.read(pb);
+                        in.close();
+                        String t = n > 0 ? new String(pb, 0, n, "UTF-8") : "";
+                        if (t.contains("pantau")) {
+                            synchronized (found) { if (found[0] == 0 || p < found[0]) found[0] = p; }
+                        }
+                    } catch (Exception e) {
+                    } finally {
+                        done.countDown();
+                    }
+                }
+            }).start();
+        }
+        done.await(4, java.util.concurrent.TimeUnit.SECONDS);
+        synchronized (found) { return found[0]; }
     }
 }
