@@ -90,6 +90,7 @@ public class TitikPrintPlugin extends Plugin {
 
     private static final int[] PORTS = {8765, 8766, 8767, 8768, 8769, 8770, 8771, 8772, 8773, 8774, 8080};
     private static volatile String lastDiag = "";
+    private static volatile String lastErr = "";
     private static int lastGood = 0;
 
     /** Cari port pelayan Titik pada PC (semua port dicuba serentak, dua pusingan). 0 jika tiada; sebab dalam lastDiag. */
@@ -118,6 +119,7 @@ public class TitikPrintPlugin extends Plugin {
                         } catch (java.net.SocketTimeoutException e) {
                             synchronized (refused) { timeout[0]++; }
                         } catch (java.net.ConnectException e) {
+                            lastErr = String.valueOf(e.getMessage());
                             synchronized (refused) { refused[0]++; }
                         } catch (Exception e) {
                             synchronized (refused) { other[0]++; }
@@ -132,7 +134,15 @@ public class TitikPrintPlugin extends Plugin {
             Thread.sleep(500);
         }
         if (timeout[0] >= PORTS.length - 1) lastDiag = "PC tidak menjawab langsung (tamat masa pada semua port). Rangkaian atau AP menghalang fon daripada sampai ke PC itu, atau PC tidur/tidak hidup.";
-        else if (refused[0] >= PORTS.length - 1) lastDiag = "PC dijumpai tetapi pelayan cetak tidak berjalan (sambungan ditolak pada semua port). Semak Titik di PC: Urus > status pelayan.";
+        else if (refused[0] >= PORTS.length - 1) {
+            String em = lastErr == null ? "" : lastErr;
+            if (em.contains("EHOSTUNREACH") || em.contains("ENETUNREACH") || em.toLowerCase().contains("unreachable") || em.toLowerCase().contains("no route"))
+                lastDiag = "Fon tiada laluan ke PC itu (" + em + "). Rangkaian/AP di lokasi ini menghalang fon daripada sampai ke PC. Cuba dari bilik lain atau guna router sendiri.";
+            else if (em.contains("ECONNREFUSED") || em.toLowerCase().contains("refused"))
+                lastDiag = "PC dijumpai tetapi pelayan cetak menolak sambungan (" + em + "). Semak Titik di PC: Urus > status pelayan.";
+            else
+                lastDiag = "Sambungan gagal pada semua port: " + em;
+        }
         else lastDiag = "Jawapan campuran: tamat masa " + timeout[0] + ", ditolak " + refused[0] + ", lain " + other[0] + " daripada " + PORTS.length + " port.";
         return 0;
     }
