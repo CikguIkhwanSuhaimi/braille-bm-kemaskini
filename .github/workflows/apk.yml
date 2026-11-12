@@ -1,6 +1,8 @@
 name: Bina APK Titik
 on:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -36,3 +38,10 @@ jobs:
         with:
           name: Titik-APK
           path: cap/android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Terbitkan APK untuk dimuat turun
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp cap/android/app/build/outputs/apk/debug/app-debug.apk Titik.apk
+          gh release delete apk-terkini --yes --cleanup-tag || true
+          gh release create apk-terkini Titik.apk --title "Titik APK (terkini)" --notes "Muat turun Titik.apk, pasang di telefon Android."
