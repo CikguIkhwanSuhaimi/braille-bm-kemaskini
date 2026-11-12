@@ -81,14 +81,14 @@ footer{margin-top:36px;color:var(--mut);font-size:14px}
 <p><b>Cara A: Chrome di telefon</b></p>
 <ol>
 <li>Telefon dan PC mesti dalam Wi-Fi yang sama.</li>
-<li>Di PC: Start &gt; Titik &gt; <b>Alamat PC untuk fon</b>. Catat alamat, contohnya <code>http://172.30.109.166:8080</code>.</li>
+<li>Di PC: Start &gt; Titik &gt; <b>Alamat PC untuk fon</b>. Catat alamat penuh yang dipaparkan, contohnya <code>http://172.30.109.166:8765</code>. Nombor port boleh 8765 atau 8080 (pelayan pilih port yang kosong).</li>
 <li>Buka alamat itu di Chrome telefon. Tekan <b>Urus</b> dan tambah embosser jenis USB dengan nama pencetak yang sama seperti di PC.</li>
 <li>Muat naik Word dan tekan <b>Cetak ke embosser</b>.</li>
 </ol>
 <p><b>Cara B: Aplikasi Titik (APK)</b></p>
 <ol>
 <li>Pasang <b>Titik.apk</b>. Jika kemas kini gagal, nyahpasang versi lama dahulu.</li>
-<li>Tekan <b>Urus</b>. Pilih jenis <b>USB (pencetak Windows)</b>, isi nama pencetak dan <b>Alamat PC pelayan cetak</b> (alamat IP PC tadi, tanpa <code>http://</code> dan <code>:8080</code>).</li>
+<li>Tekan <b>Urus</b>. Pilih jenis <b>USB (pencetak Windows)</b>, isi nama pencetak dan <b>Alamat PC pelayan cetak</b> (nombor IP PC tadi sahaja, tanpa <code>http://</code> dan tanpa port; APK cari port sendiri).</li>
 <li>Tekan <b>Cetak ke embosser</b>.</li>
 </ol>
 </details>
@@ -112,6 +112,17 @@ footer{margin-top:36px;color:var(--mut);font-size:14px}
 <li><b>Henti pelayan:</b> Start &gt; Titik &gt; <b>Henti pelayan cetak</b>. Mula semula dengan Start &gt; Titik &gt; <b>Mula pelayan cetak</b>.</li>
 <li><b>Nyahpasang:</b> Start &gt; Titik &gt; <b>Nyahpasang Titik</b>.</li>
 </ul>
+</details>
+
+<details>
+<summary>5. Cetak dari satu PC ke embosser di PC lain</summary>
+<ol>
+<li>Pasang Titik di PC yang disambung embosser USB. Di bawah <b>Urus</b> papar status <b>Pelayan cetak PC ini: AKTIF</b>.</li>
+<li>Catat alamat IP PC itu (Start &gt; Titik &gt; <b>Alamat PC untuk fon</b>).</li>
+<li>Di PC lain, buka Titik melalui ikon (jangan guna laman web). Tekan <b>Urus</b>, pilih jenis <b>USB</b>, isi nama pencetak seperti di PC embosser dan <b>Alamat PC</b> (nombor IP tadi).</li>
+<li>Terjemah, pilih embosser itu dan tekan <b>Cetak ke embosser</b>. Titik cari pelayan di PC itu sendiri.</li>
+<li>Jika gagal: pastikan kedua-dua PC dalam rangkaian yang sama dan PC embosser dihidupkan.</li>
+</ol>
 </details>
 
 <footer>Dibangunkan oleh Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi), SMK Pendidikan Khas Setapak, Kuala Lumpur.<br>Cetakan USB dan APK baharu masih dalam percubaan. Sila laporkan sebarang masalah kepada penyelia.</footer>
