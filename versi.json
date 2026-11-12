@@ -1,5 +1,5 @@
 {
-  "version": "1.17.13",
-  "sha256": "47eb55c2dca7e945ff5afdad1459042b1132ed19725e5569526beb3f2d08e164",
-  "notes": "Cetak USB ke PC lain: isi alamat PC pada embosser USB"
+  "version": "1.17.14",
+  "sha256": "1a15d605f98d3cc2bf941c1133c5b94f3f8081a4799f48bbcdbf03cd7b2efc23",
+  "notes": "Butang Cetak terus ke embosser dipaparkan terbuka"
 }
