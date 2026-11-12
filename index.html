@@ -2247,7 +2247,7 @@ const plug=n=>(Capacitor.Plugins&&Capacitor.Plugins[n])||Capacitor.registerPlugi
 if(NATIVE&&!window.embosser){window.embosser={apk:true,version:async()=>'',printPc:async(host,printer,u)=>{try{let b='';for(let i=0;i<u.length;i+=8192)b+=String.fromCharCode.apply(null,u.subarray(i,i+8192));const r=await plug('TitikPrint').printPc({host,printer,data:btoa(b)});return{ok:true,bytes:r.bytes}}catch(e){return{ok:false,error:(e&&e.message)||'Cetak gagal.'}}},print:async(ip,u)=>{try{let b='';for(let i=0;i<u.length;i+=8192)b+=String.fromCharCode.apply(null,u.subarray(i,i+8192));const r=await plug('TitikPrint').print({ip,data:btoa(b)});return{ok:true,bytes:r.bytes}}catch(e){return{ok:false,error:(e&&e.message)||'Cetak gagal.'}}}}}
 let SRV=false,SBASE='';const DESK=!!window.embosser;
 if(DESK){SRV=true;document.addEventListener('DOMContentLoaded',()=>{})}
-async function findSrv(){for(const b of ['','http://127.0.0.1:8080','http://localhost:8080']){try{const r=await fetch(b+'/ping',{cache:'no-store'});const j=r.ok?await r.json():null;if(j&&j.pantau){SRV=true;SBASE=b;$('phint').hidden=true;$('sm2').hidden=true;if(j.ip)$('eip').value=j.ip;return true}}catch(e){}}return false}
+async function findSrv(){for(const b of ['','http://127.0.0.1:8080','http://localhost:8080','http://127.0.0.1:8765','http://localhost:8765']){try{const r=await fetch(b+'/ping',{cache:'no-store'});const j=r.ok?await r.json():null;if(j&&j.pantau){SRV=true;SBASE=b;$('phint').hidden=true;$('sm2').hidden=true;if(j.ip)$('eip').value=j.ip;return true}}catch(e){}}return false}
 findSrv();
 function anchorSave(n,t){const b=t instanceof Blob?t:new Blob([t],{type:'application/octet-stream'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=n;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
 function say(m){$('fbm').textContent=m;$('sm2').hidden=false;$('sm2').textContent=m}
@@ -2968,7 +2968,7 @@ $('pdirect').onclick=async()=>{if(!last)return;const b=$('pdirect'),m=$('fbm');b
       b.disabled=false;return}
     if(T.jenis==='usb'){m.textContent='Menghantar ke pencetak USB "'+T.pencetak+'" ...';
       try{const t=brf(),u=new Uint8Array(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i)&255;let ok=false,er='';
-        for(const bs of ['http://127.0.0.1:8080','http://localhost:8080']){try{const r=await fetch(bs+'/print?printer='+encodeURIComponent(T.pencetak),{method:'POST',body:u});const j=await r.json().catch(()=>({}));if(r.ok){m.textContent='Dihantar ke pencetak USB ('+(j.bytes||u.length)+' bait). Embosser akan mula sebentar lagi.';ok=true}else{er=j.error||('kod '+r.status);ok='ralat'}break}catch(e){}}
+        for(const bs of (SBASE?[SBASE]:[]).concat(['http://127.0.0.1:8080','http://localhost:8080','http://127.0.0.1:8765','http://localhost:8765'])){try{const r=await fetch(bs+'/print?printer='+encodeURIComponent(T.pencetak),{method:'POST',body:u});const j=await r.json().catch(()=>({}));if(r.ok){m.textContent='Dihantar ke pencetak USB ('+(j.bytes||u.length)+' bait). Embosser akan mula sebentar lagi.';ok=true}else{er=j.error||('kod '+r.status);ok='ralat'}break}catch(e){}}
         if(ok==='ralat'){m.textContent='Gagal: '+er}
         else if(!ok){await toClip(embCmd(T,t),'Pelayan cetak tidak dikesan (jalankan Mula_Pelayan.bat). Perintah PowerShell disalin: tampal dalam PowerShell dan tekan Enter. Perintah cetak USB')}}
       catch(e){m.textContent='Gagal: '+e.message}

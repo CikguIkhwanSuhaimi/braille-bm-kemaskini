@@ -63,7 +63,16 @@ public class TitikPrintPlugin extends Plugin {
                 try {
                     byte[] b = Base64.decode(data, Base64.DEFAULT);
                     if (b.length > 20 * 1024 * 1024) { call.reject("Fail terlalu besar."); return; }
-                    URL u = new URL("http://" + host + ":8080/print?printer=" + URLEncoder.encode(printer, "UTF-8"));
+                    int port = 8080;
+                    try {
+                        HttpURLConnection pc = (HttpURLConnection) new URL("http://" + host + ":8080/ping").openConnection();
+                        pc.setConnectTimeout(2500); pc.setReadTimeout(2500);
+                        java.io.InputStream pin = pc.getInputStream();
+                        byte[] pb = new byte[256]; int pn = pin.read(pb); pin.close();
+                        String ptxt = pn > 0 ? new String(pb, 0, pn, "UTF-8") : "";
+                        if (!ptxt.contains("pantau")) port = 8765;
+                    } catch (Exception pe) { port = 8765; }
+                    URL u = new URL("http://" + host + ":" + port + "/print?printer=" + URLEncoder.encode(printer, "UTF-8"));
                     HttpURLConnection c = (HttpURLConnection) u.openConnection();
                     c.setConnectTimeout(6000);
                     c.setReadTimeout(30000);
