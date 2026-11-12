@@ -29,6 +29,7 @@ jobs:
           rm -rf android/app/src/main/res/mipmap-anydpi-v26
           cp -r ../android-src/res/* android/app/src/main/res/
           sed -i 's|<application|<application android:usesCleartextTraffic="true"|' android/app/src/main/AndroidManifest.xml
+          sed -i 's|<application|<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/><application|' android/app/src/main/AndroidManifest.xml
           npx cap sync android
       - name: Bina APK
         run: |

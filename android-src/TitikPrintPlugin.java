@@ -1,6 +1,11 @@
 package my.edu.smkpks.titik;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.util.Base64;
+import java.io.IOException;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -63,10 +68,11 @@ public class TitikPrintPlugin extends Plugin {
                 try {
                     byte[] b = Base64.decode(data, Base64.DEFAULT);
                     if (b.length > 20 * 1024 * 1024) { call.reject("Fail terlalu besar."); return; }
-                    int port = findPort(host);
+                    final Network net = wifiNetwork();
+                    int port = findPort(host, net);
                     if (port == 0) { call.reject("Pelayan cetak tidak dijumpai di PC " + host + ". " + lastDiag); return; }
                     URL u = new URL("http://" + host + ":" + port + "/print?printer=" + URLEncoder.encode(printer, "UTF-8"));
-                    HttpURLConnection c = (HttpURLConnection) u.openConnection();
+                    HttpURLConnection c = open(u, net);
                     c.setConnectTimeout(6000);
                     c.setReadTimeout(30000);
                     c.setRequestMethod("POST");
@@ -88,13 +94,31 @@ public class TitikPrintPlugin extends Plugin {
         }).start();
     }
 
+
+    /** Rangkaian Wi-Fi (supaya trafik ke PC tidak melalui data selular). null jika tidak dijumpai. */
+    private Network wifiNetwork() {
+        try {
+            ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+            for (Network n : cm.getAllNetworks()) {
+                NetworkCapabilities c = cm.getNetworkCapabilities(n);
+                if (c != null && c.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return n;
+            }
+        } catch (Exception e) {
+        }
+        return null;
+    }
+
+    private static HttpURLConnection open(URL u, Network n) throws IOException {
+        return (HttpURLConnection) (n != null ? n.openConnection(u) : u.openConnection());
+    }
+
     private static final int[] PORTS = {8765, 8766, 8767, 8768, 8769, 8770, 8771, 8772, 8773, 8774, 8080};
     private static volatile String lastDiag = "";
     private static volatile String lastErr = "";
     private static int lastGood = 0;
 
     /** Cari port pelayan Titik pada PC (semua port dicuba serentak, dua pusingan). 0 jika tiada; sebab dalam lastDiag. */
-    private static int findPort(final String host) throws InterruptedException {
+    private static int findPort(final String host, final Network net) throws InterruptedException {
         final int[] found = {0};
         final int[] refused = {0}, timeout = {0}, other = {0};
         for (int round = 0; round < 2; round++) {
@@ -105,7 +129,7 @@ public class TitikPrintPlugin extends Plugin {
                     @Override
                     public void run() {
                         try {
-                            HttpURLConnection pc = (HttpURLConnection) new URL("http://" + host + ":" + p + "/ping").openConnection();
+                            HttpURLConnection pc = open(new URL("http://" + host + ":" + p + "/ping"), net);
                             pc.setConnectTimeout(5000);
                             pc.setReadTimeout(5000);
                             java.io.InputStream in = pc.getInputStream();
