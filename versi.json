@@ -1,5 +1,5 @@
 {
-  "version": "1.17.9",
-  "sha256": "9fa158f8dea5f9d0f76b8bdc71cdfc0652066638a8b12ea2e28cdc10d9260d14",
-  "notes": "APK: cetak ke embosser USB melalui PC (alamat PC)"
+  "version": "1.17.10",
+  "sha256": "6cc70fdf45dcc97ebd42caba075d5c6fa2ef996faba615eb21abc8a978ba0645",
+  "notes": "Mesej ralat embosser lebih jelas; pelayan senyap"
 }
