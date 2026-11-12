@@ -1,7 +1,120 @@
-<!doctype html><html lang="ms"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Muat turun Titik</title>
-<style>:root{--bg:#fff;--fg:#1b2a26;--ac:#0f5f55;--bd:#cfd8d5}@media(prefers-color-scheme:dark){:root{--bg:#17201e;--fg:#e8efed;--ac:#58c2b3;--bd:#33443f}}body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px 16px}main{max-width:640px;margin:auto}h1{font-size:24px}a.b{display:block;border:1px solid var(--bd);border-radius:10px;padding:14px 16px;margin:12px 0;text-decoration:none;color:var(--fg)}a.b b{color:var(--ac);display:block}small{opacity:.75}</style></head><body><main>
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Muat turun Titik</title>
+<meta name="description" content="Muat turun dan panduan pemasangan Titik, penterjemah Braille Kita, SMK Pendidikan Khas Setapak.">
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--fg:#1b2a26;--mut:#5a6b66;--ac:#0f6b5f;--acfg:#fff;--bd:#d9d4c8}
+@media(prefers-color-scheme:dark){:root{--bg:#121816;--card:#1a2320;--fg:#e8efed;--mut:#9fb0aa;--ac:#4fc2b1;--acfg:#08201b;--bd:#2c3a36}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:24px 16px 56px}
+main{max-width:720px;margin:0 auto}
+h1{font-size:26px;margin:0 0 4px;text-wrap:balance}
+h2{font-size:19px;margin:32px 0 10px}
+p{margin:0 0 10px}
+.s{color:var(--mut)}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.dl{display:block;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;text-decoration:none;color:var(--fg)}
+.dl b{display:block;color:var(--ac);font-size:17px}
+.dl small{color:var(--mut)}
+.dl.main{border-color:var(--ac);border-width:2px}
+.btn{display:inline-block;background:var(--ac);color:var(--acfg);border-radius:8px;padding:8px 14px;text-decoration:none;font-weight:600;margin-top:8px}
+details{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:0 16px;margin:10px 0}
+summary{cursor:pointer;padding:14px 0;font-weight:600}
+details[open] summary{border-bottom:1px solid var(--bd);margin-bottom:10px}
+ol,ul{padding-left:22px;margin:0 0 12px}
+li{margin:4px 0}
+code{background:rgba(127,127,127,.15);padding:1px 6px;border-radius:5px;font-size:.92em;word-break:break-word}
+.note{border-left:4px solid var(--ac);padding:6px 12px;color:var(--mut);margin:10px 0}
+footer{margin-top:36px;color:var(--mut);font-size:14px}
+</style>
+</head>
+<body>
+<main>
 <h1>Muat turun Titik</h1>
-<a class="b" href="muat-turun/Pasang_Titik.exe"><b>Pasang_Titik.exe (Windows 32-bit dan 64-bit)</b><small>Pemasang lengkap: Titik, pelayan cetak USB/Wi-Fi yang jalan sendiri tanpa tetingkap, dan kemas kini automatik.</small></a>
-<a class="b" href="https://github.com/CikguIkhwanSuhaimi/braille-bm-kemaskini/releases/download/apk-terkini/Titik.apk"><b>Titik.apk (Android)</b><small>Cetak ke embosser Wi-Fi sahaja. Ada selepas APK dibina di GitHub Actions.</small></a>
-<a class="b" href="./"><b>Buka Titik di pelayar</b><small>Tiada pemasangan.</small></a>
-</main></body></html>
+<p class="s">Titik – Penterjemah Braille Kita. Word (.docx) ke Braille Grade 2 dan BRF, dengan cetakan terus ke embosser.<br>SMK Pendidikan Khas Setapak.</p>
+
+<h2>Muat turun</h2>
+<div class="grid">
+  <a class="dl main" href="muat-turun/Pasang_Titik.exe"><b>Windows (PC)</b>Pasang_Titik.exe<br><small>Pemasang lengkap untuk Windows 32-bit dan 64-bit. Termasuk pelayan cetak USB dan Wi-Fi yang jalan sendiri tanpa tetingkap, serta kemas kini automatik.</small></a>
+  <a class="dl" href="https://github.com/CikguIkhwanSuhaimi/braille-bm-kemaskini/releases/download/apk-terkini/Titik.apk"><b>Android (telefon)</b>Titik.apk<br><small>Boleh cetak ke embosser Wi-Fi, atau ke embosser USB melalui PC yang ada pelayan cetak.</small></a>
+  <a class="dl" href="./"><b>Pelayar web</b>Buka Titik terus<br><small>Tiada pemasangan. Untuk menyunting dan memuat turun BRF. Cetak terus memerlukan pemasang di PC.</small></a>
+  <a class="dl" href="muat-turun/Pelayan_Cetak_Braille.zip"><b>Alternatif tanpa pemasang</b>Pelayan_Cetak_Braille.zip<br><small>Hanya pelayan cetak, untuk pengguna lanjutan. Pemasang di atas sudah cukup untuk kebanyakan keadaan.</small></a>
+</div>
+<p class="note">Windows mungkin keluarkan amaran biru "Windows protected your PC" kerana pemasang belum bertandatangan digital. Tekan <b>More info</b>, kemudian <b>Run anyway</b>. Pada Android, benarkan "Pasang daripada sumber tidak diketahui" apabila diminta.</p>
+
+<h2>Panduan</h2>
+
+<details open>
+<summary>1. Pasang di PC (sekali sahaja)</summary>
+<ol>
+<li>Muat turun <b>Pasang_Titik.exe</b> dan klik dua kali. Tekan <b>Yes</b> untuk kebenaran Administrator.</li>
+<li>Tunggu sehingga siap. Pemasang menyediakan pelayan cetak, firewall, dan ikon <b>Titik</b> di desktop.</li>
+<li>Selepas itu pelayan jalan sendiri setiap kali PC dihidupkan, tanpa tetingkap. Selepas PC dihidupkan, tunggu sekitar seminit sebelum cetak dari telefon.</li>
+</ol>
+<p class="s">Jika PC ada pelayan lama dalam folder <code>Embosser\Pelayan</code>, jalankan <code>Buang_Automatik.bat</code> dalam folder itu dahulu.</p>
+</details>
+
+<details>
+<summary>2. Sambung embosser USB ke PC</summary>
+<ol>
+<li>Sambung kabel USB dan pasang pemacu Index supaya embosser muncul dalam Windows: <b>Settings &gt; Printers &amp; scanners</b>.</li>
+<li>Semak nama pencetaknya. Buka PowerShell dan taip: <code>Get-Printer | Select Name, PortName</code></li>
+<li>Jika embosser tak ada dalam senarai, tambah secara manual: <b>Add a local printer</b>, port <b>USB001</b>, pemacu <b>Generic / Text Only</b>.</li>
+<li>Dalam Titik, tekan <b>Urus</b>. Isi nama embosser, jenis <b>USB (pencetak Windows)</b>, dan nama pencetak yang sama persis dengan dalam Windows. Tekan <b>Simpan</b>.</li>
+</ol>
+</details>
+
+<details>
+<summary>3. Cetak dari PC</summary>
+<ol>
+<li>Klik ikon <b>Titik</b> di desktop. Jika pelayan belum jalan, ia dimulakan sendiri.</li>
+<li>Muat naik fail Word dan semak pratonton.</li>
+<li>Di bahagian <b>Hasil</b>, pilih embosser kemudian tekan <b>Cetak ke embosser</b>. Cuba 1 muka surat dahulu.</li>
+</ol>
+</details>
+
+<details>
+<summary>4. Cetak dari telefon</summary>
+<p><b>Cara A: Chrome di telefon</b></p>
+<ol>
+<li>Telefon dan PC mesti dalam Wi-Fi yang sama.</li>
+<li>Di PC: Start &gt; Titik &gt; <b>Alamat PC untuk fon</b>. Catat alamat, contohnya <code>http://172.30.109.166:8080</code>.</li>
+<li>Buka alamat itu di Chrome telefon. Tekan <b>Urus</b> dan tambah embosser jenis USB dengan nama pencetak yang sama seperti di PC.</li>
+<li>Muat naik Word dan tekan <b>Cetak ke embosser</b>.</li>
+</ol>
+<p><b>Cara B: Aplikasi Titik (APK)</b></p>
+<ol>
+<li>Pasang <b>Titik.apk</b>. Jika kemas kini gagal, nyahpasang versi lama dahulu.</li>
+<li>Tekan <b>Urus</b>. Pilih jenis <b>USB (pencetak Windows)</b>, isi nama pencetak dan <b>Alamat PC pelayan cetak</b> (alamat IP PC tadi, tanpa <code>http://</code> dan <code>:8080</code>).</li>
+<li>Tekan <b>Cetak ke embosser</b>.</li>
+</ol>
+</details>
+
+<details>
+<summary>5. Embosser rangkaian (Wi-Fi atau LAN)</summary>
+<ol>
+<li>Pada embosser, tekan <b>HELP</b> dan <b>10</b> untuk melihat alamat IP.</li>
+<li>Dalam Titik, tekan <b>Urus</b>, pilih jenis <b>Rangkaian (alamat IP)</b>, isi alamat IP, dan simpan.</li>
+<li>PC atau telefon mesti dalam rangkaian yang sama. Aplikasi telefon boleh cetak terus tanpa PC.</li>
+</ol>
+</details>
+
+<details>
+<summary>6. Masalah biasa</summary>
+<ul>
+<li><b>"Pencetak tidak dijumpai":</b> nama pencetak dalam Titik tak sama dengan dalam Windows. Semak dengan <code>Get-Printer | Select Name</code>.</li>
+<li><b>Telefon tak dapat sambung ke PC:</b> pastikan PC hidup dan baru dihidupkan lebih seminit lalu, Wi-Fi sama, dan alamat PC belum bertukar (semak "Alamat PC untuk fon"). Sesetengah rangkaian sekolah menghalang peranti berhubung antara satu sama lain.</li>
+<li><b>Jadual atau teks hilang:</b> buka melalui ikon Titik atau alamat pelayan, bukan fail HTML lama. Pelayan mengemas kini sendiri bila ada internet.</li>
+<li><b>"This app can't run on your PC":</b> jangan guna Titik desktop lama (64-bit sahaja). Guna <b>Pasang_Titik.exe</b> di atas.</li>
+<li><b>Henti pelayan:</b> Start &gt; Titik &gt; <b>Henti pelayan cetak</b>. Mula semula dengan klik ikon Titik.</li>
+<li><b>Nyahpasang:</b> Start &gt; Titik &gt; <b>Nyahpasang Titik</b>.</li>
+</ul>
+</details>
+
+<footer>Dibangunkan oleh Cikgu Ikhwan (Mohd Ikhwan bin Suhaimi), SMK Pendidikan Khas Setapak, Kuala Lumpur.<br>Cetakan USB dan APK baharu masih dalam percubaan. Sila laporkan sebarang masalah kepada penyelia.</footer>
+</main>
+</body>
+</html>
