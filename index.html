@@ -2942,8 +2942,9 @@ function embList(){const L=$('embl'),R=$('embr');if(!L)return;L.innerHTML='';R.i
   if(!EMBS.length){const p=document.createElement('div');p.className='sm';p.textContent='Belum ada embosser sendiri. Tambah di bawah.';L.append(p)}
   EMBS.forEach(e=>row(e,L,[['Pilih',()=>{LS.set('brl_emb_sel',e.id);embRender()}],['Ubah',()=>embEdit(e)],['Padam',()=>{if(confirm('Padam "'+e.nama+'"?')){EMBS=EMBS.filter(x=>x.id!==e.id);embSaveL();embRender()}}]]));
   if(EMBR.length){const h=document.createElement('div');h.className='sm';h.style.cssText='margin:12px 0 2px;font-weight:700';h.textContent='Embosser sekolah (daripada penyelia)';R.append(h);EMBR.forEach(e=>row(Object.assign({},e,{rasmi:true}),R,[['Pilih',()=>{LS.set('brl_emb_sel',e.id);embRender()}],['Salin ke senarai saya',()=>{EMBS.push(Object.assign({},e,{id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,4)}));embSaveL();embRender()}]]))}}
-function embJenis(){$('em_h').style.color='';$('em_h').style.fontWeight='';const u=$('em_j').value==='usb';$('em_ipw').hidden=u&&!NATIVE;$('em_ipl').textContent=u?'Alamat PC yang ada pelayan cetak (cth 172.30.109.166)':'Alamat IP';$('em_prw').hidden=!u;$('em_h').textContent=u?'Embosser mesti dipasang dalam Windows sebagai pencetak (pemacu Index) dan kabel USB disambung. Nama mesti sama dengan yang tertera di Settings, Printers & scanners.':'Tekan HELP dan 10 pada embosser untuk melihat alamat IP. Komputer dan embosser mesti dalam rangkaian yang sama.'}
+function embJenis(){$('em_h').style.color='';$('em_h').style.fontWeight='';const u=$('em_j').value==='usb';$('em_ipw').hidden=false;$('em_ipl').textContent=u?(NATIVE?'Alamat PC yang ada pelayan cetak (cth 172.30.109.166)':'Alamat PC yang disambung embosser (kosong jika embosser di PC ini)'):'Alamat IP';$('em_prw').hidden=!u;$('em_h').textContent=u?'Embosser mesti dipasang dalam Windows sebagai pencetak (pemacu Index) dan kabel USB disambung. Nama mesti sama dengan yang tertera di Settings, Printers & scanners.':'Tekan HELP dan 10 pada embosser untuk melihat alamat IP. Komputer dan embosser mesti dalam rangkaian yang sama.'}
 function embEdit(e){EMEDIT=e?e.id:null;$('em_n').value=e?e.nama:'';$('em_j').value=e?e.jenis:'ip';$('em_ip').value=e&&e.ip||'';$('em_pr').value=e&&e.pencetak||'';embJenis();$('embf').open=true;$('em_n').focus()}
+async function pcBase(ip){const bs=PORTS.map(p=>'http://'+ip+':'+p);const rs=await Promise.all(bs.map(b=>pingBase(b)));for(let k=0;k<bs.length;k++)if(rs[k])return bs[k];return ''}
 async function srvStatus(){const e=$('srvst');if(!e)return;e.textContent='Memeriksa pelayan cetak...';const ok=await findSrv();e.innerHTML=ok?'Pelayan cetak PC ini: <b style="color:#0a7a3b">AKTIF</b> (port '+(SPORT||'?')+'). Cetak USB tersedia.':'Pelayan cetak PC ini: <b style="color:#b3261e">tidak dijumpai</b>. Perlu hanya untuk cetak USB. Tunggu seminit selepas PC dihidupkan, atau buka Start > Titik > Mula pelayan cetak. Jika masih tiada, jalankan Pasang_Titik.exe semula (ia akan uji dan papar sebabnya).'}
 function embManage(){srvStatus();embRender();embEdit(null);$('embf').open=!EMBS.length&&!EMBR.length;$('embd').showModal()}
 $('em_j').onchange=embJenis;$('em_c').onclick=()=>embEdit(null);$('embx2').onclick=()=>$('embd').close();
@@ -2952,8 +2953,9 @@ $('em_s').onclick=()=>{const n=$('em_n').value.trim(),j=$('em_j').value,ip=$('em
   if(!n){embErr('Isi nama embosser.');return}
   if(j==='ip'&&!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){embErr('Alamat IP tak sah (cth 192.168.0.240).');return}
   if(j==='usb'&&!pr){embErr('Isi nama pencetak seperti dalam Windows.');return}
+  if(j==='usb'&&!NATIVE&&ip&&!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){embErr('Alamat PC tidak sah (cth 172.30.109.166). Kosongkan jika embosser disambung ke PC ini.');return}
   if(j==='usb'&&NATIVE&&!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){embErr('Isi alamat PC yang ada pelayan cetak (cth 172.30.109.166).');return}
-  const it={id:EMEDIT||('e'+Date.now().toString(36)+Math.random().toString(36).slice(2,4)),nama:n,jenis:j,ip:(j==='ip'||(j==='usb'&&NATIVE))?ip:'',pencetak:j==='usb'?pr:''};
+  const it={id:EMEDIT||('e'+Date.now().toString(36)+Math.random().toString(36).slice(2,4)),nama:n,jenis:j,ip:(j==='ip'||j==='usb')?ip:'',pencetak:j==='usb'?pr:''};
   const k=EMBS.findIndex(x=>x.id===it.id);if(k>=0)EMBS[k]=it;else EMBS.push(it);embSaveL();LS.set('brl_emb_sel',it.id);embRender();embEdit(null);$('embf').open=false};
 ['esel','lsel'].forEach(id=>{$(id).onchange=e=>{if(e.target.value)LS.set('brl_emb_sel',e.target.value);embRender()}});
 ['eman','lman','hemb'].forEach(id=>{$(id).onclick=embManage});
@@ -2982,14 +2984,17 @@ $('pdirect').onclick=async()=>{if(!last)return;const b=$('pdirect'),m=$('fbm');b
       m.textContent=r&&r.ok?'Dihantar ke embosser ('+r.bytes+' bait). Embosser akan mula sebentar lagi.':'Gagal: '+((r&&r.error)||'tidak diketahui')}
     catch(e){m.textContent='Gagal: '+e.message}
     b.disabled=false;return}
-  if(!SRV&&!(await findSrv())){   // cuba mulakan pelayan secara automatik (perlu Pasang_Automatik.bat sekali)
+  const T0=embSel();let RB='';
+  if(T0&&T0.jenis==='usb'&&T0.ip){m.textContent='Mencari pelayan cetak pada PC '+T0.ip+' ...';RB=await pcBase(T0.ip);
+    if(!RB){m.textContent='Pelayan cetak tidak dijumpai pada PC '+T0.ip+'. Pastikan PC itu hidup dan sama rangkaian, Titik/pelayan sudah dipasang di situ, dan Titik dibuka melalui ikon di PC ini'+(location.protocol==='https:'?' (bukan laman web)':'')+'.';b.disabled=false;return}}
+  if(!RB&&!SRV&&!(await findSrv())){   // cuba mulakan pelayan secara automatik (perlu Pasang_Automatik.bat sekali)
     m.textContent='Memulakan pelayan cetak...';
     try{const a=document.createElement('a');a.href='bprint://mula';a.style.display='none';document.body.appendChild(a);a.click();a.remove()}catch(e){}
     for(let k=0;k<12&&!SRV;k++){await new Promise(r=>setTimeout(r,1000));await findSrv()}
     if(!SRV){m.textContent='Pelayan cetak tidak dapat dimulakan. Jalankan Pasang_Automatik.bat sekali pada PC ini (dalam folder Pelayan), kemudian cuba lagi. Jika Chrome tanya kebenaran membuka aplikasi, pilih Buka.';b.disabled=false;return}}
   m.textContent='Menghantar ke embosser...';
   try{const t=brf(),u=new Uint8Array(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i)&255;
-    const T=embSel();const r=await fetch(SBASE+'/print'+(T&&T.jenis==='usb'?'?printer='+encodeURIComponent(T.pencetak):''),{method:'POST',body:u});const j=await r.json().catch(()=>({}));
+    const T=embSel();const r=await fetch((RB||SBASE)+'/print'+(T&&T.jenis==='usb'?'?printer='+encodeURIComponent(T.pencetak):''),{method:'POST',body:u});const j=await r.json().catch(()=>({}));
     m.textContent=r.ok?'Dihantar ke embosser ('+(j.bytes||u.length)+' bait). Embosser akan mula sebentar lagi.':'Gagal: '+(j.error||r.status)}
   catch(e){m.textContent='Gagal menghubungi PC pantau: '+e.message}
   b.disabled=false};

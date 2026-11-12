@@ -1,5 +1,5 @@
 {
-  "version": "1.17.12",
-  "sha256": "9a2c4879568bb79bd7941461eb743ddfd36ee4932104b11a18be9450898d7053",
-  "notes": "Revamp pelayan: cari port sendiri, status pelayan dalam Urus"
+  "version": "1.17.13",
+  "sha256": "47eb55c2dca7e945ff5afdad1459042b1132ed19725e5569526beb3f2d08e164",
+  "notes": "Cetak USB ke PC lain: isi alamat PC pada embosser USB"
 }
