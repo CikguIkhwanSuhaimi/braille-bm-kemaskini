@@ -143,7 +143,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 <details id="embf" style="margin-top:10px"><summary><b>Tambah atau ubah embosser</b></summary>
 <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px"><label>Nama (cth Makmal Braille)<br><input type="text" id="em_n" style="width:100%"></label>
 <label>Jenis sambungan<br><select id="em_j"><option value="ip">Rangkaian (alamat IP)</option><option value="usb">USB (pencetak Windows)</option></select></label>
-<label id="em_ipw">Alamat IP<br><input type="text" id="em_ip" inputmode="decimal" placeholder="192.168.0.240" style="width:100%"></label>
+<label id="em_ipw"><span id="em_ipl">Alamat IP</span><br><input type="text" id="em_ip" inputmode="decimal" placeholder="192.168.0.240" style="width:100%"></label>
 <label id="em_prw" hidden>Nama pencetak dalam Windows<br><input type="text" id="em_pr" placeholder="cth Index Basic-D V4" style="width:100%"></label>
 <div class="sm" id="em_h"></div>
 <div class="row"><button type="button" id="em_s">Simpan</button><button type="button" class="g" id="em_c">Kosongkan</button></div></div></details></dialog>
@@ -2244,7 +2244,7 @@ let DL=null;
 (async()=>{try{DL=await window.claude.use('downloads')}catch(e){}if(!DL){$('sm2').hidden=false}})();
 const NATIVE=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
 const plug=n=>(Capacitor.Plugins&&Capacitor.Plugins[n])||Capacitor.registerPlugin(n);
-if(NATIVE&&!window.embosser){window.embosser={apk:true,version:async()=>'',print:async(ip,u)=>{try{let b='';for(let i=0;i<u.length;i+=8192)b+=String.fromCharCode.apply(null,u.subarray(i,i+8192));const r=await plug('TitikPrint').print({ip,data:btoa(b)});return{ok:true,bytes:r.bytes}}catch(e){return{ok:false,error:(e&&e.message)||'Cetak gagal.'}}}}}
+if(NATIVE&&!window.embosser){window.embosser={apk:true,version:async()=>'',printPc:async(host,printer,u)=>{try{let b='';for(let i=0;i<u.length;i+=8192)b+=String.fromCharCode.apply(null,u.subarray(i,i+8192));const r=await plug('TitikPrint').printPc({host,printer,data:btoa(b)});return{ok:true,bytes:r.bytes}}catch(e){return{ok:false,error:(e&&e.message)||'Cetak gagal.'}}},print:async(ip,u)=>{try{let b='';for(let i=0;i<u.length;i+=8192)b+=String.fromCharCode.apply(null,u.subarray(i,i+8192));const r=await plug('TitikPrint').print({ip,data:btoa(b)});return{ok:true,bytes:r.bytes}}catch(e){return{ok:false,error:(e&&e.message)||'Cetak gagal.'}}}}}
 let SRV=false,SBASE='';const DESK=!!window.embosser;
 if(DESK){SRV=true;document.addEventListener('DOMContentLoaded',()=>{})}
 async function findSrv(){for(const b of ['','http://127.0.0.1:8080','http://localhost:8080']){try{const r=await fetch(b+'/ping',{cache:'no-store'});const j=r.ok?await r.json():null;if(j&&j.pantau){SRV=true;SBASE=b;$('phint').hidden=true;$('sm2').hidden=true;if(j.ip)$('eip').value=j.ip;return true}}catch(e){}}return false}
@@ -2931,7 +2931,7 @@ if(!EMBS.length&&LS.get('brl_eip')){EMBS=[{id:'e'+Date.now().toString(36),nama:'
 const embAll=()=>[...EMBS,...EMBR.map(e=>Object.assign({},e,{rasmi:true}))];
 const embSel=()=>{const a=embAll(),id=LS.get('brl_emb_sel');return a.find(e=>e.id===id)||a[0]||null};
 const embSaveL=()=>LS.set('brl_embs',JSON.stringify(EMBS));
-const embDesc=e=>e.jenis==='usb'?'USB · '+e.pencetak:e.ip;
+const embDesc=e=>e.jenis==='usb'?'USB · '+e.pencetak+(e.ip?' · PC '+e.ip:''):e.ip;
 function embFill(sel){sel.innerHTML='';const a=embAll();if(!a.length){const o=document.createElement('option');o.value='';o.textContent='(belum ada, tekan Urus)';sel.append(o);return}const cur=embSel();a.forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=e.nama+' · '+embDesc(e);if(cur&&cur.id===e.id)o.selected=true;sel.append(o)})}
 function embRender(){['esel','lsel'].forEach(id=>{const x=$(id);if(x)embFill(x)});embList()}
 function embList(){const L=$('embl'),R=$('embr');if(!L)return;L.innerHTML='';R.innerHTML='';const cur=embSel();
@@ -2939,7 +2939,7 @@ function embList(){const L=$('embl'),R=$('embr');if(!L)return;L.innerHTML='';R.i
   if(!EMBS.length){const p=document.createElement('div');p.className='sm';p.textContent='Belum ada embosser sendiri. Tambah di bawah.';L.append(p)}
   EMBS.forEach(e=>row(e,L,[['Pilih',()=>{LS.set('brl_emb_sel',e.id);embRender()}],['Ubah',()=>embEdit(e)],['Padam',()=>{if(confirm('Padam "'+e.nama+'"?')){EMBS=EMBS.filter(x=>x.id!==e.id);embSaveL();embRender()}}]]));
   if(EMBR.length){const h=document.createElement('div');h.className='sm';h.style.cssText='margin:12px 0 2px;font-weight:700';h.textContent='Embosser sekolah (daripada penyelia)';R.append(h);EMBR.forEach(e=>row(Object.assign({},e,{rasmi:true}),R,[['Pilih',()=>{LS.set('brl_emb_sel',e.id);embRender()}],['Salin ke senarai saya',()=>{EMBS.push(Object.assign({},e,{id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,4)}));embSaveL();embRender()}]]))}}
-function embJenis(){const u=$('em_j').value==='usb';$('em_ipw').hidden=u;$('em_prw').hidden=!u;$('em_h').textContent=u?'Embosser mesti dipasang dalam Windows sebagai pencetak (pemacu Index) dan kabel USB disambung. Nama mesti sama dengan yang tertera di Settings, Printers & scanners.':'Tekan HELP dan 10 pada embosser untuk melihat alamat IP. Komputer dan embosser mesti dalam rangkaian yang sama.'}
+function embJenis(){const u=$('em_j').value==='usb';$('em_ipw').hidden=u&&!NATIVE;$('em_ipl').textContent=u?'Alamat PC yang ada pelayan cetak (cth 172.30.109.166)':'Alamat IP';$('em_prw').hidden=!u;$('em_h').textContent=u?'Embosser mesti dipasang dalam Windows sebagai pencetak (pemacu Index) dan kabel USB disambung. Nama mesti sama dengan yang tertera di Settings, Printers & scanners.':'Tekan HELP dan 10 pada embosser untuk melihat alamat IP. Komputer dan embosser mesti dalam rangkaian yang sama.'}
 function embEdit(e){EMEDIT=e?e.id:null;$('em_n').value=e?e.nama:'';$('em_j').value=e?e.jenis:'ip';$('em_ip').value=e&&e.ip||'';$('em_pr').value=e&&e.pencetak||'';embJenis();$('embf').open=true;$('em_n').focus()}
 function embManage(){embRender();embEdit(null);$('embf').open=!EMBS.length&&!EMBR.length;$('embd').showModal()}
 $('em_j').onchange=embJenis;$('em_c').onclick=()=>embEdit(null);$('embx2').onclick=()=>$('embd').close();
@@ -2947,7 +2947,8 @@ $('em_s').onclick=()=>{const n=$('em_n').value.trim(),j=$('em_j').value,ip=$('em
   if(!n){$('em_h').textContent='Isi nama embosser.';return}
   if(j==='ip'&&!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){$('em_h').textContent='Alamat IP tak sah (cth 192.168.0.240).';return}
   if(j==='usb'&&!pr){$('em_h').textContent='Isi nama pencetak seperti dalam Windows.';return}
-  const it={id:EMEDIT||('e'+Date.now().toString(36)+Math.random().toString(36).slice(2,4)),nama:n,jenis:j,ip:j==='ip'?ip:'',pencetak:j==='usb'?pr:''};
+  if(j==='usb'&&NATIVE&&!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){$('em_h').textContent='Isi alamat PC yang ada pelayan cetak (cth 172.30.109.166).';return}
+  const it={id:EMEDIT||('e'+Date.now().toString(36)+Math.random().toString(36).slice(2,4)),nama:n,jenis:j,ip:(j==='ip'||(j==='usb'&&NATIVE))?ip:'',pencetak:j==='usb'?pr:''};
   const k=EMBS.findIndex(x=>x.id===it.id);if(k>=0)EMBS[k]=it;else EMBS.push(it);embSaveL();LS.set('brl_emb_sel',it.id);embRender();embEdit(null);$('embf').open=false};
 ['esel','lsel'].forEach(id=>{$(id).onchange=e=>{if(e.target.value)LS.set('brl_emb_sel',e.target.value);embRender()}});
 ['eman','lman','hemb'].forEach(id=>{$(id).onclick=embManage});
@@ -2961,6 +2962,9 @@ async function toClip(text,label){const fb=$('fb');fb.hidden=false;fb.value=text
 function showBrf(){const t=brf();$('fb').hidden=false;$('fb').value=t;$('fbm').textContent='Teks BRF (tanda \\f ialah pemisah muka surat dan tak kelihatan).'}
 $('pdirect').onclick=async()=>{if(!last)return;const b=$('pdirect'),m=$('fbm');b.disabled=true;
   if(DESK){const T=embSel();if(!T){m.textContent='Pilih embosser dahulu: tekan Urus.';b.disabled=false;return}
+    if(T.jenis==='usb'&&NATIVE){if(!T.ip){m.textContent='Tambah alamat PC pada embosser ini: tekan Urus, Ubah.';b.disabled=false;return}m.textContent='Menghantar ke PC '+T.ip+' ...';
+      try{const t=brf(),u=new Uint8Array(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i)&255;const r=await window.embosser.printPc(T.ip,T.pencetak,u);m.textContent=r&&r.ok?'Dihantar ke pencetak USB melalui PC ('+r.bytes+' bait). Embosser akan mula sebentar lagi.':'Gagal: '+((r&&r.error)||'tidak diketahui')}catch(e){m.textContent='Gagal: '+e.message}
+      b.disabled=false;return}
     if(T.jenis==='usb'){m.textContent='Menghantar ke pencetak USB "'+T.pencetak+'" ...';
       try{const t=brf(),u=new Uint8Array(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i)&255;let ok=false,er='';
         for(const bs of ['http://127.0.0.1:8080','http://localhost:8080']){try{const r=await fetch(bs+'/print?printer='+encodeURIComponent(T.pencetak),{method:'POST',body:u});const j=await r.json().catch(()=>({}));if(r.ok){m.textContent='Dihantar ke pencetak USB ('+(j.bytes||u.length)+' bait). Embosser akan mula sebentar lagi.';ok=true}else{er=j.error||('kod '+r.status);ok='ralat'}break}catch(e){}}

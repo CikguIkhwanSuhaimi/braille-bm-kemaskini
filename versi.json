@@ -1,5 +1,5 @@
 {
-  "version": "1.17.8",
-  "sha256": "6baafd482bcd418cd5f1757ffa3b695e8ab186dd0cdbd22d893e6d12d2b11789",
-  "notes": "Teks braille baris tajuk boleh diklik"
+  "version": "1.17.9",
+  "sha256": "9fa158f8dea5f9d0f76b8bdc71cdfc0652066638a8b12ea2e28cdc10d9260d14",
+  "notes": "APK: cetak ke embosser USB melalui PC (alamat PC)"
 }

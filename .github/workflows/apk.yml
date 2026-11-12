@@ -28,6 +28,7 @@ jobs:
           cp ../android-src/TitikPrintPlugin.java ../android-src/MainActivity.java $PKG/
           rm -rf android/app/src/main/res/mipmap-anydpi-v26
           cp -r ../android-src/res/* android/app/src/main/res/
+          sed -i 's|<application|<application android:usesCleartextTraffic="true"|' android/app/src/main/AndroidManifest.xml
           npx cap sync android
       - name: Bina APK
         run: |
