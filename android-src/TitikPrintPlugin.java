@@ -64,7 +64,7 @@ public class TitikPrintPlugin extends Plugin {
                     byte[] b = Base64.decode(data, Base64.DEFAULT);
                     if (b.length > 20 * 1024 * 1024) { call.reject("Fail terlalu besar."); return; }
                     int port = findPort(host);
-                    if (port == 0) { call.reject("Pelayan cetak tidak dijumpai di PC " + host + ". Pastikan PC hidup, Titik dipasang di PC, dan telefon di Wi-Fi yang sama."); return; }
+                    if (port == 0) { call.reject("Pelayan cetak tidak dijumpai di PC " + host + ". " + lastDiag); return; }
                     URL u = new URL("http://" + host + ":" + port + "/print?printer=" + URLEncoder.encode(printer, "UTF-8"));
                     HttpURLConnection c = (HttpURLConnection) u.openConnection();
                     c.setConnectTimeout(6000);
@@ -89,35 +89,51 @@ public class TitikPrintPlugin extends Plugin {
     }
 
     private static final int[] PORTS = {8765, 8766, 8767, 8768, 8769, 8770, 8771, 8772, 8773, 8774, 8080};
+    private static volatile String lastDiag = "";
+    private static int lastGood = 0;
 
-    /** Cari port pelayan Titik pada PC (semua port dicuba serentak). 0 jika tiada. */
+    /** Cari port pelayan Titik pada PC (semua port dicuba serentak, dua pusingan). 0 jika tiada; sebab dalam lastDiag. */
     private static int findPort(final String host) throws InterruptedException {
         final int[] found = {0};
-        final java.util.concurrent.CountDownLatch done = new java.util.concurrent.CountDownLatch(PORTS.length);
-        for (final int p : PORTS) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        HttpURLConnection pc = (HttpURLConnection) new URL("http://" + host + ":" + p + "/ping").openConnection();
-                        pc.setConnectTimeout(2500);
-                        pc.setReadTimeout(2500);
-                        java.io.InputStream in = pc.getInputStream();
-                        byte[] pb = new byte[256];
-                        int n = in.read(pb);
-                        in.close();
-                        String t = n > 0 ? new String(pb, 0, n, "UTF-8") : "";
-                        if (t.contains("pantau")) {
-                            synchronized (found) { if (found[0] == 0 || p < found[0]) found[0] = p; }
+        final int[] refused = {0}, timeout = {0}, other = {0};
+        for (int round = 0; round < 2; round++) {
+            refused[0] = 0; timeout[0] = 0; other[0] = 0;
+            final java.util.concurrent.CountDownLatch done = new java.util.concurrent.CountDownLatch(PORTS.length);
+            for (final int p : PORTS) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            HttpURLConnection pc = (HttpURLConnection) new URL("http://" + host + ":" + p + "/ping").openConnection();
+                            pc.setConnectTimeout(5000);
+                            pc.setReadTimeout(5000);
+                            java.io.InputStream in = pc.getInputStream();
+                            byte[] pb = new byte[256];
+                            int n = in.read(pb);
+                            in.close();
+                            String t = n > 0 ? new String(pb, 0, n, "UTF-8") : "";
+                            if (t.contains("pantau")) {
+                                synchronized (found) { if (found[0] == 0 || p < found[0]) found[0] = p; }
+                            } else { synchronized (refused) { other[0]++; } }
+                        } catch (java.net.SocketTimeoutException e) {
+                            synchronized (refused) { timeout[0]++; }
+                        } catch (java.net.ConnectException e) {
+                            synchronized (refused) { refused[0]++; }
+                        } catch (Exception e) {
+                            synchronized (refused) { other[0]++; }
+                        } finally {
+                            done.countDown();
                         }
-                    } catch (Exception e) {
-                    } finally {
-                        done.countDown();
                     }
-                }
-            }).start();
+                }).start();
+            }
+            done.await(8, java.util.concurrent.TimeUnit.SECONDS);
+            synchronized (found) { if (found[0] != 0) { lastGood = found[0]; lastDiag = ""; return found[0]; } }
+            Thread.sleep(500);
         }
-        done.await(4, java.util.concurrent.TimeUnit.SECONDS);
-        synchronized (found) { return found[0]; }
+        if (timeout[0] >= PORTS.length - 1) lastDiag = "PC tidak menjawab langsung (tamat masa pada semua port). Rangkaian atau AP menghalang fon daripada sampai ke PC itu, atau PC tidur/tidak hidup.";
+        else if (refused[0] >= PORTS.length - 1) lastDiag = "PC dijumpai tetapi pelayan cetak tidak berjalan (sambungan ditolak pada semua port). Semak Titik di PC: Urus > status pelayan.";
+        else lastDiag = "Jawapan campuran: tamat masa " + timeout[0] + ", ditolak " + refused[0] + ", lain " + other[0] + " daripada " + PORTS.length + " port.";
+        return 0;
     }
 }
