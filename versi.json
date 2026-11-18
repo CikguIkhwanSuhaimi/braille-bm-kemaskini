@@ -1,5 +1,5 @@
 {
-  "version": "1.17.18",
-  "sha256": "ed3d93e4a7ce445863ff437da3415e10a7529657aea7e815b459f3c65a7dc024",
-  "notes": "Nombor dan huruf automatik Word (1. a. b.) pada dokumen pendek tanpa tajuk kini dikekalkan"
+  "version": "1.17.19",
+  "sha256": "0b10854bce5022c2bb7cd46013647ded57222de177cd206a39aeaee83bb97fd8",
+  "notes": "Ikut baris kosong Word (Enter berulang), boleh dimatikan"
 }

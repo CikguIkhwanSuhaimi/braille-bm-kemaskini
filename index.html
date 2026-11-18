@@ -168,6 +168,7 @@ dialog#libd select,dialog#libd input,dialog#embd select,dialog#embd input{paddin
 <label>Nombor muka surat <select id="pnpos"><option value="none">Tiada</option><option value="tl">Atas kiri</option><option value="tc">Atas tengah</option><option value="tr" selected>Atas kanan</option><option value="bl">Bawah kiri</option><option value="bc">Bawah tengah</option><option value="br">Bawah kanan</option></select></label>
 <label>Mula dari <input id="pnstart" type="number" min="0" max="999" value="1"></label>
 <label><input id="pnfirst" type="checkbox" checked> Nombor pada muka pertama</label>
+<label><input id="ikutw" type="checkbox" checked> Ikut baris kosong Word (Enter berulang)</label>
 <label><input id="bnp" type="checkbox"> Setiap Bahagian mula muka surat baharu</label>
 <label>Nombor biasa untuk guru (bawah kanan) <select id="pnprint"><option value="medium" selected>Sederhana, 2 baris</option><option value="big">Besar, 3 baris</option><option value="none">Tiada</option></select></label>
 </div></div>
@@ -820,10 +821,10 @@ function classify(paras, opts = {}) {
   const blocks = []; const warnings = [];
   let skip = false, qn = 0, imageNo = 0, underlineRuns = 0;
   let afterGroupHeading = false, inPassage = false, inFront = true, bahagianListMode = false;
-  let pendingBlank = false; const numCnt = {}; let inFrontNum = false;
+  let pendingBlank = false, pendN = 0; const numCnt = {}; let inFrontNum = false;
   let curKeep = false;
   let pendBreak = false;
-  const push = b => { if (curKeep) b.keepNext = true; if (pendBreak && b.role !== 'answer-line') { b.pageBreak = true; pendBreak = false; } blocks.push(b); };
+  const push = b => { if (opts.followBlank && pendN) b.blanks = Math.min(pendN, 3); pendN = 0; if (curKeep) b.keepNext = true; if (pendBreak && b.role !== 'answer-line') { b.pageBreak = true; pendBreak = false; } blocks.push(b); };
 
   for (let i = 0; i < paras.length; i++) {
     curKeep = !!paras[i].keepNext;
@@ -839,7 +840,7 @@ function classify(paras, opts = {}) {
       push({ role: 'image', text: p.alt || '', imageNo, drawing: true, embed: p.embed });
       if (!p.alt) warnings.push({ type: 'gambar', imageNo, msg: `Gambar ${imageNo} tiada deskripsi. Tambah teks alt atau tulis deskripsi di bawah gambar.` });
     }
-    if (!plain) { pendingBlank = true; if (p.pbAfter) pendBreak = true; continue; }
+    if (!plain) { pendingBlank = true; pendN++; if (p.pbAfter) pendBreak = true; continue; }
     if (plain === '\u0007JADUAL\u0007') { continue; }          // jadual: cetak sahaja (dilangkau)
 
     // --- Kawasan dilangkau (cetak sahaja) ---
@@ -1971,7 +1972,8 @@ function compose(blocks, dict, cfg = {}) {
     if (b.role === 'skip') continue;
     if (b.role === 'arahan-head') inArahan = true;
     if (b.role === 'bahagian') { inArahan = false; bahagianSeen = true; }
-    const gap = gapFor(b, prev);
+    let gap = gapFor(b, prev);
+    if (cfg.ikutWord && b.blanks && prev && gap < b.blanks) gap = b.blanks;   // baris kosong Word diikut (maks 3)
     if (b.role === 'table') { const chs = T.toChunks(b.table, tr, cfg); chs.forEach((c, i) => flat.push({ role: 'table', pb: i === 0 && !!b.pageBreak, tbl: i === 0 ? b.table : null, nch: i === 0 ? chs.length : 0, gap: i ? 1 : gap, lb: c.map((l, k) => ({ t: 'raw', text: l, src: c.src ? c.src[k] : '', sw: c.sw ? c.sw[k] : null })) })); prev = b; continue; }
     if (b.role === 'image' && b.tactile) {              // rajah timbul: muka penuh / dalam kertas / separuh / belah
       const rows = cfg.rows || L.DEFAULT.rows, cols = cfg.cols || L.DEFAULT.cols;
@@ -2178,7 +2180,7 @@ function furn(cfg = {}) {
 
 function run(xml, dict, cfg = {}) {
   const raw = R.readParagraphs(xml, cfg.numXml, { math: cfg.lang === 'mt' });
-  const cls = R.classify(raw.paras, { lang: cfg.lang === 'en' ? 'en' : 'bm' });
+  const cls = R.classify(raw.paras, { lang: cfg.lang === 'en' ? 'en' : 'bm', followBlank: !!cfg.ikutWord });
   const desc = cfg.imageDesc || {};
   cls.blocks.forEach(b => { if (b.drawing && !b.text && desc[b.imageNo] && desc[b.imageNo].trim()) b.text = desc[b.imageNo].trim(); });
   cls.warnings = cls.warnings.filter(w => w.type !== 'gambar' || !cls.blocks.some(b => b.drawing && b.imageNo === w.imageNo && b.text));
@@ -2329,7 +2331,7 @@ async function load(f){
   }catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">'+esc(e.message)+'</div>'}
 }
 let brks=new Set(),restored=0,sTm=null,curBuf=null;
-function cfg(){syncMain();return{numXml,tableMode:($('tmode')||{}).value||'auto',lang:MOD==='en'?'en':MOD==='mt'?'mt':'bm',cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:(MOD==='sn'||MOD==='gf')?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
+function cfg(){syncMain();return{ikutWord:!$('ikutw')||$('ikutw').checked,numXml,tableMode:($('tmode')||{}).value||'auto',lang:MOD==='en'?'en':MOD==='mt'?'mt':'bm',cols:+$('cols').value||36,rows:+$('rows').value||26,interpoint:$('inter').checked,punct,imageDesc:imgDesc,imageTactile:(MOD==='sn'||MOD==='gf')?imgTac:{},tableChars:tchars,pageNum:{pos:$('pnpos').value,start:+$('pnstart').value,first:$('pnfirst').checked,print:$('pnprint').value==='none'?false:$('pnprint').value},tablePadV:Math.max(0,Math.min(3,+$('tpv').value||0)),bahagianNewPage:$('bnp').checked,manualBreaks:[...brks]}}
 function go(){
   let r;try{r=E.P.run(xml,dict(),cfg())}catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">Ralat: '+esc(e.message)+'</div>';return}
   last=r;buildPool();$('out').hidden=false;
@@ -2808,7 +2810,7 @@ $('pages').addEventListener('input',e=>{const t=e.target;if(t.tagName!=='TEXTARE
   if(r.changed){render();const n=document.querySelector('#pages textarea[data-i="'+i+'"]');if(n){n.focus();const p=Math.min(caret,n.value.length);n.setSelectionRange(p,p)}return}
   if(r.text!==t.value){t.value=r.text;const p=Math.min(caret,r.text.length);t.setSelectionRange(p,p)}
   const bad=r.text.split('\n').some(l=>l.length>c.cols);let w=t.parentNode.querySelector('.w');if(bad&&!w){w=document.createElement('div');w.className='w e';t.parentNode.append(w)}if(w)w.textContent=bad?'Ada baris melebihi '+c.cols+' sel.':'';if(!bad&&w)w.remove()});
-['copies','inter','cols','rows','uni','side','bnp','pnpos','pnstart','pnfirst','pnprint'].forEach(i=>$(i).addEventListener('change',()=>{if(!xml)return;(i==='uni'||i==='side'||i==='copies')?render():go()}));
+['copies','inter','cols','rows','uni','side','bnp','ikutw','pnpos','pnstart','pnfirst','pnprint'].forEach(i=>$(i).addEventListener('change',()=>{if(!xml)return;(i==='uni'||i==='side'||i==='copies')?render():go()}));
 $('ack').onchange=render;
 window.__eff=()=>eff();
 Object.defineProperty(window,"__last",{get:()=>last});
