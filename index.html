@@ -784,8 +784,8 @@ function readParagraphs(xml, numXml, opts) {
     const pbBefore = pbProp || (bri >= 0 && (ti < 0 || bri < ti)), pbAfter = bri >= 0 && !pbBefore;
     const lri = p.search(/<w:lastRenderedPageBreak\s*\/>/), lrb = lri >= 0 && (ti < 0 || lri < ti);   // Word mula muka surat baharu di sini
     const head = p.split(/<w:t[ >][^<]*[^\s<][^<]*<\/w:t>/)[0], leadTabs = (head.match(/<w:tab\/>/g) || []).length, indL = +((p.match(/<w:ind\b[^>]*\sw:(?:left|start)="(\d+)"/) || [])[1] || 0);
-    const lead = Math.min(8, leadTabs * 2 + Math.round(indL / 360));   // Tab / inden Word -> sel inden
-    const base = { lead, style, num: hasNum, bullet: isBullet, lvl: +nil, draw, alt: cleanAlt(dec(alt)), embed, keepNext, pbBefore, pbAfter, lrb };
+    const lead = Math.min(8, leadTabs * 2);   // Tab di awal baris Word -> sel inden (inden perenggan Word tidak diikut: terlalu banyak templat)
+    const base = { lead, nid: hasNum ? nid : '', nf: hasNum ? nfmt(nid, nil) : '', style, num: hasNum, bullet: isBullet, lvl: +nil, draw, alt: cleanAlt(dec(alt)), embed, keepNext, pbBefore, pbAfter, lrb };
     const segs = (!draw && !/\u0007/.test(tx) && /\n/.test(tx.replace(/^\n+|\n+$/g, ''))) ? tx.replace(/^\n+|\n+$/g, '').split('\n') : null;
     if (segs) {   // Shift+Enter: setiap baris Word kekal baris sendiri (penanda penekanan ditutup dan dibuka semula pada setiap baris)
       const open = { '\u0002': 0, '\u0004': 0, '\u000e': 0 }, close = { '\u0003': '\u0002', '\u0005': '\u0004', '\u000f': '\u000e' };
@@ -820,7 +820,7 @@ function classify(paras, opts = {}) {
   const blocks = []; const warnings = [];
   let skip = false, qn = 0, imageNo = 0, underlineRuns = 0;
   let afterGroupHeading = false, inPassage = false, inFront = true, bahagianListMode = false;
-  let pendingBlank = false;
+  let pendingBlank = false; const numCnt = {}; let inFrontNum = false;
   let curKeep = false;
   let pendBreak = false;
   const push = b => { if (curKeep) b.keepNext = true; if (pendBreak && b.role !== 'answer-line') { b.pageBreak = true; pendBreak = false; } blocks.push(b); };
@@ -870,7 +870,7 @@ function classify(paras, opts = {}) {
       if (p.bullet || lit) { push({ role: 'bullet', text: lit ? t.replace(lit[0], lit[1]) : t, lvl: p.bullet ? Math.min(2, p.lvl || 0) : 0 }); afterGroupHeading = false; continue; }
     }
     // --- Tajuk kertas (4 baris pertama) ---
-    if (inFront && !blocks.some(b => b.role === 'arahan-head') && !/^(ARAHAN|INSTRUCTIONS?|DIRECTIONS?)\s*:?$/i.test(plain)) {
+    if (inFront && !(p.num && (inFrontNum = !blocks.length || blocks.every(b => /^(question|option)$/.test(b.role)))) && !blocks.some(b => b.role === 'arahan-head') && !/^(ARAHAN|INSTRUCTIONS?|DIRECTIONS?)\s*:?$/i.test(plain)) {
       push({ role: 'title', text: plain }); continue;
     }
     if (/^(ARAHAN|INSTRUCTIONS?|DIRECTIONS?)\s*:?$/i.test(plain)) { push({ role: 'arahan-head', text: /^ARAHAN/i.test(plain) ? 'ARAHAN:' : plain.toUpperCase().replace(/\s*:?$/, ':') }); inFront = true; bahagianListMode = true; continue; }
@@ -912,8 +912,12 @@ function classify(paras, opts = {}) {
 
     // --- Soalan bernombor ---
     if (p.num) {
-      qn++; inPassage = false; afterGroupHeading = false;
-      push({ role: 'question', n: qn, text: t });
+      numCnt[p.nid] = (numCnt[p.nid] || 0) + 1;
+      if (/^(lower|upper)Letter$/.test(p.nf) && numCnt[p.nid] <= 26 && blocks.length && /^(question|option)$/.test(blocks[blocks.length - 1].role) && inFrontNum) {      // senarai huruf automatik Word (a. b. c.) = pilihan
+        push({ role: 'option', label: String.fromCharCode(64 + numCnt[p.nid]), text: t, raw: t, ind: p.lead || 0 }); afterGroupHeading = false; inFront = false; continue;
+      }
+      qn++; inPassage = false; afterGroupHeading = false; inFront = false;
+      push({ role: 'question', n: (inFrontNum && p.nf === 'decimal') ? numCnt[p.nid] : qn, text: t });   // dokumen pendek tanpa tajuk: nombor ikut senarai Word
       continue;
     }
 

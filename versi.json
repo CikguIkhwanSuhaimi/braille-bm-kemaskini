@@ -1,5 +1,5 @@
 {
-  "version": "1.17.17",
-  "sha256": "c1266964aa0c5deafa4f5f128bd3a188b31b90db88cd98ba4c1747646c7f4d04",
-  "notes": "Tab / inden Word sebelum pilihan A-D kini diikuti dalam Braille"
+  "version": "1.17.18",
+  "sha256": "ed3d93e4a7ce445863ff437da3415e10a7529657aea7e815b459f3c65a7dc024",
+  "notes": "Nombor dan huruf automatik Word (1. a. b.) pada dokumen pendek tanpa tajuk kini dikekalkan"
 }
