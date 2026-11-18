@@ -783,7 +783,9 @@ function readParagraphs(xml, numXml, opts) {
     const bri = p.search(/<w:br\s+w:type="page"\s*\/>/), ti = p.search(/<w:t[ >]/);
     const pbBefore = pbProp || (bri >= 0 && (ti < 0 || bri < ti)), pbAfter = bri >= 0 && !pbBefore;
     const lri = p.search(/<w:lastRenderedPageBreak\s*\/>/), lrb = lri >= 0 && (ti < 0 || lri < ti);   // Word mula muka surat baharu di sini
-    const base = { style, num: hasNum, bullet: isBullet, lvl: +nil, draw, alt: cleanAlt(dec(alt)), embed, keepNext, pbBefore, pbAfter, lrb };
+    const head = p.split(/<w:t[ >][^<]*[^\s<][^<]*<\/w:t>/)[0], leadTabs = (head.match(/<w:tab\/>/g) || []).length, indL = +((p.match(/<w:ind\b[^>]*\sw:(?:left|start)="(\d+)"/) || [])[1] || 0);
+    const lead = Math.min(8, leadTabs * 2 + Math.round(indL / 360));   // Tab / inden Word -> sel inden
+    const base = { lead, style, num: hasNum, bullet: isBullet, lvl: +nil, draw, alt: cleanAlt(dec(alt)), embed, keepNext, pbBefore, pbAfter, lrb };
     const segs = (!draw && !/\u0007/.test(tx) && /\n/.test(tx.replace(/^\n+|\n+$/g, ''))) ? tx.replace(/^\n+|\n+$/g, '').split('\n') : null;
     if (segs) {   // Shift+Enter: setiap baris Word kekal baris sendiri (penanda penekanan ditutup dan dibuka semula pada setiap baris)
       const open = { '\u0002': 0, '\u0004': 0, '\u000e': 0 }, close = { '\u0003': '\u0002', '\u0005': '\u0004', '\u000f': '\u000e' };
@@ -894,7 +896,7 @@ function classify(paras, opts = {}) {
       const o = plain.match(optRe);
       const rr = plain.match(romanRe);
       if ((o && underlineOnly(o[2])) || (rr && underlineOnly(rr[2]))) { blocks.push({ role: 'answer-line' }); continue; }   // "i. ______": ruang jawapan, bukan teks
-      if (o) { push({ role: 'option', label: o[1], text: sfx(t, o[2].length), raw: t }); afterGroupHeading = false; continue; }
+      if (o) { push({ role: 'option', label: o[1], text: sfx(t, o[2].length), raw: t, ind: p.lead || 0 }); afterGroupHeading = false; continue; }
       const r = plain.match(romanRe);
       if (r) { push({ role: 'roman', label: r[1], text: sfx(t, r[2].length), raw: t }); continue; }
     } else {
@@ -1992,7 +1994,7 @@ function compose(blocks, dict, cfg = {}) {
     switch (b.role) {
       case 'question': lb = { t: 'item', num: numLabel(b.n), text: tr(b.text), src: MT.plain(b.text), srcNum: b.n + '.' }; break;
       case 'roman': lb = { t: 'item', num: EN ? tr(b.label + '.') : romanLabel(b.label), text: tr(b.text), indent: 3, src: MT.plain(b.text), srcNum: b.label.toLowerCase() + '.' }; break;
-      case 'option': lb = { t: 'item', num: EN ? tr(b.label + '.') : optLabel(b.label), text: tr(b.text), src: MT.plain(b.text), srcNum: b.label + '.' }; break;
+      case 'option': lb = { t: 'item', num: EN ? tr(b.label + '.') : optLabel(b.label), text: tr(b.text), indent: b.ind || 0, src: MT.plain(b.text), srcNum: b.label + '.' }; break;
       case 'bullet': lb = { t: 'item', num: EN ? '_4' : ((cfg.punct && cfg.punct['\u2022']) || B.PUNCT['\u2022'] || '3'), indent: 2 * (b.lvl || 0), text: tr(b.text), src: MT.plain(b.text), srcNum: '\u2022' }; break;
       case 'list-bahagian': lb = { t: 'para', text: tr(b.text), indent: 4, src: MT.plain(b.text) }; break;
       case 'image': if (!b.text) continue; lb = { t: 'para', text: tr(IMGD + b.text), src: MT.plain(IMGD + b.text) }; break;

@@ -1,5 +1,5 @@
 {
-  "version": "1.17.16",
-  "sha256": "3f5c308fa0aa3401672eb91ae1b98bc754d568c1c74fbfba1f820c0309fc323d",
-  "notes": "Ikut muka surat Word: Enter berulang untuk lompat muka surat"
+  "version": "1.17.17",
+  "sha256": "c1266964aa0c5deafa4f5f128bd3a188b31b90db88cd98ba4c1747646c7f4d04",
+  "notes": "Tab / inden Word sebelum pilihan A-D kini diikuti dalam Braille"
 }
