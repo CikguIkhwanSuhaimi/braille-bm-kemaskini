@@ -1,5 +1,5 @@
 {
-  "version": "1.19.2",
-  "sha256": "71ec7ee36526a6b45159e85767ea4fde5d05b2b73758846ae67b48b558092792",
-  "notes": "Jadual bergambar dari PDF ditulis sebagai senarai (IMK 62 -> 29 muka)"
+  "version": "1.19.3",
+  "sha256": "670bcdc66ee02bab4b68c39239b492db5fcbf942ed80334332512832a1e84b9a",
+  "notes": "Gambar dalam sel jadual Word kini diberi amaran dan kad deskripsi"
 }

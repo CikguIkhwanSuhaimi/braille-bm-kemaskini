@@ -648,6 +648,7 @@ function runText(p) {
   if (!outside && /\u0004/.test(tx)) tx = tx.replace(/[\u0004\u0005]/g, '');
   return tx.replace(/\s+/g, ' ').trim();
 }
+const tblImgs = x => (x.match(/<w:drawing>[\s\S]*?<\/w:drawing>|<w:pict>[\s\S]*?<\/w:pict>/g) || []).map(d => ({ alt: ((d.match(/<wp:docPr[^>]*descr="([^"]*)"/) || [])[1]) || '', embed: (d.match(/<a:blip[^>]*r:embed="([^"]+)"/) || [])[1] || '' }));
 function parseTable(t) {
   const grid = (t.match(/<w:tblGrid>([\s\S]*?)(?:<w:tblGridChange|<\/w:tblGrid>)/) || [])[1] || '';
   let widths = (grid.match(/<w:gridCol w:w="(\d+)"/g) || []).map(x => +x.match(/(\d+)/)[1]);
@@ -661,7 +662,7 @@ function parseTable(t) {
   })).filter(r => r.cells.length);
   const ncol = Math.max(widths.length, ...rows.map(r => r.cells.reduce((s, c) => s + c.span, 0)), 1);
   if (widths.length !== ncol) widths = Array(ncol).fill(1);
-  return { widths, rows, pic: /<w:tblCaption w:val="titik-gambar"/.test(t) };
+  return { widths, rows, imgs: tblImgs(t), pic: /<w:tblCaption w:val="titik-gambar"/.test(t) };
 }
 
 
@@ -699,7 +700,7 @@ function handleTable(t, ctx, nested, PRINT_ONLY) {
     if (!grp.length) return;
     const widest = grp.reduce((a, r) => (r.length > a.length ? r : a), grp[0]);
     const widths = widest.map(c => c.w || 1);
-    ctx.tabs.push({ widths, rows: grp.map(r => ({ cells: r.map(c => ({ text: c.text, align: c.align, span: 1 })) })) });
+    ctx.tabs.push({ widths, imgs: tblImgs(grp.map(r => r.map(c => c.ps.join('')).join('')).join('')), rows: grp.map(r => ({ cells: r.map(c => ({ text: c.text, align: c.align, span: 1 })) })) });
     out.push(PLACE(ctx.tabs.length - 1)); grp = [];
   };
   for (const tr of (inner.match(/<w:tr[ >][\s\S]*?<\/w:tr>/g) || [])) {
@@ -851,7 +852,14 @@ function classify(paras, opts = {}) {
       if (/^(Arahan|Instructions?)\s*:/i.test(plain) || (/^(Bahagian|Section|Part)\s+[A-Z]$/i.test(plain) && /^\d+\s*(markah|marks?)$/i.test(nxt))) { skip = false; inFront = false; } else continue;
     }
     if (/^Verifikasi Braille/i.test(plain)) continue;
-    if (p.table) { push({ role: 'table', table: p.table }); continue; }
+    if (p.table) {
+      for (const im of (p.table.imgs || [])) {        // gambar dalam sel jadual: kad deskripsi + amaran (jadual tidak diubah)
+        imageNo++; const alt = cleanAlt(dec(im.alt));
+        push({ role: 'image', text: alt, imageNo, drawing: true, embed: im.embed });
+        if (!alt) warnings.push({ type: 'gambar', imageNo, msg: `Gambar ${imageNo} (dalam jadual) tiada deskripsi. Tambah teks alt atau tulis deskripsi di kad gambar.` });
+      }
+      push({ role: 'table', table: p.table }); continue;
+    }
 
     // --- Gaya templat (jika ada) ---
     // (disediakan untuk Mod 1; lihat STYLE_ROLE)
