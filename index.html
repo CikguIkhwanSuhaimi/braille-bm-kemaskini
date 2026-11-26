@@ -661,7 +661,7 @@ function parseTable(t) {
   })).filter(r => r.cells.length);
   const ncol = Math.max(widths.length, ...rows.map(r => r.cells.reduce((s, c) => s + c.span, 0)), 1);
   if (widths.length !== ncol) widths = Array(ncol).fill(1);
-  return { widths, rows };
+  return { widths, rows, pic: /<w:tblCaption w:val="titik-gambar"/.test(t) };
 }
 
 
@@ -2165,7 +2165,7 @@ function modelToXml(model) {
     else if (b.type === 'pb') body.push('<w:p><w:r><w:br w:type="page"/></w:r></w:p>');
     else if (b.type === 'tbl') {
       const nC = b.xs.length - 1;
-      let x = '<w:tbl><w:tblPr><w:tblBorders><w:top w:val="single" w:sz="4"/><w:left w:val="single" w:sz="4"/><w:bottom w:val="single" w:sz="4"/><w:right w:val="single" w:sz="4"/><w:insideH w:val="single" w:sz="4"/><w:insideV w:val="single" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid>' + b.xs.slice(1).map((v, k) => '<w:gridCol w:w="' + Math.max(200, Math.round((v - b.xs[k]) * 20)) + '"/>').join('') + '</w:tblGrid>';
+      let x = '<w:tbl><w:tblPr>' + (b.pic ? '<w:tblCaption w:val="titik-gambar"/>' : '') + '<w:tblBorders><w:top w:val="single" w:sz="4"/><w:left w:val="single" w:sz="4"/><w:bottom w:val="single" w:sz="4"/><w:right w:val="single" w:sz="4"/><w:insideH w:val="single" w:sz="4"/><w:insideV w:val="single" w:sz="4"/></w:tblBorders></w:tblPr><w:tblGrid>' + b.xs.slice(1).map((v, k) => '<w:gridCol w:w="' + Math.max(200, Math.round((v - b.xs[k]) * 20)) + '"/>').join('') + '</w:tblGrid>';
       for (const r of b.rows) {
         x += '<w:tr>';
         for (const c of r) x += '<w:tc><w:tcPr><w:tcW w:w="2000" w:type="dxa"/>' + (c.span > 1 ? '<w:gridSpan w:val="' + c.span + '"/>' : '') + bd + '</w:tcPr>' + (c.t.length ? c.t.map(p).join('') : '<w:p/>') + '</w:tc>';
@@ -2203,6 +2203,7 @@ const optLabel = l => ';,' + l.toLowerCase() + '4';
 const cleanCell = t => String(t || '').replace(/[\u0002-\u0005\u0007\u000e\u000f\u0010]/g, '').replace(/\s*\n\s*/g, ' ').replace(/\s+/g, ' ').trim();
 function tableWide(tbl, cfg) {
   const mode = cfg.tableMode || 'auto';
+  if (mode === 'auto' && tbl.pic) return true;                  // jadual bergambar (dari PDF): senarai, lebih ringkas untuk jari
   if (mode === 'auto' && cfg.lang !== 'en') return false;      // BM kekal bingkai (sudah disahkan dengan jadual DXB sekolah)
   if (mode === 'frame') return false;
   if (mode === 'list') return true;

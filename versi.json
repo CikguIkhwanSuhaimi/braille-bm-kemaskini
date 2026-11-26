@@ -1,5 +1,5 @@
 {
-  "version": "1.19.1",
-  "sha256": "ad0f73db077194f043b7d3e633ef9eca5f6e28e4eefa54454bd921ffdd30d7ca",
-  "notes": "PDF bergambar: gambar dikesan, kapsyen dibawa, OCR tidak lagi menghasilkan sampah daripada lukisan"
+  "version": "1.19.2",
+  "sha256": "71ec7ee36526a6b45159e85767ea4fde5d05b2b73758846ae67b48b558092792",
+  "notes": "Jadual bergambar dari PDF ditulis sebagai senarai (IMK 62 -> 29 muka)"
 }
