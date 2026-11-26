@@ -1,5 +1,5 @@
 {
-  "version": "1.18.1",
-  "sha256": "e3fcfa7dc8650b01e09a392e0b34d16eec3f6850bef87bc5f9fa6bd2e41c09f3",
-  "notes": "PDF: jadual bersambung merentas muka surat, nota kaki dibuang"
+  "version": "1.19.0",
+  "sha256": "6a6a1675d44fccfe5a6065bd0085ce6021853a5e5b9dd77c1a152abc6fc8479c",
+  "notes": "PDF imbasan dibaca dengan OCR (BM+Inggeris); salinan Word boleh dimuat turun untuk semakan"
 }
