@@ -1,5 +1,5 @@
 {
-  "version": "1.17.19",
-  "sha256": "0b10854bce5022c2bb7cd46013647ded57222de177cd206a39aeaee83bb97fd8",
-  "notes": "Ikut baris kosong Word (Enter berulang), boleh dimatikan"
+  "version": "1.18.0",
+  "sha256": "721db40d3aab40e7e2114297bc76528cebfc5243a5c06e67187613e108253732",
+  "notes": "Baca fail PDF (teks asli): perenggan dan jadual ditukar kepada struktur untuk enjin Braille"
 }
