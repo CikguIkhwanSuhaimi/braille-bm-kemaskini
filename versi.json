@@ -1,5 +1,5 @@
 {
-  "version": "1.18.0",
-  "sha256": "721db40d3aab40e7e2114297bc76528cebfc5243a5c06e67187613e108253732",
-  "notes": "Baca fail PDF (teks asli): perenggan dan jadual ditukar kepada struktur untuk enjin Braille"
+  "version": "1.18.1",
+  "sha256": "e3fcfa7dc8650b01e09a392e0b34d16eec3f6850bef87bc5f9fa6bd2e41c09f3",
+  "notes": "PDF: jadual bersambung merentas muka surat, nota kaki dibuang"
 }

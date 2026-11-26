@@ -2043,7 +2043,7 @@ function pdfToModel(pages, opts = {}) {
   const warnings = [], blocks = [];
   // buang kepala/kaki berulang: baris dalam 9% atas/bawah halaman yang (selain digit) muncul pada >=60% halaman
   const norm = s => s.replace(/\d+/g, '#');
-  const edge = pages.map(pg => groupLines(pg.items).filter(L => L.y > pg.h * 0.91 || L.y < pg.h * 0.1).map(L => ({ L, k: norm(lineText(L)), pos: L.y > pg.h / 2 ? 'T' : 'B' })));
+  const edge = pages.map(pg => groupLines(pg.items).filter(L => L.y > pg.h * 0.91 || L.y < pg.h * 0.15).map(L => ({ L, k: norm(lineText(L)), pos: L.y > pg.h / 2 ? 'T' : 'B' })));
   const cnt = {}; edge.forEach(arr => new Set(arr.map(e => e.pos + e.k)).forEach(k => cnt[k] = (cnt[k] || 0) + 1));
   const need = Math.max(2, Math.ceil(pages.length * 0.6));
   const drop = new Set(); pages.forEach((pg, i) => edge[i].forEach(e => { if (cnt[e.pos + e.k] >= need && pages.length > 1) e.L.items.forEach(it => drop.add(it)); }));
