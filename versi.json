@@ -1,5 +1,5 @@
 {
-  "version": "1.19.0",
-  "sha256": "6a6a1675d44fccfe5a6065bd0085ce6021853a5e5b9dd77c1a152abc6fc8479c",
-  "notes": "PDF imbasan dibaca dengan OCR (BM+Inggeris); salinan Word boleh dimuat turun untuk semakan"
+  "version": "1.19.1",
+  "sha256": "ad0f73db077194f043b7d3e633ef9eca5f6e28e4eefa54454bd921ffdd30d7ca",
+  "notes": "PDF bergambar: gambar dikesan, kapsyen dibawa, OCR tidak lagi menghasilkan sampah daripada lukisan"
 }

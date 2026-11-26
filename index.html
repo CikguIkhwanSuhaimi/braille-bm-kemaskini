@@ -1922,7 +1922,7 @@ async function extractPages(pdfjs, data) {
     }
     // garis: segi empat nipis / garisan, dengan matriks transformasi
     const ol = await pg.getOperatorList();
-    const hs = [], vs = [];
+    const hs = [], vs = [], imgs = [];
     let ctm = [1, 0, 0, 1, 0, 0]; const stack = [];
     const mul = (m, t) => [m[0] * t[0] + m[2] * t[1], m[1] * t[0] + m[3] * t[1], m[0] * t[2] + m[2] * t[3], m[1] * t[2] + m[3] * t[3], m[0] * t[4] + m[2] * t[5] + m[4], m[1] * t[4] + m[3] * t[5] + m[5]];
     const P = (x, y) => [ctm[0] * x + ctm[2] * y + ctm[4], ctm[1] * x + ctm[3] * y + ctm[5]];
@@ -1937,6 +1937,12 @@ async function extractPages(pdfjs, data) {
       if (f === O.save) stack.push(ctm.slice());
       else if (f === O.restore) ctm = stack.pop() || ctm;
       else if (f === O.transform) ctm = mul(ctm, a);
+      else if (f === O.paintImageXObject || f === O.paintInlineImageXObject || f === O.paintJpegXObject || f === O.paintImageMaskXObject || f === O.paintImageXObjectRepeat) {
+        if (Math.abs(ctm[1]) < 1e-3 && Math.abs(ctm[2]) < 1e-3) {   // tidak diputar
+          const x0 = Math.min(ctm[4], ctm[4] + ctm[0]), x1 = Math.max(ctm[4], ctm[4] + ctm[0]), y0 = Math.min(ctm[5], ctm[5] + ctm[3]), y1 = Math.max(ctm[5], ctm[5] + ctm[3]);
+          if (x1 - x0 >= 24 && y1 - y0 >= 24) imgs.push({ x0, x1, y0, y1 });
+        }
+      }
       else if (f === O.constructPath) {
         const ops = a[0], co = a[1]; let k = 0, cur = null, start = null;
         for (const op of ops) {
@@ -1958,7 +1964,7 @@ async function extractPages(pdfjs, data) {
         paths = [];
       } else if (f === O.endPath) paths = [];
     }
-    pages.push({ w: vp.width, h: vp.height, items, hs, vs });
+    pages.push({ w: vp.width, h: vp.height, items, hs, vs, imgs });
   }
   return pages;
 }
@@ -2038,7 +2044,10 @@ function fillTable(t, items) {          // setiap baris: sel bergabung (span) ik
     if (!cell) { rest.push(it); continue; }
     cell.its.push(it);
   }
-  const rows = rowsCells.map(cells => cells.map(c => ({ t: groupLines(c.its).map(lineText).filter(Boolean), span: c.k1 - c.k0 })));
+  const rows = rowsCells.map((cells, r) => cells.map(c => {
+    const imgs = (t.imgs || []).filter(im => { const cx = (im.x0 + im.x1) / 2, cy = (im.y0 + im.y1) / 2; return cx >= t.xs[c.k0] - 2 && cx <= t.xs[c.k1] + 2 && cy <= t.ys[r] + 2 && cy >= t.ys[r + 1] - 2; }).length;
+    return { t: groupLines(c.its).map(lineText).filter(Boolean), span: c.k1 - c.k0, img: imgs };
+  }));
   return { rows, rest };
 }
 
@@ -2054,6 +2063,25 @@ function cellRects(t) {                 // segi empat setiap sel (ikut garis men
   return out;
 }
 
+// Jadual bergambar (cth Inventori Minat): baris [nombor | gambar] + baris [kapsyen | YA | TIDAK] -> satu baris [nombor | kapsyen | YA | TIDAK]
+function pictureItems(b) {
+  if (!b.rows.some(r => r.some(c => c.img))) return b;
+  const rows = b.rows, out = [], hdr = []; let i = 0, nPic = 0, noCap = 0;
+  while (i < rows.length) {
+    const r = rows[i];
+    if (r.some(c => c.img)) {
+      nPic += r.reduce((a, c) => a + c.img, 0);
+      const num = r[0] && !r[0].img ? r[0].t : [], nx = rows[i + 1];
+      if (nx && !nx.some(c => c.img)) { const nc = (nx.length > 3 && !nx[0].t.length) ? nx.slice(1) : nx; out.push([{ t: num, span: 1 }].concat(nc.map(c => ({ t: c.t, span: 1 })))); i += 2; }
+      else { noCap++; out.push([{ t: num, span: 1 }, { t: [], span: 1 }, { t: [], span: 1 }, { t: [], span: 1 }]); i++; }
+    } else if (!out.length) { hdr.push(r); i++; }
+    else { out.push(r.map(c => ({ t: c.t, span: c.span }))); i++; }
+  }
+  const nC = Math.max(...out.map(r => r.reduce((a, c) => a + c.span, 0)));
+  const hrows = hdr.map(r => r.map((c, k) => ({ t: c.t, span: k === r.length - 1 ? Math.max(1, nC - (r.length - 1)) : 1 })));
+  return { type: 'tbl', rows: hrows.concat(out), page: b.page, xs: Array.from({ length: nC + 1 }, (_, k) => k * 100), pic: true, nPic, noCap };
+}
+
 function pdfToModel(pages, opts = {}) {
   const warnings = [], blocks = [];
   // buang kepala/kaki berulang: baris dalam 9% atas/bawah halaman yang (selain digit) muncul pada >=60% halaman
@@ -2065,21 +2093,26 @@ function pdfToModel(pages, opts = {}) {
   // nota sambungan di kaki ("Lihat halaman sebelah"): buang jika berulang
   const tabs = [];
   pages.forEach((pg, pi) => {
-    const items = pg.items.filter(it => !drop.has(it));
+    const inImg = it => (pg.imgs || []).some(im => it.x + it.w / 2 >= im.x0 && it.x + it.w / 2 <= im.x1 && it.y >= im.y0 - 2 && it.y <= im.y1 + 2);
+    const items = pg.items.filter(it => !drop.has(it) && !inImg(it));
     const tbs = findTables(pg).sort((a, b) => b.yTop - a.yTop);
+    tbs.forEach(t => { t.imgs = (pg.imgs || []).filter(im => { const cx = (im.x0 + im.x1) / 2, cy = (im.y0 + im.y1) / 2; return cx >= t.xs[0] - 2 && cx <= t.xs[t.xs.length - 1] + 2 && cy <= t.ys[0] + 2 && cy >= t.ys[t.ys.length - 1] - 2; }); });
+    const looseImgs = (pg.imgs || []).filter(im => !tbs.some(t => t.imgs.includes(im)));
     let rest = items; const tblObjs = [];
     for (const t of tbs) { const f = fillTable(t, rest); rest = f.rest; tblObjs.push({ t, rows: f.rows }); }
     // gabungkan teks luar jadual dan jadual ikut kedudukan menegak
     const els = [];
-    for (const L of groupLines(rest)) els.push({ y: L.y, type: 'line', L });
-    for (const o of tblObjs) els.push({ y: o.t.yTop, type: 'tbl', o });
-    els.sort((a, b) => b.y - a.y);
+    for (const L of groupLines(rest)) els.push({ y: L.y, type: 'line', L, x: L.x });
+    for (const o of tblObjs) els.push({ y: o.t.yTop, type: 'tbl', o, x: o.t.xs[0] });
+    for (const im of looseImgs) els.push({ y: im.y1, type: 'img', x: im.x0 });
+    els.sort((a, b) => Math.abs(a.y - b.y) < 6 && a.type === 'tbl' && b.type === 'tbl' ? a.x - b.x : b.y - a.y);
     // perenggan: baris berturutan dengan jarak kecil dan indentasi serupa digabungkan
     let prevL = null, cur = null;
     const lns = els.filter(e => e.type === 'line').map(e => { const it = e.L.items[e.L.items.length - 1]; e.L.right = it.x + it.w; return e.L; });
     const maxRx = x0 => { let m = 0; for (const l of lns) if (Math.abs(l.x - x0) < 8 && l.right > m) m = l.right; return m || x0 + 1; };
     for (const e of els) {
-      if (e.type === 'tbl') { cur = null; prevL = null; blocks.push({ type: 'tbl', rows: e.o.rows, page: pi, xs: e.o.t.xs }); continue; }
+      if (e.type === 'img') { cur = null; prevL = null; blocks.push({ type: 'img', page: pi }); continue; }
+      if (e.type === 'tbl') { cur = null; prevL = null; blocks.push(pictureItems({ type: 'tbl', rows: e.o.rows, page: pi, xs: e.o.t.xs })); continue; }
       const txt = lineText(e.L);
       if (!txt) continue;
       const gap = prevL ? prevL.y - e.L.y : 0;
@@ -2089,7 +2122,7 @@ function pdfToModel(pages, opts = {}) {
       else { cur = { type: 'p', text: txt, x0: e.L.x, page: pi, y: e.L.y, edge: e.L.y < pg.h * 0.16 || e.L.y > pg.h * 0.9 }; blocks.push(cur); }
       prevL = e.L;
     }
-    const lows = els.map(e => e.type === 'line' ? e.L.y : e.o.t.yBot); const low = lows.length ? Math.min(...lows) : pg.h * 0.1;
+    const lows = els.map(e => e.type === 'line' ? e.L.y : e.type === 'img' ? e.y : e.o.t.yBot); const low = lows.length ? Math.min(...lows) : pg.h * 0.1;
     const fill = (pg.h * 0.91 - low) / (pg.h * 0.81);
     if (pi < pages.length - 1 && fill < 0.6) blocks.push({ type: 'pb' });
   });
@@ -2128,6 +2161,7 @@ function modelToXml(model) {
   const bd = '<w:tcBorders><w:top w:val="single" w:sz="4"/><w:left w:val="single" w:sz="4"/><w:bottom w:val="single" w:sz="4"/><w:right w:val="single" w:sz="4"/></w:tcBorders>';
   for (const b of model.blocks) {
     if (b.type === 'p') body.push(p(b.text));
+    else if (b.type === 'img') body.push('<w:p><w:r><w:drawing><wp:inline><wp:docPr id="1" name="Gambar" descr=""/></wp:inline></w:drawing></w:r></w:p>');
     else if (b.type === 'pb') body.push('<w:p><w:r><w:br w:type="page"/></w:r></w:p>');
     else if (b.type === 'tbl') {
       const nC = b.xs.length - 1;
@@ -2140,7 +2174,7 @@ function modelToXml(model) {
       body.push(x + '</w:tbl>');
     }
   }
-  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + body.join('') + '</w:body></w:document>';
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>' + body.join('') + '</w:body></w:document>';
 }
 
 async function pdfToDocXml(pdfjs, data, opts = {}) {
@@ -2149,7 +2183,8 @@ async function pdfToDocXml(pdfjs, data, opts = {}) {
   const scanned = pages.some(pg => pg.items.length < 3 && (pg.hs.length + pg.vs.length) > 0 || pg.items.length === 0);
   if (scanned && opts.ocr) ocr = await opts.ocr(pages);          // OCR mengisi pg.items bagi halaman tanpa teks
   const model = pdfToModel(pages);
-  return { xml: modelToXml(model), model, pages: pages.length, scanned, ocr };
+  const imgCap = model.blocks.reduce((a, b) => a + (b.nPic || 0), 0), imgNoCap = model.blocks.reduce((a, b) => a + (b.noCap || 0), 0), imgLoose = model.blocks.filter(b => b.type === 'img').length;
+  return { xml: modelToXml(model), model, pages: pages.length, scanned, ocr, imgCap, imgNoCap, imgLoose };
 }
 
 module.exports = { extractPages, pdfToModel, modelToXml, pdfToDocXml, findTables, cellRects };
@@ -2586,6 +2621,7 @@ async function ocrPdf(lib,data,pages,prog){
     prog('OCR muka '+(pi+1)+'/'+pages.length+'…');
     const page=await doc.getPage(pi+1),vp=page.getViewport({scale:S}),cv=document.createElement('canvas');cv.width=Math.ceil(vp.width);cv.height=Math.ceil(vp.height);
     const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);await page.render({canvasContext:ctx,viewport:vp}).promise;
+    ctx.fillStyle='#fff';for(const im of (pg.imgs||[]))ctx.fillRect(Math.floor(im.x0*S)-2,Math.floor((pg.h-im.y1)*S)-2,Math.ceil((im.x1-im.x0)*S)+4,Math.ceil((im.y1-im.y0)*S)+4);
     const H=pg.h,items=[],tbs=BrailleEngine.PDF.findTables(pg);
     await wk.setParameters({tessedit_pageseg_mode:'6',preserve_interword_spaces:'1'});
     for(const t of tbs){for(const c of BrailleEngine.PDF.cellRects(t)){
@@ -2603,7 +2639,7 @@ async function ocrPdf(lib,data,pages,prog){
 async function pdfToDocx(f){
   if(typeof DecompressionStream==='undefined')throw new Error('Pelayar ini terlalu lama untuk membaca PDF. Guna Edge atau Chrome terkini.');
   const lib=await loadPdfjs();const data=new Uint8Array(await f.arrayBuffer()),data2=data.slice();
-  const r=await BrailleEngine.PDF.pdfToDocXml(lib,data,{ocr:pages=>ocrPdf(lib,data2,pages,m=>{$('fname').textContent=m})});window.__ocrLow=(r.ocr&&r.ocr.low)||[];window.__ocrSeq=[];if(r.scanned){let pv=null;for(const b of r.model.blocks){if(b.type!=='tbl')continue;for(const row of b.rows){const t=((row[0]&&row[0].t)||[]).join('').trim();if(/^\d{1,3}$/.test(t)){const v=+t;if(pv!==null&&v!==pv+1)window.__ocrSeq.push('selepas '+pv+' ialah '+v);pv=v}}}}window.__pdfScanned=!!r.scanned;window.__pdfXml=r.xml;window.__pdfBlocks=r.model.blocks.map(b=>b.type==='tbl'?'TBL'+b.xs.length+':'+b.xs.map(v=>Math.round(v)).join(','):b.type==='p'?'P'+(b.edge?'*':'')+':'+b.text.slice(0,35)+'@'+Math.round(b.y):b.type);
+  const r=await BrailleEngine.PDF.pdfToDocXml(lib,data,{ocr:pages=>ocrPdf(lib,data2,pages,m=>{$('fname').textContent=m})});window.__ocrLow=(r.ocr&&r.ocr.low)||[];window.__ocrSeq=[];if(r.scanned){let pv=null;for(const b of r.model.blocks){if(b.type!=='tbl')continue;for(const row of b.rows){const t=((row[0]&&row[0].t)||[]).join('').trim();if(/^\d{1,3}$/.test(t)){const v=+t;if(pv!==null&&v!==pv+1)window.__ocrSeq.push('selepas '+pv+' ialah '+v);pv=v}}}}window.__pdfScanned=!!r.scanned;window.__pdfImg={cap:r.imgCap||0,nocap:r.imgNoCap||0,loose:r.imgLoose||0};window.__pdfXml=r.xml;window.__pdfBlocks=r.model.blocks.map(b=>b.type==='tbl'?'TBL'+b.xs.length+':'+b.xs.map(v=>Math.round(v)).join(','):b.type==='p'?'P'+(b.edge?'*':'')+':'+b.text.slice(0,35)+'@'+Math.round(b.y):b.type);
   if(!/<w:t[ >]/.test(r.xml))throw new Error('PDF ini tiada teks yang boleh dibaca walaupun selepas OCR. Cuba PDF lain.');
   const z=new JSZip();z.file('[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
   z.file('_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
@@ -2627,6 +2663,7 @@ async function load(f){
     try{brks=new Set(JSON.parse(LS.get('brl_brk_'+name)||'[]'))}catch(e){brks=new Set()}
     go();idbPut(name,{buf:ab,fname:f.name,t:Date.now()});
     if(pdfNote){const pb=$('pdfdl')||(()=>{const b=document.createElement('button');b.id='pdfdl';b.className='g';b.style.marginLeft='10px';$('fname').after(b);return b})();pb.textContent='Muat turun salinan Word (untuk semak/betulkan)';pb.hidden=false;pb.onclick=()=>dl(f.name,f);
+      const gi=window.__pdfImg||{};if(gi.cap||gi.loose){$('warns').insertAdjacentHTML('beforeend','<div class="w">'+(gi.cap?'<b>'+gi.cap+' gambar dalam jadual</b> tidak dibawa ke Braille; <b>kapsyen</b> di bawah gambar dibawa sebagai pengganti.'+(gi.nocap?' '+gi.nocap+' item tiada kapsyen: semak.':''):'')+(gi.loose?' '+gi.loose+' gambar di luar jadual: beri deskripsi atau jadikan rajah timbul.':'')+'</div>')}
       const lw=window.__ocrLow||[];if(window.__pdfScanned){$('warns').insertAdjacentHTML('beforeend','<div class="w">PDF ini ialah imbasan dan dibaca dengan OCR, jadi <b>ada kemungkinan salah baca</b>. Muat turun salinan Word, semak setiap soalan, kemudian muat naik Word itu.'+((window.__ocrSeq||[]).length?' <b>Nombor tidak berturutan</b>: '+window.__ocrSeq.slice(0,6).join('; ')+'.':'')+(lw.length?' Baris kurang yakin ('+lw.length+'): '+lw.slice(0,8).map(x=>'m/s '+x.p+': “'+esc(x.t.slice(0,40))+'”').join('; ')+(lw.length>8?'…':''):'')+'</div>')}}
     else{const pb=$('pdfdl');if(pb)pb.hidden=true}
   }catch(e){$('out').hidden=false;$('warns').innerHTML='<div class="w e">'+esc(e.message)+'</div>'}
